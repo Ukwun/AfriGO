@@ -6,7 +6,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { LotsModule } from './modules/lots/lots.module';
-import { TradingModule } from './modules/trading/trading.module';
 
 @Module({
   imports: [
@@ -45,7 +44,6 @@ import { TradingModule } from './modules/trading/trading.module';
     // Feature modules
     AuthModule,
     LotsModule,
-    TradingModule,
     // TODO: MarketplaceModule,
     // TODO: ContractsModule,
     // TODO: PaymentsModule,

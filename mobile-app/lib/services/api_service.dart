@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/lot_model.dart';
+import '../models/order_model.dart';
+import '../models/quote_model.dart';
 
 // API service provider
 final apiServiceProvider = Provider<ApiService>((ref) {
@@ -309,6 +311,349 @@ class ApiService {
       }
     } on DioException catch (e) {
       throw Exception('Error verifying lot: ${e.message}');
+    }
+  }
+
+  // ==================== ORDERS ENDPOINTS ====================
+
+  /// POST /api/orders
+  /// Create new order
+  Future<OrderModel> createOrder({
+    required String lotId,
+    required double quantity,
+    required String shippingAddress,
+    required DateTime deliveryDate,
+    String? notes,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/api/orders',
+        data: {
+          'lotId': lotId,
+          'quantity': quantity,
+          'shippingAddress': shippingAddress,
+          'deliveryDate': deliveryDate.toIso8601String(),
+          if (notes != null) 'notes': notes,
+        },
+      );
+
+      if (response.statusCode == 201) {
+        return OrderModel.fromJson(response.data as Map<String, dynamic>);
+      } else {
+        throw Exception('Failed to create order');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error creating order: ${e.message}');
+    }
+  }
+
+  /// GET /api/orders
+  /// Get all orders (both bought and sold)
+  Future<List<OrderModel>> getOrders({
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/api/orders',
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> ordersList = response.data['data'] ?? [];
+        return ordersList
+            .map((order) => OrderModel.fromJson(order as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw Exception('Failed to load orders');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error loading orders: ${e.message}');
+    }
+  }
+
+  /// GET /api/orders/:id
+  /// Get order by ID
+  Future<OrderModel> getOrderById(String orderId) async {
+    try {
+      final response = await _dio.get('/api/orders/$orderId');
+
+      if (response.statusCode == 200) {
+        return OrderModel.fromJson(response.data as Map<String, dynamic>);
+      } else {
+        throw Exception('Order not found');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error loading order: ${e.message}');
+    }
+  }
+
+  /// GET /api/orders/buyer/me
+  /// Get current user's orders as buyer
+  Future<List<OrderModel>> getMyBuyerOrders({
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/api/orders/buyer/me',
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> ordersList = response.data['data'] ?? [];
+        return ordersList
+            .map((order) => OrderModel.fromJson(order as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw Exception('Failed to load buyer orders');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error loading buyer orders: ${e.message}');
+    }
+  }
+
+  /// GET /api/orders/seller/me
+  /// Get current user's orders as seller
+  Future<List<OrderModel>> getMySellerOrders({
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/api/orders/seller/me',
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> ordersList = response.data['data'] ?? [];
+        return ordersList
+            .map((order) => OrderModel.fromJson(order as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw Exception('Failed to load seller orders');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error loading seller orders: ${e.message}');
+    }
+  }
+
+  /// PUT /api/orders/:id
+  /// Update order
+  Future<OrderModel> updateOrder(
+    String orderId, {
+    String? status,
+    String? paymentStatus,
+    String? trackingNumber,
+    DateTime? deliveryDate,
+    String? notes,
+  }) async {
+    try {
+      final data = <String, dynamic>{};
+      if (status != null) data['status'] = status;
+      if (paymentStatus != null) data['paymentStatus'] = paymentStatus;
+      if (trackingNumber != null) data['trackingNumber'] = trackingNumber;
+      if (deliveryDate != null)
+        data['deliveryDate'] = deliveryDate.toIso8601String();
+      if (notes != null) data['notes'] = notes;
+
+      final response = await _dio.put('/api/orders/$orderId', data: data);
+
+      if (response.statusCode == 200) {
+        return OrderModel.fromJson(response.data as Map<String, dynamic>);
+      } else {
+        throw Exception('Failed to update order');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error updating order: ${e.message}');
+    }
+  }
+
+  /// DELETE /api/orders/:id
+  /// Cancel order
+  Future<bool> cancelOrder(String orderId) async {
+    try {
+      final response = await _dio.delete('/api/orders/$orderId');
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        throw Exception('Failed to cancel order');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error cancelling order: ${e.message}');
+    }
+  }
+
+  // ==================== QUOTES ENDPOINTS ====================
+
+  /// POST /api/quotes
+  /// Create new quote (price offer)
+  Future<QuoteModel> createQuote({
+    required String lotId,
+    required double suggestedPricePerUnit,
+    required double quantity,
+    String? notes,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/api/quotes',
+        data: {
+          'lotId': lotId,
+          'suggestedPricePerUnit': suggestedPricePerUnit,
+          'quantity': quantity,
+          if (notes != null) 'notes': notes,
+        },
+      );
+
+      if (response.statusCode == 201) {
+        return QuoteModel.fromJson(response.data as Map<String, dynamic>);
+      } else {
+        throw Exception('Failed to create quote');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error creating quote: ${e.message}');
+    }
+  }
+
+  /// GET /api/quotes/:id
+  /// Get quote by ID
+  Future<QuoteModel> getQuoteById(String quoteId) async {
+    try {
+      final response = await _dio.get('/api/quotes/$quoteId');
+
+      if (response.statusCode == 200) {
+        return QuoteModel.fromJson(response.data as Map<String, dynamic>);
+      } else {
+        throw Exception('Quote not found');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error loading quote: ${e.message}');
+    }
+  }
+
+  /// GET /api/quotes/lot/:lotId
+  /// Get all quotes for a lot (seller only)
+  Future<List<QuoteModel>> getQuotesForLot(
+    String lotId, {
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/api/quotes/lot/$lotId',
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> quotesList = response.data['data'] ?? [];
+        return quotesList
+            .map((quote) => QuoteModel.fromJson(quote as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw Exception('Failed to load quotes');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error loading quotes: ${e.message}');
+    }
+  }
+
+  /// GET /api/quotes/buyer/me
+  /// Get current user's quotes as buyer
+  Future<List<QuoteModel>> getMyQuotes({
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/api/quotes/buyer/me',
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> quotesList = response.data['data'] ?? [];
+        return quotesList
+            .map((quote) => QuoteModel.fromJson(quote as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw Exception('Failed to load quotes');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error loading quotes: ${e.message}');
+    }
+  }
+
+  /// PUT /api/quotes/:id
+  /// Update quote (counter-offer)
+  Future<QuoteModel> updateQuote(
+    String quoteId, {
+    double? suggestedPricePerUnit,
+    String? status,
+    String? notes,
+  }) async {
+    try {
+      final data = <String, dynamic>{};
+      if (suggestedPricePerUnit != null)
+        data['suggestedPricePerUnit'] = suggestedPricePerUnit;
+      if (status != null) data['status'] = status;
+      if (notes != null) data['notes'] = notes;
+
+      final response = await _dio.put('/api/quotes/$quoteId', data: data);
+
+      if (response.statusCode == 200) {
+        return QuoteModel.fromJson(response.data as Map<String, dynamic>);
+      } else {
+        throw Exception('Failed to update quote');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error updating quote: ${e.message}');
+    }
+  }
+
+  /// POST /api/quotes/:id/accept
+  /// Accept a quote (create order from quote)
+  Future<OrderModel> acceptQuote(String quoteId) async {
+    try {
+      final response = await _dio.post('/api/quotes/$quoteId/accept');
+
+      if (response.statusCode == 201) {
+        return OrderModel.fromJson(response.data as Map<String, dynamic>);
+      } else {
+        throw Exception('Failed to accept quote');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error accepting quote: ${e.message}');
+    }
+  }
+
+  /// DELETE /api/quotes/:id
+  /// Reject/delete a quote
+  Future<bool> rejectQuote(String quoteId) async {
+    try {
+      final response = await _dio.delete('/api/quotes/$quoteId');
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        throw Exception('Failed to reject quote');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error rejecting quote: ${e.message}');
     }
   }
 
