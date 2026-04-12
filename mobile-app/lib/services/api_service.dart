@@ -4,6 +4,7 @@ import '../models/lot_model.dart';
 import '../models/order_model.dart';
 import '../models/quote_model.dart';
 import '../models/message_model.dart';
+import '../models/payment_model.dart';
 
 // API service provider
 final apiServiceProvider = Provider<ApiService>((ref) {
@@ -933,6 +934,153 @@ class ApiService {
       }
     } on DioException catch (e) {
       throw Exception('Error uploading images: ${e.message}');
+    }
+  }
+
+  // ==================== PAYMENTS ENDPOINTS ====================
+
+  /// GET /api/payments/config/publishable-key
+  /// Get Stripe publishable key for frontend
+  Future<String> getStripePublishableKey() async {
+    try {
+      final response = await _dio.get('/api/payments/config/publishable-key');
+      if (response.statusCode == 200) {
+        return response.data['publishableKey'] as String;
+      }
+      throw Exception('Failed to fetch publishable key');
+    } on DioException catch (e) {
+      throw Exception('Error fetching publishable key: ${e.message}');
+    }
+  }
+
+  /// POST /api/payments
+  /// Create a new payment (initialize PaymentIntent)
+  Future<PaymentModel> createPayment(CreatePaymentRequestModel request) async {
+    try {
+      final response = await _dio.post(
+        '/api/payments',
+        data: request.toJson(),
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return PaymentModel.fromJson(response.data['data']);
+      }
+      throw Exception('Failed to create payment');
+    } on DioException catch (e) {
+      throw Exception('Error creating payment: ${e.message}');
+    }
+  }
+
+  /// POST /api/payments/:id/confirm
+  /// Confirm payment (for 3D Secure or additional authentication)
+  Future<PaymentModel> confirmPayment(
+    String paymentId,
+    ConfirmPaymentRequestModel request,
+  ) async {
+    try {
+      final response = await _dio.post(
+        '/api/payments/$paymentId/confirm',
+        data: request.toJson(),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return PaymentModel.fromJson(response.data['data']);
+      }
+      throw Exception('Failed to confirm payment');
+    } on DioException catch (e) {
+      throw Exception('Error confirming payment: ${e.message}');
+    }
+  }
+
+  /// GET /api/payments/:id
+  /// Get payment by ID
+  Future<PaymentModel> getPayment(String paymentId) async {
+    try {
+      final response = await _dio.get('/api/payments/$paymentId');
+
+      if (response.statusCode == 200) {
+        return PaymentModel.fromJson(response.data['data']);
+      }
+      throw Exception('Failed to fetch payment');
+    } on DioException catch (e) {
+      throw Exception('Error fetching payment: ${e.message}');
+    }
+  }
+
+  /// GET /api/payments/order/:orderId
+  /// Get payment for an order
+  Future<List<PaymentModel>> getOrderPayments(String orderId) async {
+    try {
+      final response = await _dio.get('/api/payments/order/$orderId');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'] ?? [];
+        return data.map((item) => PaymentModel.fromJson(item)).toList();
+      }
+      throw Exception('Failed to fetch order payments');
+    } on DioException catch (e) {
+      throw Exception('Error fetching order payments: ${e.message}');
+    }
+  }
+
+  /// POST /api/payments/:id/refund
+  /// Refund a payment
+  Future<PaymentModel> refundPayment(
+    String paymentId,
+    RefundPaymentRequestModel request,
+  ) async {
+    try {
+      final response = await _dio.post(
+        '/api/payments/$paymentId/refund',
+        data: request.toJson(),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return PaymentModel.fromJson(response.data['data']);
+      }
+      throw Exception('Failed to refund payment');
+    } on DioException catch (e) {
+      throw Exception('Error refunding payment: ${e.message}');
+    }
+  }
+
+  /// GET /api/payments
+  /// Get user payment history with pagination
+  Future<PaymentHistoryResponseModel> getUserPaymentHistory({
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/api/payments',
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return PaymentHistoryResponseModel.fromJson(response.data);
+      }
+      throw Exception('Failed to fetch payment history');
+    } on DioException catch (e) {
+      throw Exception('Error fetching payment history: ${e.message}');
+    }
+  }
+
+  /// POST /api/payments/:id/release-escrow
+  /// Release escrow funds (seller receives payout)
+  Future<PaymentModel> releaseEscrow(String paymentId) async {
+    try {
+      final response =
+          await _dio.post('/api/payments/$paymentId/release-escrow');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return PaymentModel.fromJson(response.data['data']);
+      }
+      throw Exception('Failed to release escrow');
+    } on DioException catch (e) {
+      throw Exception('Error releasing escrow: ${e.message}');
     }
   }
 }
