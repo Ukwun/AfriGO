@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
+import { LotsModule } from './modules/lots/lots.module';
 
 @Module({
   imports: [
@@ -42,7 +43,7 @@ import { AuthModule } from './modules/auth/auth.module';
 
     // Feature modules
     AuthModule,
-    // TODO: LotsModule,
+    LotsModule,
     // TODO: MarketplaceModule,
     // TODO: ContractsModule,
     // TODO: PaymentsModule,
