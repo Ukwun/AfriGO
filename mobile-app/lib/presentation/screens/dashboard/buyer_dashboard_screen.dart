@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../config/theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../config/theme.dart';
 
 class BuyerDashboardScreen extends StatefulWidget {
   const BuyerDashboardScreen({Key? key}) : super(key: key);

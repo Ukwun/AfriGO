@@ -34,14 +34,18 @@ class AfrigoColors {
   // Borders
   static const Color borderLight = Color(0xFFE5E7EB);
   static const Color borderDark = Color(0xFF374151);
+
+  // Text
+  static const Color textPrimary = Color(0xFF111827);
+  static const Color textSecondary = Color(0xFF6B7280);
 }
 
 /// Typography
 class AfrigoTypography {
-  static const String fontFamilyPrimary = 'Inter';
-  static const String fontFamilyDisplay = 'Sora';
+  static const String fontFamilyPrimary = 'Roboto'; // System font
+  static const String fontFamilyDisplay = 'Roboto'; // System font
 
-  // Display styles (Sora)
+  // Display styles
   static const TextStyle displayLarge = TextStyle(
     fontFamily: fontFamilyDisplay,
     fontSize: 36,

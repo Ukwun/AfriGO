@@ -1,31 +1,59 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-
-// Module imports
-// TODO: import { AuthModule } from './modules/auth/auth.module';
-// TODO: import { LotsModule } from './modules/lots/lots.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
+    // Load environment variables from .env.local
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: '.env.local',
     }),
-    // TypeOrmModule.forRoot({
-    //   type: 'postgres',
-    //   url: process.env.DATABASE_URL,
-    //   autoLoadEntities: true,
-    //   synchronize: false, // Use migrations instead
-    // }),
-    // AuthModule,
-    // LotsModule,
-    // ... other modules
+
+    // TypeORM: Database configuration
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get<string>('DATABASE_HOST'),
+        port: configService.get<number>('DATABASE_PORT'),
+        username: configService.get<string>('DATABASE_USER'),
+        password: configService.get<string>('DATABASE_PASSWORD'),
+        database: configService.get<string>('DATABASE_NAME'),
+        entities: ['src/**/*.entity.ts'],
+        subscribers: ['src/**/*.subscriber.ts'],
+        migrations: ['migrations/*.ts'],
+        migrationsTableName: 'typeorm_migrations',
+        cli: {
+          migrationsDir: 'migrations',
+        },
+        logging: configService.get<boolean>('DATABASE_LOG_QUERIES') || false,
+        synchronize: false, // Use migrations instead
+        ssl:
+          configService.get<string>('NODE_ENV') === 'production'
+            ? { rejectUnauthorized: false }
+            : false,
+      }),
+    }),
+
+    // Feature modules
+    AuthModule,
+    // TODO: LotsModule,
+    // TODO: MarketplaceModule,
+    // TODO: ContractsModule,
+    // TODO: PaymentsModule,
+    // TODO: LogisticsModule,
+    // TODO: DocumentsModule,
+    // TODO: ZoneServicesModule,
+    // TODO: QualityModule,
   ],
+
   controllers: [AppController],
+
   providers: [AppService],
 })
 export class AppModule {}
