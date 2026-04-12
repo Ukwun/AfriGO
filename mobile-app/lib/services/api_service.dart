@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/lot_model.dart';
 import '../models/order_model.dart';
 import '../models/quote_model.dart';
+import '../models/message_model.dart';
 
 // API service provider
 final apiServiceProvider = Provider<ApiService>((ref) {
@@ -654,6 +655,236 @@ class ApiService {
       }
     } on DioException catch (e) {
       throw Exception('Error rejecting quote: ${e.message}');
+    }
+  }
+
+  // ==================== MESSAGING ENDPOINTS ====================
+
+  /// POST /api/messages
+  /// Send a new message
+  Future<MessageModel> sendMessage({
+    required String recipientId,
+    required String content,
+    String? orderId,
+    String? messageType,
+    List<String>? attachments,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/api/messages',
+        data: {
+          'recipientId': recipientId,
+          'content': content,
+          if (orderId != null) 'orderId': orderId,
+          if (messageType != null) 'messageType': messageType,
+          if (attachments != null) 'attachments': attachments,
+        },
+      );
+
+      if (response.statusCode == 201) {
+        return MessageModel.fromJson(response.data as Map<String, dynamic>);
+      } else {
+        throw Exception('Failed to send message');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error sending message: ${e.message}');
+    }
+  }
+
+  /// GET /api/messages/conversations
+  /// Get all conversations for current user
+  Future<List<ConversationModel>> getConversations({
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/api/messages/conversations',
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> conversationsList = response.data ?? [];
+        return conversationsList
+            .map((conv) =>
+                ConversationModel.fromJson(conv as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw Exception('Failed to load conversations');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error loading conversations: ${e.message}');
+    }
+  }
+
+  /// GET /api/messages/conversations/:otherUserId
+  /// Get messages in conversation with specific user
+  Future<List<MessageModel>> getConversationMessages(
+    String otherUserId, {
+    int page = 1,
+    int limit = 50,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/api/messages/conversations/$otherUserId',
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> messagesList = response.data['messages'] ?? [];
+        return messagesList
+            .map((msg) => MessageModel.fromJson(msg as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw Exception('Failed to load conversation');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error loading conversation: ${e.message}');
+    }
+  }
+
+  /// GET /api/messages/orders/:orderId
+  /// Get conversation for a specific order
+  Future<List<MessageModel>> getOrderConversation(String orderId) async {
+    try {
+      final response = await _dio.get('/api/messages/orders/$orderId');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> messagesList = response.data['messages'] ?? [];
+        return messagesList
+            .map((msg) => MessageModel.fromJson(msg as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw Exception('Failed to load order conversation');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error loading order conversation: ${e.message}');
+    }
+  }
+
+  /// PUT /api/messages/:id
+  /// Update message content (within 5 minutes of sending)
+  Future<MessageModel> updateMessage(
+    String messageId, {
+    required String content,
+  }) async {
+    try {
+      final response = await _dio.put(
+        '/api/messages/$messageId',
+        data: {'content': content},
+      );
+
+      if (response.statusCode == 200) {
+        return MessageModel.fromJson(response.data as Map<String, dynamic>);
+      } else {
+        throw Exception('Failed to update message');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error updating message: ${e.message}');
+    }
+  }
+
+  /// DELETE /api/messages/:id
+  /// Delete (soft delete) a message
+  Future<bool> deleteMessage(String messageId) async {
+    try {
+      final response = await _dio.delete('/api/messages/$messageId');
+
+      if (response.statusCode == 204 || response.statusCode == 200) {
+        return true;
+      } else {
+        throw Exception('Failed to delete message');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error deleting message: ${e.message}');
+    }
+  }
+
+  /// POST /api/messages/read/mark
+  /// Mark multiple messages as read
+  Future<bool> markMessagesAsRead(List<String> messageIds) async {
+    try {
+      final response = await _dio.post(
+        '/api/messages/read/mark',
+        data: {'messageIds': messageIds},
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        throw Exception('Failed to mark messages as read');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error marking messages: ${e.message}');
+    }
+  }
+
+  /// POST /api/messages/conversations/:otherUserId/read
+  /// Mark entire conversation as read
+  Future<bool> markConversationAsRead(String otherUserId) async {
+    try {
+      final response = await _dio.post(
+        '/api/messages/conversations/$otherUserId/read',
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        throw Exception('Failed to mark conversation as read');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error marking conversation: ${e.message}');
+    }
+  }
+
+  /// GET /api/messages/unread/count
+  /// Get count of unread messages
+  Future<int> getUnreadMessageCount() async {
+    try {
+      final response = await _dio.get('/api/messages/unread/count');
+
+      if (response.statusCode == 200) {
+        return response.data['unreadCount'] as int? ?? 0;
+      } else {
+        throw Exception('Failed to get unread count');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error getting unread count: ${e.message}');
+    }
+  }
+
+  /// GET /api/messages/conversations/:otherUserId/search
+  /// Search messages in a conversation
+  Future<List<MessageModel>> searchMessages(
+    String otherUserId,
+    String query, {
+    int limit = 20,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/api/messages/conversations/$otherUserId/search',
+        queryParameters: {
+          'q': query,
+          'limit': limit,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> messagesList = response.data ?? [];
+        return messagesList
+            .map((msg) => MessageModel.fromJson(msg as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw Exception('Search failed');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error searching messages: ${e.message}');
     }
   }
 
