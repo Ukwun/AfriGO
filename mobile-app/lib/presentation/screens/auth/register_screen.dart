@@ -6,7 +6,7 @@ import '../../../config/theme.dart';
 import '../../providers/auth_provider.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
-  const RegisterScreen({Key? key}) : super(key: key);
+  const RegisterScreen({super.key});
 
   @override
   ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
@@ -93,6 +93,68 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         password.contains(RegExp(r'[0-9]'));
   }
 
+  /// Handle Google Sign-Up
+  Future<void> _handleGoogleSignUp() async {
+    setState(() => _errorMessage = null);
+    try {
+      await ref.read(authProvider.notifier).loginWithGoogle();
+      if (!mounted) return;
+
+      final authState = ref.read(authProvider);
+      if (authState is AuthAuthenticated) {
+        context.go('/dashboard/buyer');
+      } else if (authState is AuthError) {
+        setState(() => _errorMessage = authState.message);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(
+            () => _errorMessage = 'Google sign-up failed: ${e.toString()}');
+      }
+    }
+  }
+
+  /// Handle Facebook Sign-Up
+  Future<void> _handleFacebookSignUp() async {
+    setState(() => _errorMessage = null);
+    try {
+      await ref.read(authProvider.notifier).loginWithFacebook();
+      if (!mounted) return;
+
+      final authState = ref.read(authProvider);
+      if (authState is AuthAuthenticated) {
+        context.go('/dashboard/buyer');
+      } else if (authState is AuthError) {
+        setState(() => _errorMessage = authState.message);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(
+            () => _errorMessage = 'Facebook sign-up failed: ${e.toString()}');
+      }
+    }
+  }
+
+  /// Handle Apple Sign-Up
+  Future<void> _handleAppleSignUp() async {
+    setState(() => _errorMessage = null);
+    try {
+      await ref.read(authProvider.notifier).loginWithApple();
+      if (!mounted) return;
+
+      final authState = ref.read(authProvider);
+      if (authState is AuthAuthenticated) {
+        context.go('/dashboard/buyer');
+      } else if (authState is AuthError) {
+        setState(() => _errorMessage = authState.message);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _errorMessage = 'Apple sign-up failed: ${e.toString()}');
+      }
+    }
+  }
+
   /// Handle registration
   Future<void> _handleRegister() async {
     // Validate input
@@ -164,8 +226,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     final authState = ref.read(authProvider);
     if (authState is AuthAuthenticated) {
-      // Navigate to verification screen or dashboard
-      context.go('/verify-email');
+      // Navigate to buyer dashboard (email verification can be added later)
+      context.go('/dashboard/buyer');
     } else if (authState is AuthError) {
       setState(() => _errorMessage = authState.message);
     }
@@ -229,10 +291,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               controller: _firstNameController,
               focusNode: _firstNameFocus,
               enabled: !isLoading,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'First Name',
                 hintText: 'John',
-                prefixIcon: const Icon(Icons.person_outline),
+                prefixIcon: Icon(Icons.person_outline),
               ),
               textInputAction: TextInputAction.next,
               onSubmitted: (_) => _lastNameFocus.requestFocus(),
@@ -244,10 +306,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               controller: _lastNameController,
               focusNode: _lastNameFocus,
               enabled: !isLoading,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Last Name',
                 hintText: 'Doe',
-                prefixIcon: const Icon(Icons.person_outline),
+                prefixIcon: Icon(Icons.person_outline),
               ),
               textInputAction: TextInputAction.next,
               onSubmitted: (_) => _emailFocus.requestFocus(),
@@ -259,10 +321,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               controller: _emailController,
               focusNode: _emailFocus,
               enabled: !isLoading,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Email Address',
                 hintText: 'you@example.com',
-                prefixIcon: const Icon(Icons.email_outlined),
+                prefixIcon: Icon(Icons.email_outlined),
               ),
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.next,
@@ -330,10 +392,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               controller: _phoneController,
               focusNode: _phoneFocus,
               enabled: !isLoading,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Phone Number (Optional)',
                 hintText: '+254700000000',
-                prefixIcon: const Icon(Icons.phone_outlined),
+                prefixIcon: Icon(Icons.phone_outlined),
               ),
               keyboardType: TextInputType.phone,
               textInputAction: TextInputAction.next,
@@ -346,10 +408,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               controller: _organizationController,
               focusNode: _organizationFocus,
               enabled: !isLoading,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Organization/Business (Optional)',
                 hintText: 'Your Company Name',
-                prefixIcon: const Icon(Icons.business_outlined),
+                prefixIcon: Icon(Icons.business_outlined),
               ),
               textInputAction: TextInputAction.next,
               onSubmitted: (_) => _countryFocus.requestFocus(),
@@ -361,10 +423,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               controller: _countryController,
               focusNode: _countryFocus,
               enabled: !isLoading,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Country Code (Optional)',
                 hintText: 'KE, NG, UG, etc',
-                prefixIcon: const Icon(Icons.public_outlined),
+                prefixIcon: Icon(Icons.public_outlined),
               ),
               textInputAction: TextInputAction.done,
             ),
@@ -418,7 +480,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               onChanged: isLoading
                   ? null
                   : (value) => setState(() => _agreedToTerms = value ?? false),
-              title: Text(
+              title: const Text(
                 'I agree to the Terms of Service and Privacy Policy',
                 style: AfrigoTypography.bodySmall,
               ),
@@ -441,11 +503,84 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
             const SizedBox(height: AfrigoSpacing.lg),
 
+            // Divider
+            Row(
+              children: [
+                const Expanded(
+                  child: Divider(
+                    height: 1,
+                    color: AfrigoColors.borderLight,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AfrigoSpacing.md,
+                  ),
+                  child: Text(
+                    'OR',
+                    style: AfrigoTypography.bodySmall.copyWith(
+                      color: AfrigoColors.textSecondary,
+                    ),
+                  ),
+                ),
+                const Expanded(
+                  child: Divider(
+                    height: 1,
+                    color: AfrigoColors.borderLight,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AfrigoSpacing.lg),
+
+            // Social Login Buttons
+            Text(
+              'Sign up with',
+              style: AfrigoTypography.bodySmall.copyWith(
+                color: AfrigoColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AfrigoSpacing.md),
+
+            // Google Button
+            OutlinedButton.icon(
+              onPressed: isLoading ? null : _handleGoogleSignUp,
+              icon: const Icon(Icons.g_translate),
+              label: const Text('Google'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
+            ),
+            const SizedBox(height: AfrigoSpacing.sm),
+
+            // Facebook Button
+            OutlinedButton.icon(
+              onPressed: isLoading ? null : _handleFacebookSignUp,
+              icon: const Icon(Icons.facebook),
+              label: const Text('Facebook'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
+            ),
+            const SizedBox(height: AfrigoSpacing.sm),
+
+            // Apple Button
+            OutlinedButton.icon(
+              onPressed: isLoading ? null : _handleAppleSignUp,
+              icon: const Icon(Icons.apple),
+              label: const Text('Apple'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
+            ),
+            const SizedBox(height: AfrigoSpacing.lg),
+
             // Login Link
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
+                const Text(
                   'Already have an account? ',
                   style: AfrigoTypography.bodyMedium,
                 ),

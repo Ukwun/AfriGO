@@ -18,7 +18,7 @@ final minPriceProvider = StateProvider<double>((ref) => 0);
 final maxPriceProvider = StateProvider<double>((ref) => 10000);
 
 class BrowseLotsScreen extends ConsumerWidget {
-  const BrowseLotsScreen({Key? key}) : super(key: key);
+  const BrowseLotsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

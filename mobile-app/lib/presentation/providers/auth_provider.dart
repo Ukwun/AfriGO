@@ -1,11 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dio/dio.dart';
-
-import '../../../config/theme.dart';
+import '../../data/services/api_client.dart';
 
 /// Auth State Management with Riverpod
-/// Manages user authentication state and API communication
+/// Manages user authentication state using Backend API
 
 /// User model matching backend response
 class AuthUser {
@@ -67,13 +64,11 @@ class AuthLoading extends AuthState {
 
 class AuthAuthenticated extends AuthState {
   final AuthUser user;
-  final String accessToken;
-  final String refreshToken;
+  final String token;
 
   const AuthAuthenticated({
     required this.user,
-    required this.accessToken,
-    required this.refreshToken,
+    required this.token,
   });
 }
 
@@ -87,13 +82,13 @@ class AuthUnauthenticated extends AuthState {
   const AuthUnauthenticated();
 }
 
-/// Auth Notifier - handles auth logic
+/// Auth Notifier - handles auth logic using Backend API
 class AuthNotifier extends StateNotifier<AuthState> {
-  final Dio dio;
+  final apiClient = ApiClient();
 
-  AuthNotifier(this.dio) : super(const AuthIdle());
+  AuthNotifier() : super(const AuthIdle());
 
-  /// REGISTER: Create new account
+  /// REGISTER with Email & Password
   Future<void> register({
     required String email,
     required String password,
@@ -106,34 +101,41 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = const AuthLoading();
 
     try {
-      final response = await dio.post(
+      print('[AuthNotifier] Registering: $email');
+
+      final response = await apiClient.post(
         '/auth/register',
-        data: {
+        body: {
           'email': email,
           'password': password,
           'firstName': firstName,
           'lastName': lastName,
-          'phone': phone,
-          'organizationName': organizationName,
-          'countryCode': countryCode,
+          if (phone != null) 'phone': phone,
+          if (organizationName != null) 'organization': organizationName,
+          if (countryCode != null) 'countryCode': countryCode,
         },
       );
 
-      final user = AuthUser.fromJson(response.data['user']);
-      final accessToken = response.data['accessToken'];
-      final refreshToken = response.data['refreshToken'];
+      if (!response['success']) {
+        throw Exception(response['message'] ?? 'Registration failed');
+      }
 
-      state = AuthAuthenticated(
-        user: user,
-        accessToken: accessToken,
-        refreshToken: refreshToken,
-      );
+      final token = response['token'] as String;
+      final userData = response['user'] as Map<String, dynamic>;
+
+      apiClient.setToken(token);
+
+      final authUser = AuthUser.fromJson(userData);
+      state = AuthAuthenticated(user: authUser, token: token);
+
+      print('[AuthNotifier] Registration successful: ${authUser.id}');
     } catch (e) {
-      state = AuthError(_extractErrorMessage(e));
+      state = AuthError(e.toString());
+      print('[AuthNotifier] Registration error: $e');
     }
   }
 
-  /// LOGIN: Authenticate with email & password
+  /// LOGIN with Email & Password
   Future<void> login({
     required String email,
     required String password,
@@ -141,200 +143,92 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = const AuthLoading();
 
     try {
-      final response = await dio.post(
+      print('[AuthNotifier] Logging in: $email');
+
+      final response = await apiClient.post(
         '/auth/login',
-        data: {
+        body: {
           'email': email,
           'password': password,
         },
       );
 
-      final user = AuthUser.fromJson(response.data['user']);
-      final accessToken = response.data['accessToken'];
-      final refreshToken = response.data['refreshToken'];
+      if (!response['success']) {
+        throw Exception(response['message'] ?? 'Login failed');
+      }
 
-      state = AuthAuthenticated(
-        user: user,
-        accessToken: accessToken,
-        refreshToken: refreshToken,
-      );
+      final token = response['token'] as String;
+      final userData = response['user'] as Map<String, dynamic>;
+
+      apiClient.setToken(token);
+
+      final authUser = AuthUser.fromJson(userData);
+      state = AuthAuthenticated(user: authUser, token: token);
+
+      print('[AuthNotifier] Login successful: ${authUser.id}');
     } catch (e) {
-      state = AuthError(_extractErrorMessage(e));
+      state = AuthError(e.toString());
+      print('[AuthNotifier] Login error: $e');
     }
   }
 
-  /// LOGOUT: Sign out current user
+  /// LOGIN with Google (stub for now)
+  Future<void> loginWithGoogle() async {
+    state = const AuthLoading();
+    try {
+      // TODO: Implement actual Google Sign-In
+      print('[AuthNotifier] Google login requested');
+      state = const AuthUnauthenticated();
+    } catch (e) {
+      state = AuthError(e.toString());
+      print('[AuthNotifier] Google login error: $e');
+    }
+  }
+
+  /// LOGIN with Facebook (stub for now)
+  Future<void> loginWithFacebook() async {
+    state = const AuthLoading();
+    try {
+      // TODO: Implement actual Facebook Sign-In
+      print('[AuthNotifier] Facebook login requested');
+      state = const AuthUnauthenticated();
+    } catch (e) {
+      state = AuthError(e.toString());
+      print('[AuthNotifier] Facebook login error: $e');
+    }
+  }
+
+  /// LOGIN with Apple (stub for now)
+  Future<void> loginWithApple() async {
+    state = const AuthLoading();
+    try {
+      // TODO: Implement actual Apple Sign-In
+      print('[AuthNotifier] Apple login requested');
+      state = const AuthUnauthenticated();
+    } catch (e) {
+      state = AuthError(e.toString());
+      print('[AuthNotifier] Apple login error: $e');
+    }
+  }
+
+  /// LOGOUT
   Future<void> logout() async {
     try {
-      if (state is AuthAuthenticated) {
-        final authState = state as AuthAuthenticated;
-        dio.options.headers['Authorization'] =
-            'Bearer ${authState.accessToken}';
-
-        await dio.post('/auth/logout');
-      }
+      await apiClient.logout();
+      state = const AuthUnauthenticated();
+      print('[AuthNotifier] Logged out');
     } catch (e) {
-      // Log error but still logout
-      print('Logout error: $e');
-    } finally {
+      print('[AuthNotifier] Logout error: $e');
       state = const AuthUnauthenticated();
     }
-  }
-
-  /// REFRESH TOKEN: Get new access token
-  Future<bool> refreshToken(String currentRefreshToken) async {
-    try {
-      final response = await dio.post(
-        '/auth/refresh',
-        data: {
-          'refreshToken': currentRefreshToken,
-        },
-      );
-
-      if (state is AuthAuthenticated) {
-        final authState = state as AuthAuthenticated;
-        state = AuthAuthenticated(
-          user: authState.user,
-          accessToken: response.data['accessToken'],
-          refreshToken: response.data['refreshToken'],
-        );
-        return true;
-      }
-    } catch (e) {
-      print('Token refresh failed: $e');
-    }
-    return false;
-  }
-
-  /// VERIFY EMAIL: Verify email with token from link
-  Future<void> verifyEmail(String token) async {
-    try {
-      await dio.post(
-        '/auth/verify-email',
-        data: {
-          'token': token,
-          'type': 'email_verification',
-        },
-      );
-
-      // Update user's emailVerified status
-      if (state is AuthAuthenticated) {
-        final authState = state as AuthAuthenticated;
-        final updatedUser = AuthUser(
-          id: authState.user.id,
-          email: authState.user.email,
-          firstName: authState.user.firstName,
-          lastName: authState.user.lastName,
-          fullName: authState.user.fullName,
-          roles: authState.user.roles,
-          kycStatus: authState.user.kycStatus,
-          emailVerified: true, // Updated
-          phoneVerified: authState.user.phoneVerified,
-          trustScore: authState.user.trustScore,
-          completedTrades: authState.user.completedTrades,
-        );
-
-        state = AuthAuthenticated(
-          user: updatedUser,
-          accessToken: authState.accessToken,
-          refreshToken: authState.refreshToken,
-        );
-      }
-    } catch (e) {
-      state = AuthError(_extractErrorMessage(e));
-    }
-  }
-
-  /// REQUEST PASSWORD RESET: Send reset email
-  Future<void> requestPasswordReset(String email) async {
-    state = const AuthLoading();
-
-    try {
-      await dio.post(
-        '/auth/forgot-password',
-        data: {'email': email},
-      );
-
-      state = const AuthUnauthenticated();
-    } catch (e) {
-      state = AuthError(_extractErrorMessage(e));
-    }
-  }
-
-  /// RESET PASSWORD: Reset with token from email
-  Future<void> resetPassword(
-      {required String token, required String newPassword}) async {
-    state = const AuthLoading();
-
-    try {
-      await dio.post(
-        '/auth/reset-password',
-        data: {
-          'token': token,
-          'newPassword': newPassword,
-        },
-      );
-
-      state = const AuthUnauthenticated();
-    } catch (e) {
-      state = AuthError(_extractErrorMessage(e));
-    }
-  }
-
-  /// Private: Extract error message from DioException
-  String _extractErrorMessage(dynamic error) {
-    if (error is DioException) {
-      if (error.response != null) {
-        // Backend error message
-        return error.response!.data['message'] ??
-            error.response!.statusMessage ??
-            'An error occurred';
-      }
-      return error.message ?? 'Network error';
-    }
-    return error.toString();
   }
 }
 
 /// Riverpod Providers
 
-/// Dio instance (HTTP client)
-final dioProvider = Provider<Dio>((ref) {
-  final dio = Dio(
-    BaseOptions(
-      baseUrl: 'http://localhost:3000/api', // TODO: Use env
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
-      contentType: 'application/json',
-    ),
-  );
-
-  // Add response interceptor for error handling
-  dio.interceptors.add(
-    InterceptorsWrapper(
-      onResponse: (response, handler) {
-        // Handle 401 - token expired
-        if (response.statusCode == 401) {
-          // Trigger logout in app
-        }
-        return handler.next(response);
-      },
-      onError: (error, handler) {
-        // Handle errors
-        return handler.next(error);
-      },
-    ),
-  );
-
-  return dio;
-});
-
-/// Auth State Notifier
-
-/// Auth provider - main state management
+/// Auth State Provider
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  final dio = ref.watch(dioProvider);
-  return AuthNotifier(dio);
+  return AuthNotifier();
 });
 
 /// Convenience provider: Is user authenticated?
@@ -355,7 +249,7 @@ final currentUserProvider = Provider<AuthUser?>((ref) {
 final accessTokenProvider = Provider<String?>((ref) {
   final state = ref.watch(authProvider);
   if (state is AuthAuthenticated) {
-    return state.accessToken;
+    return state.token;
   }
   return null;
 });

@@ -21,7 +21,7 @@ void main() async {
 }
 
 class AfrigoApp extends ConsumerWidget {
-  const AfrigoApp({Key? key}) : super(key: key);
+  const AfrigoApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

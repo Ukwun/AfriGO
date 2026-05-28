@@ -35,13 +35,12 @@ import { User, UserRole, VerificationToken } from './entities';
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
-        const expiresIn = configService.get<string>('JWT_EXPIRATION') || '24h';
         return {
-          secret: configService.get<string>('JWT_SECRET'),
+          secret: configService.get<string>('JWT_SECRET') || 'test-secret-key-please-change-in-production',
           signOptions: {
-            expiresIn,
+            expiresIn: '24h',
           },
-        };
+        } as any;
       },
     }),
   ],

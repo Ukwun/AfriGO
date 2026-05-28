@@ -6,7 +6,7 @@ import 'package:dio/dio.dart';
 // flutter test
 
 void main() {
-  group('LotModel Tests', () => {
+  group('LotModel Tests', () {
     test('LotModel should parse JSON correctly', () {
       final json = {
         'id': 'lot-1',
@@ -158,7 +158,7 @@ void main() {
     });
   });
 
-  group('API Service Lots Tests', () => {
+  group('API Service Lots Tests', () {
     late MockDio mockDio;
     late ApiService apiService;
 

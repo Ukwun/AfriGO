@@ -1,23 +1,26 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/order_model.dart';
 import '../../services/api_service.dart';
 
 // Orders list provider
-final ordersProvider = FutureProvider.autoDispose<List<OrderModel>>((ref) async {
+final ordersProvider =
+    FutureProvider.autoDispose<List<OrderModel>>((ref) async {
   final apiService = ref.watch(apiServiceProvider);
   return apiService.getOrders();
 });
 
 // Buyer orders provider
-final buyerOrdersProvider = FutureProvider.autoDispose<List<OrderModel>>((ref) async {
+final buyerOrdersProvider =
+    FutureProvider.autoDispose<List<OrderModel>>((ref) async {
   final apiService = ref.watch(apiServiceProvider);
   return apiService.getMyBuyerOrders();
 });
 
 // Seller orders provider
-final sellerOrdersProvider = FutureProvider.autoDispose<List<OrderModel>>((ref) async {
+final sellerOrdersProvider =
+    FutureProvider.autoDispose<List<OrderModel>>((ref) async {
   final apiService = ref.watch(apiServiceProvider);
   return apiService.getMySellerOrders();
 });
@@ -31,7 +34,7 @@ class BrowseOrdersScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final filterType = ref.watch(orderTypeFilterProvider);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Orders'),
@@ -122,7 +125,8 @@ class BrowseOrdersScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildOrdersList(BuildContext context, WidgetRef ref, String filterType) {
+  Widget _buildOrdersList(
+      BuildContext context, WidgetRef ref, String filterType) {
     final ordersAsync = ref.watch(ordersProvider);
 
     return ordersAsync.when(
@@ -190,7 +194,7 @@ class BrowseOrdersScreen extends ConsumerWidget {
 
   Widget _buildOrderCard(BuildContext context, OrderModel order) {
     final statusColor = _getStatusColor(order.status);
-    
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
@@ -328,173 +332,6 @@ class BrowseOrdersScreen extends ConsumerWidget {
     } else {
       return '${date.month}/${date.day}/${date.year}';
     }
-  }
-}
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import '../models/order_model.dart';
-import '../services/api_service.dart';
-
-final buyerOrdersProvider = FutureProvider.autoDispose
-    .family<({List<OrderModel> orders, int total}), Map<String, dynamic>>(
-  (ref, filters) async {
-    final apiService = ref.watch(apiServiceProvider);
-    final response = await apiService.getBuyerOrders(filters);
-    return response;
-  },
-);
-
-class BrowseOrdersScreen extends ConsumerWidget {
-  const BrowseOrdersScreen({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final filters = <String, dynamic>{
-      'skip': 0,
-      'take': 20,
-    };
-
-    final ordersAsync = ref.watch(buyerOrdersProvider(filters));
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Orders'),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () {
-              showFilterBottomSheet(context, ref, filters);
-            },
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.refresh(buyerOrdersProvider(filters));
-        },
-        child: ordersAsync.when(
-          data: (data) {
-            final orders = data.orders;
-            final total = data.total;
-
-            if (orders.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.shopping_bag_outlined,
-                        size: 64, color: Colors.grey[400]),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No orders yet',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Start creating orders to trade with sellers',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed: () => context.push('/browse-lots'),
-                      child: const Text('Browse Lots'),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            return ListView.builder(
-              itemCount: orders.length,
-              padding: const EdgeInsets.all(12),
-              itemBuilder: (context, index) {
-                final order = orders[index];
-                return OrderCard(order: order);
-              },
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, size: 64),
-                const SizedBox(height: 16),
-                Text('Failed to load orders: $error'),
-                const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: () => ref.refresh(buyerOrdersProvider(filters)),
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void showFilterBottomSheet(
-      BuildContext context, WidgetRef ref, Map<String, dynamic> filters) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            title: const Text('All Orders'),
-            onTap: () {
-              filters.remove('statusEnum');
-              Navigator.pop(context);
-              ref.refresh(buyerOrdersProvider(filters));
-            },
-          ),
-          ListTile(
-            title: const Text('Pending'),
-            onTap: () {
-              filters['statusEnum'] = 'pending';
-              Navigator.pop(context);
-              ref.refresh(buyerOrdersProvider(filters));
-            },
-          ),
-          ListTile(
-            title: const Text('Confirmed'),
-            onTap: () {
-              filters['statusEnum'] = 'confirmed';
-              Navigator.pop(context);
-              ref.refresh(buyerOrdersProvider(filters));
-            },
-          ),
-          ListTile(
-            title: const Text('Shipped'),
-            onTap: () {
-              filters['statusEnum'] = 'shipped';
-              Navigator.pop(context);
-              ref.refresh(buyerOrdersProvider(filters));
-            },
-          ),
-          ListTile(
-            title: const Text('Delivered'),
-            onTap: () {
-              filters['statusEnum'] = 'delivered';
-              Navigator.pop(context);
-              ref.refresh(buyerOrdersProvider(filters));
-            },
-          ),
-          ListTile(
-            title: const Text('Completed'),
-            onTap: () {
-              filters['statusEnum'] = 'completed';
-              Navigator.pop(context);
-              ref.refresh(buyerOrdersProvider(filters));
-            },
-          ),
-        ],
-      ),
-    );
   }
 }
 

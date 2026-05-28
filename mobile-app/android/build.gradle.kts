@@ -2,6 +2,11 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        // Add Alibaba mirror for faster downloads from Asia
+        maven { url = uri("https://maven.aliyun.com/repository/google") }
+        maven { url = uri("https://maven.aliyun.com/repository/central") }
+        // Fallback to official repos
+        maven { url = uri("https://repo1.maven.org/maven2") }
     }
 }
 

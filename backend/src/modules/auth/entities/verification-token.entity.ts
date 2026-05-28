@@ -44,13 +44,8 @@ export class VerificationToken {
    * Values: email_verification, phone_verification, password_reset, new_device_verification
    */
   @Column({
-    type: 'enum',
-    enum: [
-      'email_verification',
-      'phone_verification',
-      'password_reset',
-      'new_device_verification',
-    ],
+    type: 'varchar',
+    length: 50,
   })
   type: string;
 
@@ -78,13 +73,13 @@ export class VerificationToken {
    * When does this token expire?
    * Calculated as: createdAt + TTL (15 min for email, 10 min for SMS, 24h for password reset)
    */
-  @Column({ type: 'timestamptz' })
+  @Column({ type: 'datetime' })
   expiresAt: Date;
 
   /**
    * When was this token verified/used?
    */
-  @Column({ type: 'timestamptz', nullable: true })
+  @Column({ type: 'datetime', nullable: true })
   verifiedAt: Date;
 
   /**
@@ -112,7 +107,7 @@ export class VerificationToken {
   /**
    * Created timestamp
    */
-  @CreateDateColumn({ type: 'timestamptz' })
+  @CreateDateColumn({ type: 'datetime' })
   createdAt: Date;
 
   /**

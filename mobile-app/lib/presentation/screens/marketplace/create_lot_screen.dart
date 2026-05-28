@@ -24,7 +24,7 @@ final createLotFormProvider = StateProvider<Map<String, dynamic>>((ref) => {
 final selectedImagesProvider = StateProvider<List<File>>((ref) => []);
 
 class CreateLotScreen extends ConsumerWidget {
-  const CreateLotScreen({Key? key}) : super(key: key);
+  const CreateLotScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -285,7 +285,7 @@ class CreateLotScreen extends ConsumerWidget {
         ),
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
-          value: value.isEmpty ? items[0] : value,
+          initialValue: value.isEmpty ? items[0] : value,
           items: items
               .map((item) => DropdownMenuItem(
                     value: item,
@@ -350,7 +350,7 @@ class CreateLotScreen extends ConsumerWidget {
                                 newImages;
                           },
                           child: Container(
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: Colors.red,
                               shape: BoxShape.circle,
                             ),

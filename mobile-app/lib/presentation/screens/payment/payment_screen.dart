@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../models/payment_model.dart';
 import '../../../models/order_model.dart';
 import '../../../services/api_service.dart';
+import '../../providers/orders_provider.dart';
 
 // Payment screen state provider
 final paymentScreenStateProvider =
@@ -151,15 +152,19 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
   Future<void> _initializePayment() async {
     final notifier = ref.read(paymentScreenStateProvider.notifier);
+    final ordersService = ref.read(ordersServiceProvider);
+
     notifier.setOrderId(widget.orderId);
     notifier.setLoading(true);
 
     try {
-      // Load order details (would be fetched from API in real app)
-      // For now, create mock order
+      // Load REAL order details from API
+      final order = await ordersService.getOrder(widget.orderId);
+      notifier.setOrder(order);
+      notifier.setAmount(order.totalPrice);
       notifier.setLoading(false);
     } catch (e) {
-      notifier.setError(e.toString());
+      notifier.setError('Failed to load order: ${e.toString()}');
       notifier.setLoading(false);
     }
   }

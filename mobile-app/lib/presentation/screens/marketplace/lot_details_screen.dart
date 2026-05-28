@@ -14,7 +14,7 @@ final lotDetailsProvider =
 class LotDetailsScreen extends ConsumerWidget {
   final String lotId;
 
-  const LotDetailsScreen({Key? key, required this.lotId}) : super(key: key);
+  const LotDetailsScreen({super.key, required this.lotId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

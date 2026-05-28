@@ -21,7 +21,7 @@ final sentQuotesProvider = FutureProvider.autoDispose<List<QuoteModel>>(
 );
 
 class QuotesScreen extends ConsumerWidget {
-  const QuotesScreen({Key? key}) : super(key: key);
+  const QuotesScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -169,8 +169,8 @@ class QuoteCard extends ConsumerWidget {
   const QuoteCard({
     required this.quote,
     required this.isReceived,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -315,7 +315,7 @@ class QuoteCard extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Text(
                         'Expires in ${quote.expiresAt.difference(DateTime.now()).inHours} hours',
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.deepOrange,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,

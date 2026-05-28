@@ -271,7 +271,8 @@ export class AuthService {
         refreshToken: refreshToken, // Keep same refresh token
       };
     } catch (error) {
-      this.logger.error(`Token refresh failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Token refresh failed: ${errorMessage}`);
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
@@ -501,8 +502,8 @@ export class AuthService {
 
     return this.jwtService.sign(payload, {
       secret: this.configService.get<string>('JWT_SECRET'),
-      expiresIn: this.configService.get<string>('JWT_EXPIRATION') || '24h',
-    });
+      expiresIn: 86400, // 24 hours in seconds
+    } as any);
   }
 
   /**
@@ -516,8 +517,8 @@ export class AuthService {
 
     return this.jwtService.sign(payload, {
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-      expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRATION') || '7d',
-    });
+      expiresIn: 604800, // 7 days in seconds
+    } as any);
   }
 
   /**
@@ -570,8 +571,8 @@ export class AuthService {
       organizationName: user.organizationName,
       countryCode: user.countryCode,
       location: user.location,
-      kycStatus: user.kycStatus,
-      accountStatus: user.accountStatus,
+      kycStatus: (user.kycStatus || 'pending') as 'pending' | 'verified' | 'rejected' | 'expired',
+      accountStatus: (user.accountStatus || 'active') as 'active' | 'suspended' | 'banned',
       emailVerified: user.emailVerified,
       phoneVerified: user.phoneVerified,
       trustScore: user.trustScore,

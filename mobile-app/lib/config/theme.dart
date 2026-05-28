@@ -204,7 +204,7 @@ class AfrigoTheme {
           color: AfrigoColors.gray400,
         ),
       ),
-      textTheme: TextTheme(
+      textTheme: const TextTheme(
         displayLarge: AfrigoTypography.displayLarge,
         displayMedium: AfrigoTypography.displayMedium,
         headlineLarge: AfrigoTypography.headingLarge,
@@ -216,7 +216,7 @@ class AfrigoTheme {
         labelLarge: AfrigoTypography.labelLarge,
         labelMedium: AfrigoTypography.labelMedium,
       ),
-      colorScheme: ColorScheme.light(
+      colorScheme: const ColorScheme.light(
         primary: AfrigoColors.primaryDeepGreen,
         secondary: AfrigoColors.primaryEmerald,
         error: AfrigoColors.errorRed,
@@ -231,7 +231,7 @@ class AfrigoTheme {
       brightness: Brightness.dark,
       primaryColor: AfrigoColors.primaryEmerald,
       scaffoldBackgroundColor: AfrigoColors.bgDark,
-      colorScheme: ColorScheme.dark(
+      colorScheme: const ColorScheme.dark(
         primary: AfrigoColors.primaryEmerald,
         secondary: AfrigoColors.primaryDeepGreen,
         error: AfrigoColors.errorRed,

@@ -6,7 +6,7 @@ import '../../../config/theme.dart';
 import '../../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -86,6 +86,77 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  /// Handle Google Sign-In
+  Future<void> _handleGoogleLogin() async {
+    setState(() => _errorMessage = null);
+    try {
+      await ref.read(authProvider.notifier).loginWithGoogle();
+      if (!mounted) return;
+
+      final authState = ref.read(authProvider);
+      if (authState is AuthAuthenticated) {
+        final role = authState.user.roles.isNotEmpty
+            ? authState.user.roles.first
+            : 'buyer';
+        context.go('/dashboard/$role');
+      } else if (authState is AuthError) {
+        setState(() => _errorMessage = authState.message);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(
+            () => _errorMessage = 'Google sign-in failed: ${e.toString()}');
+      }
+    }
+  }
+
+  /// Handle Facebook Sign-In
+  Future<void> _handleFacebookLogin() async {
+    setState(() => _errorMessage = null);
+    try {
+      await ref.read(authProvider.notifier).loginWithFacebook();
+      if (!mounted) return;
+
+      final authState = ref.read(authProvider);
+      if (authState is AuthAuthenticated) {
+        final role = authState.user.roles.isNotEmpty
+            ? authState.user.roles.first
+            : 'buyer';
+        context.go('/dashboard/$role');
+      } else if (authState is AuthError) {
+        setState(() => _errorMessage = authState.message);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(
+            () => _errorMessage = 'Facebook sign-in failed: ${e.toString()}');
+      }
+    }
+  }
+
+  /// Handle Apple Sign-In
+  Future<void> _handleAppleLogin() async {
+    setState(() => _errorMessage = null);
+    try {
+      await ref.read(authProvider.notifier).loginWithApple();
+      if (!mounted) return;
+
+      final authState = ref.read(authProvider);
+      if (authState is AuthAuthenticated) {
+        final role = authState.user.roles.isNotEmpty
+            ? authState.user.roles.first
+            : 'buyer';
+        context.go('/dashboard/$role');
+      } else if (authState is AuthError) {
+        setState(() => _errorMessage = authState.message);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _errorMessage = 'Apple sign-in failed: ${e.toString()}');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
@@ -147,10 +218,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               controller: _emailController,
               focusNode: _emailFocus,
               enabled: !isLoading,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Email Address',
                 hintText: 'your@example.com',
-                prefixIcon: const Icon(Icons.email_outlined),
+                prefixIcon: Icon(Icons.email_outlined),
               ),
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.next,
@@ -214,19 +285,73 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             // Divider
             Row(
               children: [
-                Expanded(child: Divider(color: AfrigoColors.borderLight)),
+                const Expanded(
+                  child: Divider(
+                    height: 1,
+                    color: AfrigoColors.borderLight,
+                  ),
+                ),
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: AfrigoSpacing.md),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AfrigoSpacing.md,
+                  ),
                   child: Text(
-                    'or',
+                    'OR',
                     style: AfrigoTypography.bodySmall.copyWith(
                       color: AfrigoColors.textSecondary,
                     ),
                   ),
                 ),
-                Expanded(child: Divider(color: AfrigoColors.borderLight)),
+                const Expanded(
+                  child: Divider(
+                    height: 1,
+                    color: AfrigoColors.borderLight,
+                  ),
+                ),
               ],
+            ),
+            const SizedBox(height: AfrigoSpacing.lg),
+
+            // Social Login Text
+            Text(
+              'Sign in with',
+              style: AfrigoTypography.bodySmall.copyWith(
+                color: AfrigoColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AfrigoSpacing.md),
+
+            // Google Button
+            OutlinedButton.icon(
+              onPressed: isLoading ? null : _handleGoogleLogin,
+              icon: const Icon(Icons.g_translate),
+              label: const Text('Google'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
+            ),
+            const SizedBox(height: AfrigoSpacing.sm),
+
+            // Facebook Button
+            OutlinedButton.icon(
+              onPressed: isLoading ? null : _handleFacebookLogin,
+              icon: const Icon(Icons.facebook),
+              label: const Text('Facebook'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
+            ),
+            const SizedBox(height: AfrigoSpacing.sm),
+
+            // Apple Button
+            OutlinedButton.icon(
+              onPressed: isLoading ? null : _handleAppleLogin,
+              icon: const Icon(Icons.apple),
+              label: const Text('Apple'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
             ),
             const SizedBox(height: AfrigoSpacing.lg),
 

@@ -12,6 +12,18 @@ import {
 } from 'typeorm';
 import { UserRole } from './user-role.entity';
 import { VerificationToken } from './verification-token.entity';
+// import {
+//   UserActivity,
+//   UserSession,
+//   PageView,
+//   UserMetric,
+//   Event,
+//   BehavioralAnomaly,
+//   Recommendation,
+//   AnalyticsSummary,
+// } from '../../analytics/entities';
+// import { Cohort } from '../../analytics/entities/cohort.entity';
+// import { UserSegment } from '../../analytics/entities/user-segment.entity';
 
 /**
  * User Entity - Represents all users in the AfriGo platform
@@ -20,8 +32,8 @@ import { VerificationToken } from './verification-token.entity';
  */
 @Entity('users')
 @Index(['email'], { unique: true })
-@Index(['phone'], { unique: true, where: 'phone IS NOT NULL' })
-@Index(['firebaseUid'], { unique: true, where: 'firebaseUid IS NOT NULL' })
+@Index(['phone'], { unique: true })
+@Index(['firebaseUid'], { unique: true })
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -60,8 +72,8 @@ export class User {
    * Values: pending, verified, rejected, expired
    */
   @Column({
-    type: 'enum',
-    enum: ['pending', 'verified', 'rejected', 'expired'],
+    type: 'varchar',
+    length: 20,
     default: 'pending',
   })
   kycStatus: string;
@@ -71,8 +83,8 @@ export class User {
    * Values: active, suspended, banned
    */
   @Column({
-    type: 'enum',
-    enum: ['active', 'suspended', 'banned'],
+    type: 'varchar',
+    length: 20,
     default: 'active',
   })
   accountStatus: string;
@@ -98,6 +110,41 @@ export class User {
   trustScore: number;
 
   /**
+   * Engagement score (0-100): Measures user platform engagement
+   * Factors: session frequency, page views, interactions
+   */
+  @Column({ type: 'int', default: 0 })
+  engagementScore: number;
+
+  /**
+   * Loyalty score (0-100): Measures customer loyalty
+   * Factors: repeat purchases, retention, brand affinity
+   */
+  @Column({ type: 'int', default: 0 })
+  loyaltyScore: number;
+
+  /**
+   * Total amount spent by user
+   * Cumulative across all transactions
+   */
+  @Column({ type: 'decimal', precision: 15, scale: 2, default: 0 })
+  totalSpent: number;
+
+  /**
+   * Total savings achieved by user
+   * Sum of discounts, rewards, and savings
+   */
+  @Column({ type: 'decimal', precision: 15, scale: 2, default: 0 })
+  totalSavings: number;
+
+  /**
+   * Total transaction count
+   * Number of completed transactions
+   */
+  @Column({ type: 'int', default: 0 })
+  transactionCount: number;
+
+  /**
    * Number of completed trades
    * Incremented on every successful transaction
    */
@@ -110,6 +157,27 @@ export class User {
    */
   @Column({ type: 'int', default: 0 })
   disputeCount: number;
+
+  /**
+   * Behavioral anomaly count
+   * Number of suspicious behaviors detected
+   */
+  @Column({ type: 'int', default: 0 })
+  anomalyCount: number;
+
+  /**
+   * Fraud suspicion flag
+   * True if user has been flagged as potentially fraudulent
+   */
+  @Column({ type: 'boolean', default: false })
+  isFraudSuspicious: boolean;
+
+  /**
+   * Last activity timestamp
+   * Updated on any user activity
+   */
+  @Column({ type: 'datetime', nullable: true })
+  lastActivityAt: Date;
 
   /**
    * User organization/company name
@@ -151,7 +219,7 @@ export class User {
    * Last login timestamp
    * Used for activity tracking and fraud detection
    */
-  @Column({ type: 'timestamptz', nullable: true })
+  @Column({ type: 'datetime', nullable: true })
   lastLoginAt: Date;
 
   /**
@@ -188,16 +256,121 @@ export class User {
   )
   verificationTokens: VerificationToken[];
 
+  // =========================================================================
+  // ANALYTICS RELATIONSHIPS
+  // =========================================================================
+  // NOTE: Analytics entity relationships temporarily disabled until entities are created
+  
+  /**
+   * One-to-Many: User's activity tracking
+   * Stores detailed activity logs and user interactions
+   */
+  // @OneToMany(() => UserActivity, (activity: UserActivity) => activity.user, {
+  //   cascade: true,
+  //   onDelete: 'CASCADE',
+  // })
+  // activities: UserActivity[];
+
+  /**
+   * One-to-Many: User's sessions
+   * Tracks user login sessions and durations
+   */
+  // @OneToMany(() => UserSession, (session: UserSession) => session.user, {
+  //   cascade: true,
+  //   onDelete: 'CASCADE',
+  // })
+  // sessions: UserSession[];
+
+  /**
+   * One-to-Many: User's page views
+   * Tracks which pages the user visits
+   */
+  // @OneToMany(() => PageView, (pageView: PageView) => pageView.user, {
+  //   cascade: true,
+  //   onDelete: 'CASCADE',
+  // })
+  // pageViews: PageView[];
+
+  /**
+   * One-to-Many: User's metrics
+   * Aggregated metric snapshots for performance tracking
+   */
+  // @OneToMany(() => UserMetric, (metric: UserMetric) => metric.user, {
+  //   cascade: true,
+  //   onDelete: 'CASCADE',
+  // })
+  // metrics: UserMetric[];
+
+  /**
+   * One-to-Many: User's events
+   * Granular event tracking for analytics
+   */
+  // @OneToMany(() => Event, (event: Event) => event.user, {
+  //   cascade: true,
+  //   onDelete: 'CASCADE',
+  // })
+
+  /**
+   * One-to-Many: User's behavioral anomalies
+   * Fraud detection and unusual behavior tracking
+   * TEMPORARILY DISABLED for SQLite compatibility - remap to postgres for production
+   */
+  // @OneToMany(() => BehavioralAnomaly, (anomaly) => anomaly.user, {
+  //   cascade: true,
+  //   onDelete: 'CASCADE',
+  // })
+  // anomalies: BehavioralAnomaly[];
+
+  /**
+   * One-to-Many: User's recommendations
+   * Personalized product and offer recommendations
+   * TEMPORARILY DISABLED for SQLite compatibility
+   */
+  // @OneToMany(() => Recommendation, (rec) => rec.user, {
+  //   cascade: true,
+  //   onDelete: 'CASCADE',
+  // })
+  // recommendations: Recommendation[];
+
+  /**
+   * One-to-Many: User's analytics summaries
+   * Aggregated analytics by time period
+   * TEMPORARILY DISABLED for SQLite compatibility
+   */
+  // @OneToMany(() => AnalyticsSummary, (summary) => summary.user, {
+  //   cascade: true,
+  //   onDelete: 'CASCADE',
+  // })
+  // analyticsSummaries: AnalyticsSummary[];
+
+  /**
+   * Many-to-Many: User can belong to multiple cohorts
+   * For cohort analysis and behavioral studies
+   * TEMPORARILY DISABLED for SQLite compatibility
+   */
+  // @ManyToMany(() => Cohort, (cohort) => cohort.users, { onDelete: 'CASCADE' })
+  // cohorts: Cohort[];
+
+  /**
+   * Many-to-Many: User can be assigned to multiple segments
+   * For customer segmentation and targeting
+   * TEMPORARILY DISABLED for SQLite compatibility
+   */
+  // @ManyToMany(() => UserSegment, (segment) => segment.users, {
+  //   onDelete: 'CASCADE',
+  // })
+  // segments: UserSegment[];
+
   /**
    * Created timestamp (immutable)
    */
-  @CreateDateColumn({ type: 'timestamptz' })
+  @CreateDateColumn({ type: 'datetime' })
   createdAt: Date;
 
   /**
    * Updated timestamp (changes on every update)
    */
-  @UpdateDateColumn({ type: 'timestamptz' })
+  @UpdateDateColumn({ type: 'datetime' })
   updatedAt: Date;
 
   /**
@@ -205,7 +378,7 @@ export class User {
    * Enables audit trail without losing data
    * NULL = active, has timestamp = deleted
    */
-  @DeleteDateColumn({ type: 'timestamptz', nullable: true })
+  @DeleteDateColumn({ type: 'datetime', nullable: true })
   deletedAt: Date;
 
   // =========================================================================

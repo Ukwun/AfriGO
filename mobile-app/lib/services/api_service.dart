@@ -12,16 +12,20 @@ final apiServiceProvider = Provider<ApiService>((ref) {
 });
 
 class ApiService {
-  static const String _baseUrl =
-      'https://api.afrigo.com'; // Replace with your API URL
+  // Android emulator: 10.0.2.2 reaches host localhost
+  // Physical device: Use your backend IP or domain
+  // Production: https://api.afrigo.com
+  static const String _baseUrl = 'http://10.0.2.2:3000/api';
   late final Dio _dio;
 
   ApiService() {
     _dio = Dio(
       BaseOptions(
         baseUrl: _baseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
+        connectTimeout:
+            const Duration(seconds: 60), // ✅ Increased for stability
+        receiveTimeout: const Duration(seconds: 60),
+        sendTimeout: const Duration(seconds: 60),
         contentType: 'application/json',
       ),
     );

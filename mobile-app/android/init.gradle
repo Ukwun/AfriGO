@@ -1,0 +1,46 @@
+// Force all repositories to use Alibaba mirrors first
+gradle.projectsLoaded {
+    allprojects {
+        buildscript {
+            repositories {
+                all { ArtifactRepository repo ->
+                    if (repo instanceof MavenArtifactRepository) {
+                        def url = repo.url.toString()
+                        if (url.contains('repo1.maven.org') || url.contains('maven.org')) {
+                            println "Replacing Maven Central with Alibaba mirror"
+                            remove repo
+                        }
+                        else if (url.contains('dl.google.com') || url.contains('google.com')) {
+                            println "Replacing Google repo with Alibaba mirror"
+                            remove repo
+                        }
+                    }
+                }
+                maven { url "https://maven.aliyun.com/repository/google" }
+                maven { url "https://maven.aliyun.com/repository/central" }
+                maven { url "https://maven.aliyun.com/repository/gradle-plugin" }
+                google()
+                mavenCentral()
+            }
+        }
+        repositories {
+            all { ArtifactRepository repo ->
+                if (repo instanceof MavenArtifactRepository) {
+                    def url = repo.url.toString()
+                    if (url.contains('repo1.maven.org') || url.contains('maven.org')) {
+                        println "Replacing Maven Central with Alibaba mirror"
+                        remove repo
+                    }
+                    else if (url.contains('dl.google.com') || url.contains('google.com')) {
+                        println "Replacing Google repo with Alibaba mirror"
+                        remove repo
+                    }
+                }
+            }
+            maven { url "https://maven.aliyun.com/repository/google" }
+            maven { url "https://maven.aliyun.com/repository/central" }
+            google()
+            mavenCentral()
+        }
+    }
+}

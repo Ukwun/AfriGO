@@ -2,99 +2,136 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'payment_model.g.dart';
 
-/// Payment model for Stripe payment processing
+/// Payment model for Flutterwave payment processing
 @JsonSerializable()
 class PaymentModel {
   final String id;
-  final String orderId;
-  final String userId;
+  final String contractId;
+  final String? buyerId;
+  final String? sellerId;
   final double amount;
-  final String currency;
-  final String
-      status; // pending, processing, succeeded, failed, cancelled, refunded
-  final String escrowStatus; // pending, held, released, refunded
-  final String? paymentMethod;
-  final CardInfoModel? cardInfo;
-  final String? stripePaymentIntentId;
-  final String? stripeChargeId;
-  final String? receiptUrl;
+  final String currency; // KES, USD, EUR, ZAR, UGX, TZS
+  final String paymentMethod; // FULL_UPFRONT, PARTIAL_DEPOSIT, ON_DELIVERY, INSTALLMENT, ESCROW
+  final String status; // PENDING, INITIATED, PROCESSING, COMPLETED, FAILED, REFUNDED, DISPUTED
+  final String invoiceReference; // INV-YYYY-XXXXXX
+  final String? flutterwaveReference;
+  final String? flutterwavePaymentUrl;
+  final DateTime dueDate;
   final DateTime createdAt;
-  final DateTime? paidAt;
-  final DateTime? refundedAt;
-  final String? failureReason;
+  final DateTime? completedAt;
+  final double? lateFeeAmount;
+  final DateTime? lateFeeTriggeredAt;
+  final Map<String, dynamic>? metadata;
 
   PaymentModel({
     required this.id,
-    required this.orderId,
-    required this.userId,
+    required this.contractId,
+    this.buyerId,
+    this.sellerId,
     required this.amount,
     required this.currency,
+    required this.paymentMethod,
     required this.status,
-    required this.escrowStatus,
-    this.paymentMethod,
-    this.cardInfo,
-    this.stripePaymentIntentId,
-    this.stripeChargeId,
-    this.receiptUrl,
+    required this.invoiceReference,
+    this.flutterwaveReference,
+    this.flutterwavePaymentUrl,
+    required this.dueDate,
     required this.createdAt,
-    this.paidAt,
-    this.refundedAt,
-    this.failureReason,
+    this.completedAt,
+    this.lateFeeAmount,
+    this.lateFeeTriggeredAt,
+    this.metadata,
   });
 
   /// Check if payment is successful
-  bool get isSucceeded => status == 'succeeded';
+  bool get isCompleted => status == 'COMPLETED';
 
   /// Check if payment failed
-  bool get isFailed => status == 'failed';
+  bool get isFailed => status == 'FAILED';
 
   /// Check if payment is pending
-  bool get isPending => status == 'pending' || status == 'processing';
+  bool get isPending => status == 'PENDING' || status == 'INITIATED' || status == 'PROCESSING';
 
   /// Check if payment is refunded
-  bool get isRefunded => status == 'refunded';
+  bool get isRefunded => status == 'REFUNDED';
 
-  /// Check if escrow is held
-  bool get isEscrowHeld => escrowStatus == 'held';
+  /// Check if payment is disputed
+  bool get isDisputed => status == 'DISPUTED';
+
+  /// Check if payment is overdue
+  bool get isOverdue => isPending && DateTime.now().isAfter(dueDate);
 
   /// Display status text
   String get statusText {
     switch (status) {
-      case 'succeeded':
+      case 'COMPLETED':
         return 'Payment Successful';
-      case 'processing':
+      case 'PROCESSING':
         return 'Processing...';
-      case 'pending':
+      case 'INITIATED':
+        return 'Awaiting Payment';
+      case 'PENDING':
         return 'Pending';
-      case 'failed':
+      case 'FAILED':
         return 'Payment Failed';
-      case 'cancelled':
-        return 'Cancelled';
-      case 'refunded':
+      case 'REFUNDED':
         return 'Refunded';
+      case 'DISPUTED':
+        return 'Under Dispute';
       default:
         return 'Unknown';
     }
   }
 
-  /// Display escrow status text
-  String get escrowStatusText {
-    switch (escrowStatus) {
-      case 'pending':
-        return 'Pending Escrow';
-      case 'held':
-        return 'In Escrow';
-      case 'released':
-        return 'Funds Released';
-      case 'refunded':
-        return 'Refunded';
+  /// Display payment method text
+  String get paymentMethodText {
+    switch (paymentMethod) {
+      case 'FULL_UPFRONT':
+        return 'Full Payment Upfront';
+      case 'PARTIAL_DEPOSIT':
+        return 'Deposit Required';
+      case 'ON_DELIVERY':
+        return 'Pay on Delivery';
+      case 'INSTALLMENT':
+        return 'Installment Plan';
+      case 'ESCROW':
+        return 'Escrow Fund Hold';
       default:
         return 'Unknown';
     }
   }
 
   /// Format amount as currency string
-  String get formattedAmount => '\$$amount';
+  String get formattedAmount {
+    final symbol = _getCurrencySymbol(currency);
+    return '$symbol${amount.toStringAsFixed(2)}';
+  }
+
+  /// Get currency symbol
+  String _getCurrencySymbol(String cur) {
+    switch (cur.toUpperCase()) {
+      case 'KES':
+        return 'Ksh ';
+      case 'USD':
+        return '\$ ';
+      case 'EUR':
+        return '€ ';
+      case 'ZAR':
+        return 'R ';
+      case 'UGX':
+        return 'UGX ';
+      case 'TZS':
+        return 'Tsh ';
+      default:
+        return '$cur ';
+    }
+  }
+
+  /// Days until payment is due
+  int get daysUntilDue {
+    final now = DateTime.now();
+    return dueDate.difference(now).inDays;
+  }
 
   factory PaymentModel.fromJson(Map<String, dynamic> json) =>
       _$PaymentModelFromJson(json);
@@ -102,52 +139,136 @@ class PaymentModel {
   Map<String, dynamic> toJson() => _$PaymentModelToJson(this);
 }
 
-/// Card information model
+/// Escrow Model for funds held
 @JsonSerializable()
-class CardInfoModel {
-  final String? brand; // visa, mastercard, amex, discover
-  final String? last4;
-  @JsonKey(name: 'expiryMonth')
-  final int? expMonth;
-  @JsonKey(name: 'expiryYear')
-  final int? expYear;
+class EscrowModel {
+  final String id;
+  final String paymentId;
+  final double amount;
+  final String currency;
+  final String status; // CREATED, FUNDED, HELD, RELEASED, REFUNDED, DISPUTED, RESOLVED
+  final int holdingPeriodDays;
+  final double holdingFeePercentage;
+  final Map<String, dynamic> conditionsMet; // {DELIVERY_PROOF, QUALITY_APPROVAL, BUYER_SIGNOFF}
+  final DateTime? autoReleaseDate;
+  final DateTime? releasedAt;
+  final DateTime? refundedAt;
+  final DateTime createdAt;
+  final Map<String, dynamic>? metadata;
 
-  CardInfoModel({
-    this.brand,
-    this.last4,
-    this.expMonth,
-    this.expYear,
+  EscrowModel({
+    required this.id,
+    required this.paymentId,
+    required this.amount,
+    required this.currency,
+    required this.status,
+    required this.holdingPeriodDays,
+    required this.holdingFeePercentage,
+    required this.conditionsMet,
+    this.autoReleaseDate,
+    this.releasedAt,
+    this.refundedAt,
+    required this.createdAt,
+    this.metadata,
   });
 
-  /// Display card brand icon
-  String get brandIcon {
-    switch (brand?.toLowerCase()) {
-      case 'visa':
-        return '💳'; // 💳 or use actual visa logo
-      case 'mastercard':
-        return '💳';
-      case 'amex':
-        return '💳';
-      case 'discover':
-        return '💳';
+  /// Check if escrow is held
+  bool get isHeld => status == 'HELD';
+
+  /// Check if escrow is released
+  bool get isReleased => status == 'RELEASED';
+
+  /// Check if escrow is disputed
+  bool get isDisputed => status == 'DISPUTED';
+
+  /// Count conditions met
+  int get conditionsMetCount {
+    int count = 0;
+    for (var condition in conditionsMet.values) {
+      if (condition is Map && condition['met'] == true) count++;
+    }
+    return count;
+  }
+
+  /// Check all conditions met
+  bool get allConditionsMet => conditionsMetCount == 3;
+
+  /// Display status text
+  String get statusText {
+    switch (status) {
+      case 'CREATED':
+        return 'Escrow Created';
+      case 'FUNDED':
+        return 'Funds Added';
+      case 'HELD':
+        return 'Funds In Escrow';
+      case 'RELEASED':
+        return 'Funds Released';
+      case 'REFUNDED':
+        return 'Refunded';
+      case 'DISPUTED':
+        return 'Under Dispute';
+      case 'RESOLVED':
+        return 'Dispute Resolved';
       default:
-        return '💳';
+        return 'Unknown';
     }
   }
 
-  /// Display masked card
-  String get displayCard {
-    if (last4 != null && brand != null) {
-      return '${brand!.toUpperCase()} ••••$last4';
-    }
-    return 'Unknown Card';
-  }
+  factory EscrowModel.fromJson(Map<String, dynamic> json) =>
+      _$EscrowModelFromJson(json);
 
-  /// Check if card is expired
-  bool get isExpired {
-    if (expYear == null || expMonth == null) return false;
-    final now = DateTime.now();
-    final expiry = DateTime(expYear!, expMonth! + 1);
+  Map<String, dynamic> toJson() => _$EscrowModelToJson(this);
+}
+
+/// Request model for creating payment
+class CreatePaymentRequest {
+  final String contractId;
+  final String paymentMethod;
+  final double amount;
+  final String currency;
+  final DateTime dueDate;
+  final Map<String, dynamic>? metadata;
+
+  CreatePaymentRequest({
+    required this.contractId,
+    required this.paymentMethod,
+    required this.amount,
+    required this.currency,
+    required this.dueDate,
+    this.metadata,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'contractId': contractId,
+    'paymentMethod': paymentMethod,
+    'amount': amount,
+    'currency': currency,
+    'dueDate': dueDate.toIso8601String(),
+    if (metadata != null) 'metadata': metadata,
+  };
+}
+
+/// Response model for payment operations
+@JsonSerializable()
+class PaymentResponseDto {
+  final bool success;
+  final String message;
+  final PaymentModel? data;
+  final String? error;
+
+  PaymentResponseDto({
+    required this.success,
+    required this.message,
+    this.data,
+    this.error,
+  });
+
+  factory PaymentResponseDto.fromJson(Map<String, dynamic> json) =>
+      _$PaymentResponseDtoFromJson(json);
+
+  Map<String, dynamic> toJson() => _$PaymentResponseDtoToJson(this);
+}
     return now.isAfter(expiry);
   }
 

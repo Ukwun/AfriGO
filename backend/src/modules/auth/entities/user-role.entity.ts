@@ -42,9 +42,9 @@ export class UserRole {
   /**
    * JSON array of permissions
    * Examples: ['create_lot', 'view_lots', 'submit_bid', 'make_payment']
-   * This is stored as JSON for flexibility
+   * This is stored as JSON for flexibility (SQLite-compatible)
    */
-  @Column({ type: 'jsonb', default: [] })
+  @Column({ type: 'simple-json', default: [] })
   permissions: string[];
 
   /**
@@ -68,7 +68,7 @@ export class UserRole {
   /**
    * Created timestamp
    */
-  @CreateDateColumn({ type: 'timestamptz' })
+  @CreateDateColumn({ type: 'datetime' })
   createdAt: Date;
 
   /**
