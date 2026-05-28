@@ -6,8 +6,8 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { FirebaseModule } from './firebase/firebase.module';
 // import { IntelligenceModule } from './modules/intelligence/intelligence.module';
-import { RealtimeModule } from './modules/realtime/realtime.module';
-import { AnalyticsModule } from './modules/analytics/analytics.module';
+// import { RealtimeModule } from './modules/realtime/realtime.module';
+// import { AnalyticsModule } from './modules/analytics/analytics.module';
 
 @Module({
   imports: [

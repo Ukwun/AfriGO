@@ -6,10 +6,9 @@ class ApiClient {
   late Dio _dio;
   String? _token;
 
-  // CHANGE THIS TO YOUR LAPTOP IP
-  // Run `ipconfig` in Windows PowerShell to find your IPv4 Address
-  // Example: 192.168.1.100
-  static const String _baseUrl = 'http://192.168.226.160:3000/api';
+  // Cloud backend deployed to Render
+  // Updated: May 28, 2026
+  static const String _baseUrl = 'https://afrigo-backend-1v22.onrender.com/api';
   static const Duration _timeout = Duration(seconds: 120);
 
   factory ApiClient() {
