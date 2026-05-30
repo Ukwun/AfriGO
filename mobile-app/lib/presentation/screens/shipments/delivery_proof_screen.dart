@@ -4,16 +4,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io' as io;
 import 'dart:convert';
 import 'package:go_router/go_router.dart';
+import '../../../config/theme.dart';
 import '../../models/shipment_model.dart';
 import '../providers/shipment_provider.dart';
+import '../../widgets/modern_card.dart';
+import '../../widgets/animated_button.dart';
 
 class DeliveryProofScreen extends ConsumerStatefulWidget {
   final String shipmentId;
 
   const DeliveryProofScreen({
-    Key? key,
+    super.key,
     required this.shipmentId,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<DeliveryProofScreen> createState() =>
@@ -153,29 +156,18 @@ class _DeliveryProofScreenState extends ConsumerState<DeliveryProofScreen> {
 
               const SizedBox(height: 24),
 
-              // Submit Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : () => _submitProof(context),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : const Text('Submit Proof'),
-                ),
+              // Submit Button with real-time responsiveness
+              AnimatedPrimaryButton(
+                label: 'Submit Proof',
+                onPressed: _isSubmitting ? null : () => _submitProof(context),
+                isLoading: _isSubmitting,
+                isLargeTouchTarget: true,
               ),
               const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () => context.pop(),
-                  child: const Text('Cancel'),
-                ),
+              AnimatedOutlinedButton(
+                label: 'Cancel',
+                onPressed: () => context.pop(),
+                isLargeTouchTarget: true,
               ),
             ],
           ),
@@ -227,19 +219,27 @@ class _DeliveryProofScreenState extends ConsumerState<DeliveryProofScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            ElevatedButton.icon(
-              onPressed: () {
-                // Clear signature
-              },
-              icon: const Icon(Icons.clear),
-              label: const Text('Clear'),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: AnimatedOutlinedButton(
+                  label: 'Clear',
+                  onPressed: () {
+                    // Clear signature
+                  },
+                ),
+              ),
             ),
-            ElevatedButton.icon(
-              onPressed: () {
-                // Capture signature
-              },
-              icon: const Icon(Icons.check),
-              label: const Text('Capture'),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: AnimatedPrimaryButton(
+                  label: 'Capture',
+                  onPressed: () {
+                    // Capture signature
+                  },
+                ),
+              ),
             ),
           ],
         ),
@@ -269,17 +269,25 @@ class _DeliveryProofScreenState extends ConsumerState<DeliveryProofScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  ElevatedButton.icon(
-                    onPressed: () => _pickPhoto(),
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text('Retake'),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: AnimatedPrimaryButton(
+                        label: 'Retake',
+                        onPressed: () => _pickPhoto(),
+                      ),
+                    ),
                   ),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      setState(() => _selectedImage = null);
-                    },
-                    icon: const Icon(Icons.delete),
-                    label: const Text('Clear'),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: AnimatedOutlinedButton(
+                        label: 'Clear',
+                        onPressed: () {
+                          setState(() => _selectedImage = null);
+                        },
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -320,15 +328,23 @@ class _DeliveryProofScreenState extends ConsumerState<DeliveryProofScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  ElevatedButton.icon(
-                    onPressed: () => _pickPhoto(),
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text('Take Photo'),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: AnimatedPrimaryButton(
+                        label: 'Take Photo',
+                        onPressed: () => _pickPhoto(),
+                      ),
+                    ),
                   ),
-                  ElevatedButton.icon(
-                    onPressed: () => _pickPhotoFromGallery(),
-                    icon: const Icon(Icons.photo_library),
-                    label: const Text('From Gallery'),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: AnimatedOutlinedButton(
+                        label: 'From Gallery',
+                        onPressed: () => _pickPhotoFromGallery(),
+                      ),
+                    ),
                   ),
                 ],
               ),

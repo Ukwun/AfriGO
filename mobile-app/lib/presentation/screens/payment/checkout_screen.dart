@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import '../../../models/payment_model.dart';
 import '../../../models/contract_model.dart';
 import '../../providers/payment_provider.dart';
+import '../../widgets/modern_card.dart';
+import '../../widgets/animated_button.dart';
 
 /// Checkout Screen - Payment method selection and Flutterwave processing
 class CheckoutScreen extends ConsumerStatefulWidget {
@@ -14,11 +16,11 @@ class CheckoutScreen extends ConsumerStatefulWidget {
   final String currency;
 
   const CheckoutScreen({
-    Key? key,
+    super.key,
     required this.contractId,
     required this.amount,
     required this.currency,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<CheckoutScreen> createState() => _CheckoutScreenState();
@@ -257,31 +259,32 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Amount Summary Card
-              Card(
+              // Amount Summary Card - Using ModernCard
+              ModernCard(
+                borderRadius: 16,
                 elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Total Amount',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${_getCurrencySymbol(widget.currency)}${widget.amount.toStringAsFixed(2)}',
-                        style: Theme.of(context).textTheme.headlineLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Contract: ${widget.contractId.substring(0, 8)}...',
-                        style:
-                            const TextStyle(color: Colors.grey, fontSize: 12),
-                      ),
-                    ],
-                  ),
+                backgroundColor: Colors.white,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Total Amount',
+                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${_getCurrencySymbol(widget.currency)}${widget.amount.toStringAsFixed(2)}',
+                      style:
+                          Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                color: Colors.black87,
+                              ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Contract: ${widget.contractId.substring(0, 8)}...',
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 24),
@@ -309,7 +312,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               ...paymentMethods.map((method) {
                 final isSelected = _selectedPaymentMethod == method.id;
                 return _buildPaymentMethodCard(method, isSelected);
-              }).toList(),
+              }),
 
               const SizedBox(height: 24),
 
@@ -319,31 +322,26 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
               const SizedBox(height: 24),
 
-              // Action Buttons
+              // Action Buttons - Updated with Animated Components
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton(
+                    child: AnimatedOutlinedButton(
+                      label: 'Cancel',
                       onPressed: () => context.pop(),
-                      child: const Text('Cancel'),
+                      borderColor: Colors.grey,
+                      textColor: Colors.grey,
+                      isLargeTouchTarget: true,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: _isProcessing ? null : _proceedWithPayment,
-                      icon: _isProcessing
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation(Colors.white),
-                              ),
-                            )
-                          : const Icon(Icons.payment),
-                      label: Text(_isProcessing ? 'Processing...' : 'Pay Now'),
+                    child: AnimatedPrimaryButton(
+                      label: _isProcessing ? 'Processing...' : 'Pay Now',
+                      onPressed: _isProcessing ? () {} : _proceedWithPayment,
+                      isLoading: _isProcessing,
+                      isEnabled: !_isProcessing,
+                      isLargeTouchTarget: true,
                     ),
                   ),
                 ],
@@ -386,73 +384,99 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         ? widget.amount * (method.depositPercentage! / 100)
         : widget.amount;
 
-    return Card(
-      elevation: isSelected ? 4 : 1,
-      color: isSelected ? Colors.blue.shade50 : Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: isSelected
-            ? BorderSide(color: Colors.blue.shade500, width: 2)
-            : BorderSide.none,
-      ),
-      child: ListTile(
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isSelected ? Colors.blue.shade100 : Colors.grey.shade100,
-          ),
-          child: Center(
-            child: Text(method.icon, style: const TextStyle(fontSize: 20)),
-          ),
-        ),
-        title: Text(
-          method.title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedPaymentMethod = method.id;
+        });
+      },
+      child: ModernCard(
+        borderRadius: 16,
+        isFloating: isSelected,
+        elevation: isSelected ? 4 : 1,
+        backgroundColor: isSelected ? Colors.blue.shade50 : Colors.white,
+        padding: const EdgeInsets.all(12),
+        child: Row(
           children: [
-            const SizedBox(height: 4),
-            Text(method.description, style: const TextStyle(fontSize: 12)),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Text(
-                  '${_getCurrencySymbol(widget.currency)}${paymentAmount.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                if (method.fees > 0)
+            // Icon
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isSelected ? Colors.blue.shade200 : Colors.grey.shade100,
+              ),
+              child: Center(
+                child: Text(method.icon, style: const TextStyle(fontSize: 24)),
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // Method Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    '(+${method.fees}% fee)',
-                    style: TextStyle(
-                      color: Colors.orange.shade700,
-                      fontSize: 11,
+                    method.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      fontFamily: 'Sora',
                     ),
                   ),
-              ],
+                  const SizedBox(height: 4),
+                  Text(
+                    method.description,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Text(
+                        '${_getCurrencySymbol(widget.currency)}${paymentAmount.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          color: Colors.green,
+                        ),
+                      ),
+                      if (method.fees > 0) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          '+${method.fees}% fee',
+                          style: TextStyle(
+                            color: Colors.orange.shade700,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Selection Indicator
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected ? Colors.blue : Colors.grey,
+                  width: 2,
+                ),
+                color: isSelected ? Colors.blue : Colors.transparent,
+              ),
+              child: isSelected
+                  ? const Icon(Icons.check, size: 16, color: Colors.white)
+                  : null,
             ),
           ],
         ),
-        trailing: Radio<String>(
-          value: method.id,
-          groupValue: _selectedPaymentMethod,
-          onChanged: (value) {
-            setState(() {
-              _selectedPaymentMethod = value;
-            });
-          },
-        ),
-        onTap: () {
-          setState(() {
-            _selectedPaymentMethod = method.id;
-          });
-        },
       ),
     );
   }
@@ -483,7 +507,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               });
             },
           );
-        }).toList(),
+        }),
       ],
     );
   }

@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../../../models/lot_model.dart';
 import '../../../services/api_service.dart';
 import '../../../config/theme.dart';
+import '../../widgets/modern_card.dart';
+import '../../widgets/animated_button.dart';
+import '../../widgets/motion_system.dart';
 
 final lotDetailsProvider =
     FutureProvider.family<LotModel, String>((ref, lotId) async {
@@ -320,8 +323,12 @@ class LotDetailsScreen extends ConsumerWidget {
             ],
           ),
         ),
-        loading: () => const Center(
-          child: CircularProgressIndicator(),
+        loading: () => PageSkeletonLoader(
+          elements: [
+            SkeletonElement(type: SkeletonType.card, height: 250),
+            SkeletonElement(type: SkeletonType.card, height: 120),
+            SkeletonElement(type: SkeletonType.card, height: 100),
+          ],
         ),
       ),
       bottomNavigationBar:
@@ -364,67 +371,56 @@ class LotDetailsScreen extends ConsumerWidget {
   }
 
   Widget _buildSellerCard(LotModel lot) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: AppTheme.primaryGreen,
-            radius: 24,
-            child: Text(
-              (lot.sellerName ?? 'S')[0].toUpperCase(),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  lot.sellerName ?? 'Unknown Seller',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 14),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${lot.sellerRating?.toStringAsFixed(1) ?? 'N/A'} seller rating',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          ElevatedButton.icon(
-            onPressed: () {
-              // TODO: Navigate to seller profile or send message
-            },
-            icon: const Icon(Icons.message, size: 16),
-            label: const Text('Message'),
-            style: ElevatedButton.styleFrom(
+    return ModernCard(
+      borderRadius: 16,
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Row(
+          children: [
+            // Seller Avatar
+            CircleAvatar(
               backgroundColor: AppTheme.primaryGreen,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 8,
+              radius: 28,
+              child: Text(
+                (lot.sellerName ?? 'S')[0].toUpperCase(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    lot.sellerName ?? 'Unknown Seller',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      fontFamily: 'Sora',
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.star, size: 14, color: Colors.amber),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${lot.sellerRating?.toStringAsFixed(1) ?? "4.5"} (8 reviews)',
+                        style:
+                            const TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -435,35 +431,44 @@ class LotDetailsScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(
-          top: BorderSide(color: Colors.grey[300]!, width: 1),
+          top: BorderSide(color: Colors.grey[200]!, width: 1),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
       ),
       child: Row(
         children: [
+          // Share/Message - Secondary outlined button
           Expanded(
-            child: OutlinedButton.icon(
+            child: AnimatedOutlinedButton(
+              label: 'Share',
               onPressed: () {
-                // TODO: Implement share functionality
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Sharing lot...')),
+                );
               },
-              icon: const Icon(Icons.share),
-              label: const Text('Share'),
+              borderColor: AppTheme.primaryGreen,
+              textColor: AppTheme.primaryGreen,
+              isLargeTouchTarget: true,
             ),
           ),
           const SizedBox(width: 12),
+          // Request Quote - Primary button
           Expanded(
-            child: ElevatedButton.icon(
+            child: AnimatedPrimaryButton(
+              label: 'Request Quote',
               onPressed: () {
-                // TODO: Navigate to request quote or order screen
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                       content: Text('Requesting quote from seller...')),
                 );
               },
-              icon: const Icon(Icons.shopping_cart),
-              label: const Text('Request Quote'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryGreen,
-              ),
+              isLargeTouchTarget: true,
             ),
           ),
         ],

@@ -1,63 +1,95 @@
 # AfriGo Design Tokens & Theme System
 
-## 🎨 COLOR PALETTE (PRODUCTION-LOCKED)
+## 🎨 COLOR PALETTE (OFFICIAL - May 2026)
 
-### **Primary Colors**
+### **Primary Brand Colors**
+
+**Deep Forest Green** - Trust, Agriculture, Export, Global Trade
 ```dart
-// Primary green - trust, growth, trade
-const Color primaryGreen = Color(0xFF0B6E4F);      // Deep green
-const Color primaryGreenHover = Color(0xFF09543D); // Darker for hover
-const Color accentGreen = Color(0xFF10B981);       // Emerald/bright green
+const Color primaryGreen = Color(0xFF0F5B46);        // Primary (#0F5B46)
+const Color primaryGreenHover = Color(0xFF0A4335);   // -20% lightness for hover
+const Color primaryGreenLight = Color(0xFF1A8A67);   // Lighter variant
+const Color primaryGreenLighter = Color(0xFFE8F5F1); // Background tint
 ```
 
-### **Secondary Colors**
+### **Secondary Brand Colors**
+
+**Export Gold** - Commerce, Premium, Quality
 ```dart
-// Enterprise look
-const Color darkNavy = Color(0xFF0F172A);          // Secondary dark
-const Color slate = Color(0xFF334155);             // Slate gray
+const Color secondaryGold = Color(0xFFC89B3C);       // Secondary (#C89B3C)
+const Color secondaryGoldHover = Color(0xFFB68927);  // Hover state
+const Color secondaryGoldLight = Color(0xFFE8D9B8);  // Background tint
 ```
 
-### **Functional Colors**
+**Ocean Blue** - Logistics, Tracking, Shipping
 ```dart
-const Color infoBlue = Color(0xFF3B82F6);          // Information
-const Color warningAmber = Color(0xFFF59E0B);      // Warning/pending
-const Color successGreen = Color(0xFF22C55E);      // Success
-const Color errorRed = Color(0xFFEF4444);          // Error/destructive
+const Color accentBlue = Color(0xFF1E88E5);          // Accent (#1E88E5)
+const Color accentBlueDark = Color(0xFF1565C0);      // Darker variant
+const Color accentBlueLight = Color(0xFFE3F2FD);     // Background tint
+```
 
-// Additional functional
-const Color border = Color(0xFFE2E8F0);            // Light borders
-const Color divider = Color(0xFFCBD5F5);           // Soft divider
-const Color disabled = Color(0xFF94A3B8);          // Disabled state
+### **Semantic Colors**
+
+```dart
+// Success states
+const Color successGreen = Color(0xFF12B76A);        // Success (#12B76A)
+const Color successGreenLight = Color(0xFFD1FAE5);   // Success background
+
+// Warning states
+const Color warningOrange = Color(0xFFF79009);       // Warning (#F79009)
+const Color warningOrangeLight = Color(0xFFFEF3C7);  // Warning background
+
+// Error states
+const Color errorRed = Color(0xFFF04438);            // Error (#F04438)
+const Color errorRedLight = Color(0xFFFEE4E2);       // Error background
 ```
 
 ### **Neutral Scale**
+
 ```dart
-const Color white = Color(0xFFFFFFFF);
-const Color lightBackground = Color(0xFFF8FAFC);   // Light mode BG
-const Color softBackground = Color(0xFFF1F5F9);    // Softer light
-const Color darkBackground = Color(0xFF020617);    // Dark mode BG
-const Color surfaceLight = Color(0xFFFFFFFF);
-const Color surfaceDark = Color(0xFF0F172A);
+// Backgrounds
+const Color backgroundLight = Color(0xFFF7F8FA);     // Background (#F7F8FA)
+const Color surfaceCard = Color(0xFFFFFFFF);         // Cards (#FFFFFF)
+
+// Text
+const Color textDark = Color(0xFF111827);            // Dark text (#111827)
+const Color textSecondary = Color(0xFF667085);       // Secondary text (#667085)
+
+// Borders & Dividers
+const Color borderDefault = Color(0xFFE4E7EC);       // Borders (#E4E7EC)
+const Color divider = Color(0xFFD0D5DD);             // Soft dividers
+const Color disabled = Color(0xFFA0AEC0);            // Disabled state
 ```
 
-### **Gradients**
+### **Gradients (Brand-Aligned)**
+
 ```dart
+// Primary brand gradient
 const LinearGradient primaryGradient = LinearGradient(
   begin: Alignment.topLeft,
   end: Alignment.bottomRight,
-  colors: [Color(0xFF0B6E4F), Color(0xFF10B981)],
+  colors: [Color(0xFF0F5B46), Color(0xFF1A8A67)],
 );
 
-const LinearGradient actionGradient = LinearGradient(
+// Gold accent gradient
+const LinearGradient goldGradient = LinearGradient(
   begin: Alignment.topLeft,
   end: Alignment.bottomRight,
-  colors: [Color(0xFF3B82F6), Color(0xFF06B6D4)],
+  colors: [Color(0xFFC89B3C), Color(0xFFE8D9B8)],
 );
 
+// Logistics blue gradient
+const LinearGradient logisticsGradient = LinearGradient(
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+  colors: [Color(0xFF1E88E5), Color(0xFF42A5F5)],
+);
+
+// Timeline/event gradient
 const LinearGradient eventTimelineGradient = LinearGradient(
   begin: Alignment.topCenter,
   end: Alignment.bottomCenter,
-  colors: [Color(0xFF0B6E4F), Color(0xFF10B98133)], // Fade to light
+  colors: [Color(0xFF0F5B46), Color(0xFF0F5B4622)], // Fade to transparent
 );
 ```
 

@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:convert';
+import '../../../config/theme.dart';
 import '../../models/shipment_model.dart';
 import '../providers/shipment_provider.dart';
+import '../../widgets/modern_card.dart';
+import '../../widgets/animated_button.dart';
+import '../../widgets/motion_system.dart';
 
 class ShipmentDetailsScreen extends ConsumerStatefulWidget {
   final String shipmentId;
 
   const ShipmentDetailsScreen({
-    Key? key,
+    super.key,
     required this.shipmentId,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<ShipmentDetailsScreen> createState() =>
@@ -63,7 +68,7 @@ class _ShipmentDetailsScreenState extends ConsumerState<ShipmentDetailsScreen>
                 color: Colors.red.shade400,
               ),
               const SizedBox(height: 16),
-              Text('Error loading shipment'),
+              const Text('Error loading shipment'),
               const SizedBox(height: 8),
               Text(error.toString()),
             ],
@@ -79,9 +84,8 @@ class _ShipmentDetailsScreenState extends ConsumerState<ShipmentDetailsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Status card
-          Card(
-            color: Colors.blue.shade50,
+          // Status card with modern design
+          ModernCard(
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -151,7 +155,8 @@ class _ShipmentDetailsScreenState extends ConsumerState<ShipmentDetailsScreen>
             context,
             'Financial Details',
             [
-              _buildDetailRow('Amount', '${shipment.contract.currency} ${shipment.contract.totalValue}'),
+              _buildDetailRow('Amount',
+                  '${shipment.contract.currency} ${shipment.contract.totalValue}'),
               _buildDetailRow('Buyer', shipment.contract.buyer.name),
               _buildDetailRow('Seller', shipment.contract.seller.name),
             ],
@@ -165,7 +170,8 @@ class _ShipmentDetailsScreenState extends ConsumerState<ShipmentDetailsScreen>
             [
               _buildDetailRow('Pickup', shipment.pickupLocationName),
               _buildDetailRow('Pickup Date', _formatDate(shipment.pickupDate)),
-              _buildDetailRow('Delivery Location', shipment.deliveryLocationName),
+              _buildDetailRow(
+                  'Delivery Location', shipment.deliveryLocationName),
               _buildDetailRow(
                 'Expected Delivery',
                 _formatDate(shipment.expectedDeliveryDate),
@@ -194,7 +200,8 @@ class _ShipmentDetailsScreenState extends ConsumerState<ShipmentDetailsScreen>
           const SizedBox(height: 16),
 
           // Delivery Instructions
-          if (shipment.recipientName != null || shipment.specialHandlingInstructions != null)
+          if (shipment.recipientName != null ||
+              shipment.specialHandlingInstructions != null)
             _buildSection(
               context,
               'Delivery Instructions',
@@ -209,7 +216,7 @@ class _ShipmentDetailsScreenState extends ConsumerState<ShipmentDetailsScreen>
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Instructions'),
+                      const Text('Instructions'),
                       const SizedBox(height: 4),
                       Text(
                         shipment.specialHandlingInstructions!,
@@ -230,7 +237,8 @@ class _ShipmentDetailsScreenState extends ConsumerState<ShipmentDetailsScreen>
               'Statistics',
               [
                 _buildDetailRow('Days in Transit', '${shipment.daysInTransit}'),
-                _buildDetailRow('Delivery Proofs', '${shipment.deliveryProofCount ?? 0}'),
+                _buildDetailRow(
+                    'Delivery Proofs', '${shipment.deliveryProofCount ?? 0}'),
               ],
             ),
         ],
@@ -254,83 +262,35 @@ class _ShipmentDetailsScreenState extends ConsumerState<ShipmentDetailsScreen>
                   color: Colors.grey.shade400,
                 ),
                 const SizedBox(height: 16),
-                Text('No tracking updates yet'),
+                const Text('No tracking updates yet'),
               ],
             ),
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: trackingEvents.length,
-          itemBuilder: (context, index) {
-            final event = trackingEvents[index];
-            final isFirst = index == 0;
+        // Convert tracking events to ShipmentStages for animated timeline
+        final stages = trackingEvents.asMap().entries.map((entry) {
+          final event = entry.value;
+          return ShipmentStage(
+            label: event.eventType.replaceAll('_', ' '),
+            timestamp: _formatDate(event.createdAt),
+            icon: _getStageIcon(event.eventType),
+            isCompleted: true,
+          );
+        }).toList();
 
-            return Column(
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Column(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Colors.blue,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.location_on,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                        if (!isFirst)
-                          Container(
-                            width: 2,
-                            height: 40,
-                            color: Colors.blue.shade200,
-                          ),
-                      ],
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            event.eventType.replaceAll('_', ' '),
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            event.message,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          const SizedBox(height: 4),
-                          if (event.locationName != null)
-                            Text(
-                              event.locationName!,
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    color: Colors.grey.shade600,
-                                  ),
-                            ),
-                          Text(
-                            _formatDate(event.createdAt),
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: Colors.grey.shade600,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            );
-          },
+        final currentStageIndex = trackingEvents.length - 1;
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: FadeInTransition(
+            duration: const Duration(milliseconds: 300),
+            child: ShipmentProgressTimeline(
+              stages: stages,
+              currentStageIndex: currentStageIndex,
+              isAnimating: true,
+            ),
+          ),
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -354,7 +314,7 @@ class _ShipmentDetailsScreenState extends ConsumerState<ShipmentDetailsScreen>
                   color: Colors.grey.shade400,
                 ),
                 const SizedBox(height: 16),
-                Text('No delivery proofs yet'),
+                const Text('No delivery proofs yet'),
               ],
             ),
           );
@@ -392,7 +352,8 @@ class _ShipmentDetailsScreenState extends ConsumerState<ShipmentDetailsScreen>
                     const SizedBox(height: 8),
                     if (proof.recipientName != null)
                       Text('Recipient: ${proof.recipientName}'),
-                    if (proof.dataBlobUrl != null && proof.dataBlobUrl!.isNotEmpty)
+                    if (proof.dataBlobUrl != null &&
+                        proof.dataBlobUrl!.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: Container(
@@ -447,7 +408,8 @@ class _ShipmentDetailsScreenState extends ConsumerState<ShipmentDetailsScreen>
               ),
         ),
         const SizedBox(height: 8),
-        Card(
+        ModernCard(
+          isFloating: true,
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
@@ -490,10 +452,30 @@ class _ShipmentDetailsScreenState extends ConsumerState<ShipmentDetailsScreen>
     return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
   }
 
+  IconData _getStageIcon(String eventType) {
+    switch (eventType.toUpperCase()) {
+      case 'PICKUP_SCHEDULED':
+        return Icons.calendar_today;
+      case 'TRUCK_MOVING':
+      case 'IN_TRANSIT':
+        return Icons.local_shipping;
+      case 'WAREHOUSE_RECEIVED':
+      case 'AT_WAREHOUSE':
+        return Icons.warehouse;
+      case 'EXPORT_CLEARED':
+      case 'CUSTOMS_CLEARED':
+        return Icons.check_circle;
+      case 'DELIVERED':
+        return Icons.done_all;
+      case 'DELAYED':
+        return Icons.warning_amber;
+      default:
+        return Icons.info;
+    }
+  }
+
   List<int> _dataUrlToBytes(String dataUrl) {
     final base64String = dataUrl.split(',').last;
     return base64Decode(base64String);
   }
 }
-
-import 'dart:convert';

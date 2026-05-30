@@ -24,6 +24,7 @@ class ApiClient {
         sendTimeout: _timeout,
         contentType: Headers.jsonContentType,
         responseType: ResponseType.json,
+        validateStatus: (status) => status != null && status < 500,
       ),
     );
 
@@ -70,7 +71,21 @@ class ApiClient {
   Future<Map<String, dynamic>> get(String endpoint) async {
     try {
       final response = await _dio.get(endpoint);
+
+      // Check if response indicates an error (4xx status code)
+      if (response.statusCode != null && response.statusCode! >= 400) {
+        final data = response.data as Map<String, dynamic>?;
+        final errorMsg = data?['message'] ?? 'Request failed';
+        throw Exception(errorMsg);
+      }
+
       return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data is Map) {
+        final errorData = e.response?.data as Map<String, dynamic>;
+        throw Exception(errorData['message'] ?? e.message ?? 'Request failed');
+      }
+      throw Exception(e.message ?? 'Request failed');
     } catch (e) {
       rethrow;
     }
@@ -82,7 +97,21 @@ class ApiClient {
   }) async {
     try {
       final response = await _dio.post(endpoint, data: body);
+
+      // Check if response indicates an error (4xx status code)
+      if (response.statusCode != null && response.statusCode! >= 400) {
+        final data = response.data as Map<String, dynamic>?;
+        final errorMsg = data?['message'] ?? 'Request failed';
+        throw Exception(errorMsg);
+      }
+
       return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data is Map) {
+        final errorData = e.response?.data as Map<String, dynamic>;
+        throw Exception(errorData['message'] ?? e.message ?? 'Request failed');
+      }
+      throw Exception(e.message ?? 'Request failed');
     } catch (e) {
       rethrow;
     }

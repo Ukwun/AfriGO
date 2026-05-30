@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../../../models/lot_model.dart';
 import '../../../services/api_service.dart';
 import '../../../config/theme.dart';
+import '../../widgets/modern_card.dart';
+import '../../widgets/animated_button.dart';
+import '../../widgets/motion_system.dart';
 
 // Lots provider
 final lotsProvider = FutureProvider.autoDispose<List<LotModel>>((ref) async {
@@ -91,7 +94,7 @@ class BrowseLotsScreen extends ConsumerWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.packages_outlined,
+                          const Icon(Icons.shopping_bag_outlined,
                               size: 64, color: Colors.grey),
                           const SizedBox(height: 16),
                           const Text('No lots found',
@@ -114,7 +117,11 @@ class BrowseLotsScreen extends ConsumerWidget {
                     itemCount: filteredLots.length,
                     itemBuilder: (context, index) {
                       final lot = filteredLots[index];
-                      return _buildLotCard(context, lot);
+                      return ScaleInTransition(
+                        duration: const Duration(milliseconds: 250),
+                        beginScale: 0.85,
+                        child: _buildLotCard(context, lot),
+                      );
                     },
                   );
                 },
@@ -129,8 +136,13 @@ class BrowseLotsScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                loading: () => const Center(
-                  child: CircularProgressIndicator(),
+                loading: () => PageSkeletonLoader(
+                  elements: [
+                    SkeletonElement(type: SkeletonType.card, height: 180),
+                    SkeletonElement(type: SkeletonType.card, height: 180),
+                    SkeletonElement(type: SkeletonType.card, height: 180),
+                    SkeletonElement(type: SkeletonType.card, height: 180),
+                  ],
                 ),
               ),
             ),
@@ -190,16 +202,15 @@ class BrowseLotsScreen extends ConsumerWidget {
               ),
               const SizedBox(width: 12),
 
-              // Filter button
-              ElevatedButton.icon(
+              // Filter button - Updated with AnimatedOutlinedButton
+              AnimatedOutlinedButton(
+                label: 'Filter',
                 onPressed: () {
                   _showFilterBottomSheet(context, ref);
                 },
-                icon: const Icon(Icons.filter_list),
-                label: const Text('Filter'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryGreen,
-                ),
+                borderColor: AppTheme.primaryGreen,
+                textColor: AppTheme.primaryGreen,
+                width: 100,
               ),
             ],
           ),
@@ -209,100 +220,119 @@ class BrowseLotsScreen extends ConsumerWidget {
   }
 
   Widget _buildLotCard(BuildContext context, LotModel lot) {
-    return GestureDetector(
+    return ModernCard(
+      borderRadius: 16,
+      isFloating: true,
       onTap: () {
         context.push('/lots/${lot.id}');
       },
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Product Image
-            Container(
-              height: 120,
-              decoration: BoxDecoration(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(12)),
-                color: Colors.grey[200],
-                image: lot.images.isNotEmpty
-                    ? DecorationImage(
-                        image: NetworkImage(lot.images[0]),
-                        fit: BoxFit.cover,
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Product Image with overlay
+          Stack(
+            children: [
+              Container(
+                height: 120,
+                decoration: BoxDecoration(
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(16)),
+                  color: Colors.grey[200],
+                  image: lot.images.isNotEmpty
+                      ? DecorationImage(
+                          image: NetworkImage(lot.images[0]),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: lot.images.isEmpty
+                    ? const Center(
+                        child: Icon(Icons.image_not_supported,
+                            color: Colors.grey, size: 32),
                       )
                     : null,
               ),
-              child: lot.images.isEmpty
-                  ? const Center(
-                      child: Icon(Icons.image_not_supported,
-                          color: Colors.grey, size: 32),
-                    )
-                  : null,
-            ),
-
-            // Content
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Product name
-                    Text(
-                      lot.productName,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-
-                    const SizedBox(height: 4),
-
-                    // Price
-                    Text(
-                      '\$${lot.pricePerUnit.toStringAsFixed(2)} per ${lot.quantityUnit}',
-                      style: TextStyle(
-                        color: AppTheme.primaryGreen,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                    ),
-
-                    const SizedBox(height: 4),
-
-                    // Rating
-                    Row(
-                      children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${lot.averageRating.toStringAsFixed(1)} (${lot.ratingCount})',
-                          style: const TextStyle(fontSize: 12),
+              // Rating Badge Overlay
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.6),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.star, color: Colors.amber, size: 14),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${lot.averageRating.toStringAsFixed(1)}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
-                    ),
-
-                    const Spacer(),
-
-                    // Quantity available
-                    Text(
-                      '${lot.quantity} ${lot.quantityUnit} available',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
+            ],
+          ),
+
+          // Content
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Product name
+                  Text(
+                    lot.productName,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      fontFamily: 'Sora',
+                    ),
+                  ),
+
+                  // Price and availability
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '\$${lot.pricePerUnit.toStringAsFixed(2)} per ${lot.quantityUnit}',
+                        style: TextStyle(
+                          color: AppTheme.primaryGreen,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${lot.quantity} ${lot.quantityUnit} available',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -48,7 +48,9 @@ dependencies:
   
   # UI helpers
   shimmer: ^3.0.0
+  webview_flutter: ^4.2.0
   animations: ^2.0.0
+  google_fonts: ^6.0.0
   
   # Lot Management & Photo Upload
   image_picker: ^1.0.0

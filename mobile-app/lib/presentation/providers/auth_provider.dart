@@ -116,12 +116,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
         },
       );
 
-      if (!response['success']) {
+      // Handle both success response and error response
+      if (response['success'] == false) {
         throw Exception(response['message'] ?? 'Registration failed');
       }
 
-      final token = response['token'] as String;
-      final userData = response['user'] as Map<String, dynamic>;
+      final token = response['token'] as String?;
+      final userData = response['user'] as Map<String, dynamic>?;
+
+      if (token == null || userData == null) {
+        throw Exception('Invalid response from server');
+      }
 
       apiClient.setToken(token);
 
@@ -130,8 +135,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       print('[AuthNotifier] Registration successful: ${authUser.id}');
     } catch (e) {
-      state = AuthError(e.toString());
-      print('[AuthNotifier] Registration error: $e');
+      final errorMsg = e.toString().replaceAll('Exception: ', '');
+      state = AuthError(errorMsg);
+      print('[AuthNotifier] Registration error: $errorMsg');
     }
   }
 
@@ -153,12 +159,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
         },
       );
 
-      if (!response['success']) {
+      // Handle both success response and error response
+      if (response['success'] == false) {
         throw Exception(response['message'] ?? 'Login failed');
       }
 
-      final token = response['token'] as String;
-      final userData = response['user'] as Map<String, dynamic>;
+      final token = response['token'] as String?;
+      final userData = response['user'] as Map<String, dynamic>?;
+
+      if (token == null || userData == null) {
+        throw Exception('Invalid response from server');
+      }
 
       apiClient.setToken(token);
 
@@ -167,8 +178,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       print('[AuthNotifier] Login successful: ${authUser.id}');
     } catch (e) {
-      state = AuthError(e.toString());
-      print('[AuthNotifier] Login error: $e');
+      final errorMsg = e.toString().replaceAll('Exception: ', '');
+      state = AuthError(errorMsg);
+      print('[AuthNotifier] Login error: $errorMsg');
     }
   }
 

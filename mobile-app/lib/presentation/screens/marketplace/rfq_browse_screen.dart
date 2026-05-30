@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../../config/theme.dart';
 import '../../models/rfq_model.dart';
 import '../providers/rfq_provider.dart';
+import '../../widgets/modern_card.dart';
+import '../../widgets/animated_button.dart';
 
 class RFQBrowseScreen extends ConsumerStatefulWidget {
-  const RFQBrowseScreen({Key? key}) : super(key: key);
+  const RFQBrowseScreen({super.key});
 
   @override
   ConsumerState<RFQBrowseScreen> createState() => _RFQBrowseScreenState();
@@ -112,16 +115,15 @@ class _RFQBrowseScreenState extends ConsumerState<RFQBrowseScreen> {
             child: rfqsAsync.when(
               data: (data) {
                 if (data.isEmpty) {
-                  return Center(
+                  return const Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.search_off,
-                            size: 64, color: Colors.grey),
-                        const SizedBox(height: 16),
-                        const Text('No RFQs found'),
-                        const SizedBox(height: 8),
-                        const Text(
+                        Icon(Icons.search_off, size: 64, color: Colors.grey),
+                        SizedBox(height: 16),
+                        Text('No RFQs found'),
+                        SizedBox(height: 8),
+                        Text(
                           'Check back later for new opportunities',
                           style: TextStyle(color: Colors.grey),
                         ),
@@ -152,9 +154,10 @@ class _RFQBrowseScreenState extends ConsumerState<RFQBrowseScreen> {
                     const SizedBox(height: 16),
                     Text('Error: $error'),
                     const SizedBox(height: 16),
-                    ElevatedButton(
+                    AnimatedPrimaryButton(
+                      label: 'Retry',
                       onPressed: () => ref.refresh(rfqListProvider(filters)),
-                      child: const Text('Retry'),
+                      isLargeTouchTarget: true,
                     ),
                   ],
                 ),
@@ -194,158 +197,156 @@ class _RFQCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return GestureDetector(
+    return ModernCard(
+      isFloating: true,
       onTap: onTap,
-      child: Card(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header Row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          rfq.productCategory,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          rfq.productDescription.length > 60
-                              ? '${rfq.productDescription.substring(0, 60)}...'
-                              : rfq.productDescription,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.shade100,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      _daysRemaining(rfq.expiresAt),
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.orange.shade700,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const Divider(height: 16),
-
-              // Details Grid
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _DetailColumn(
-                    label: 'Quantity',
-                    value:
-                        '${rfq.quantity.toStringAsFixed(0)} ${rfq.quantityUnit}',
-                  ),
-                  _DetailColumn(
-                    label: 'Origin Preference',
-                    value: rfq.originCountryPreference ?? 'Any',
-                  ),
-                  _DetailColumn(
-                    label: 'Grade Preference',
-                    value: rfq.gradePreference ?? 'Any',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Buyer Info
-              Row(
-                children: [
-                  const Icon(Icons.business, size: 16, color: Colors.grey),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      rfq.buyerCompanyName,
-                      style: const TextStyle(fontSize: 13, color: Colors.grey),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Footer Row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Expected Bids',
-                        style: TextStyle(fontSize: 11, color: Colors.grey),
-                      ),
                       Text(
-                        '${rfq.submittedBids.length}/${rfq.maxBidsExpected}',
+                        rfq.productCategory,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        rfq.productDescription.length > 60
+                            ? '${rfq.productDescription.substring(0, 60)}...'
+                            : rfq.productDescription,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      const Text(
-                        'Delivery By',
-                        style: TextStyle(fontSize: 11, color: Colors.grey),
-                      ),
-                      Text(
-                        _formatDate(rfq.deliveryDeadline),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade100,
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      const Text(
-                        'Posted',
-                        style: TextStyle(fontSize: 11, color: Colors.grey),
-                      ),
-                      Text(
-                        _getTimeAgo(rfq.createdAt),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    _daysRemaining(rfq.expiresAt),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.orange.shade700,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+            const Divider(height: 16),
+
+            // Details Grid
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _DetailColumn(
+                  label: 'Quantity',
+                  value:
+                      '${rfq.quantity.toStringAsFixed(0)} ${rfq.quantityUnit}',
+                ),
+                _DetailColumn(
+                  label: 'Origin Preference',
+                  value: rfq.originCountryPreference ?? 'Any',
+                ),
+                _DetailColumn(
+                  label: 'Grade Preference',
+                  value: rfq.gradePreference ?? 'Any',
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Buyer Info
+            Row(
+              children: [
+                const Icon(Icons.business, size: 16, color: Colors.grey),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    rfq.buyerCompanyName,
+                    style: const TextStyle(fontSize: 13, color: Colors.grey),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Footer Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Expected Bids',
+                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
+                    Text(
+                      '${rfq.submittedBids.length}/${rfq.maxBidsExpected}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Text(
+                      'Delivery By',
+                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
+                    Text(
+                      _formatDate(rfq.deliveryDeadline),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Text(
+                      'Posted',
+                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
+                    Text(
+                      _getTimeAgo(rfq.createdAt),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

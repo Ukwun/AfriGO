@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../config/theme.dart';
 import '../../../models/payment_model.dart';
 import '../../providers/payment_provider.dart';
+import '../../widgets/modern_card.dart';
+import '../../widgets/animated_button.dart';
+import '../../widgets/motion_system.dart';
 
 /// Payment History Screen - List of past payments with status tracking
 class PaymentHistoryScreen extends ConsumerStatefulWidget {
   final String? contractId;
 
   const PaymentHistoryScreen({
-    Key? key,
+    super.key,
     this.contractId,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<PaymentHistoryScreen> createState() =>
@@ -21,7 +25,7 @@ class PaymentHistoryScreen extends ConsumerStatefulWidget {
 class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
   String? _selectedStatus;
   String? _selectedMethod;
-  int _limit = 20;
+  final int _limit = 20;
   int _offset = 0;
 
   final List<String> statuses = [
@@ -99,8 +103,13 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
           // Payments List
           Expanded(
             child: paymentsAsync.when(
-              loading: () => const Center(
-                child: CircularProgressIndicator(),
+              loading: () => PageSkeletonLoader(
+                elements: [
+                  SkeletonElement(type: SkeletonType.card, height: 100),
+                  SkeletonElement(type: SkeletonType.card, height: 100),
+                  SkeletonElement(type: SkeletonType.card, height: 100),
+                  SkeletonElement(type: SkeletonType.card, height: 100),
+                ],
               ),
               error: (error, stack) => Center(
                 child: Column(
@@ -111,7 +120,8 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
                     const SizedBox(height: 16),
                     Text('Error: $error'),
                     const SizedBox(height: 16),
-                    ElevatedButton(
+                    AnimatedPrimaryButton(
+                      label: 'Retry',
                       onPressed: () => ref.refresh(
                         listPaymentsProvider((
                           status: _selectedStatus,
@@ -122,20 +132,20 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
                           offset: _offset,
                         )),
                       ),
-                      child: const Text('Retry'),
+                      isLargeTouchTarget: true,
                     ),
                   ],
                 ),
               ),
               data: (payments) {
                 if (payments.isEmpty) {
-                  return Center(
+                  return const Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.receipt_long, size: 48, color: Colors.grey),
-                        const SizedBox(height: 16),
-                        const Text('No payments found'),
+                        SizedBox(height: 16),
+                        Text('No payments found'),
                       ],
                     ),
                   );
@@ -145,7 +155,10 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
                   itemCount: payments.length,
                   itemBuilder: (context, index) {
                     final payment = payments[index];
-                    return _buildPaymentTile(payment, context);
+                    return ScaleInTransition(
+                      duration: const Duration(milliseconds: 250),
+                      child: _buildPaymentTile(payment, context),
+                    );
                   },
                 );
               },
@@ -168,16 +181,16 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
         onChanged(value == selectedValue ? null : value);
       },
       itemBuilder: (BuildContext context) => [
-        PopupMenuItem<String>(
+        const PopupMenuItem<String>(
           value: null,
-          child: const Text('All'),
+          child: Text('All'),
         ),
         ...options.map((option) {
           return PopupMenuItem<String>(
             value: option,
             child: Text(option),
           );
-        }).toList(),
+        }),
       ],
       child: FilterChip(
         label: Text('$label: ${selectedValue ?? 'All'}'),
@@ -192,74 +205,90 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
     final statusColor = _getStatusColor(payment.status);
     final methodText = _getPaymentMethodText(payment.paymentMethod);
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: ListTile(
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: statusColor.withOpacity(0.2),
-          ),
-          child: Center(
-            child: Icon(
-              _getStatusIcon(payment.status),
-              color: statusColor,
-            ),
-          ),
-        ),
-        title: Text(
-          payment.invoiceReference,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Text(
-              methodText,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              DateFormat('MMM dd, yyyy HH:mm').format(payment.createdAt),
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
-            ),
-          ],
-        ),
-        trailing: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              payment.formattedAmount,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                payment.statusText,
-                style: TextStyle(
-                  color: statusColor,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: ModernCard(
+        isFloating: true,
+        onTap: () => _showPaymentDetails(payment, context),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              // Status Icon
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: statusColor.withOpacity(0.2),
+                ),
+                child: Center(
+                  child: Icon(
+                    _getStatusIcon(payment.status),
+                    color: statusColor,
+                  ),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(width: 12),
+              // Payment Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      payment.invoiceReference,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      methodText,
+                      style:
+                          TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      DateFormat('MMM dd, yyyy HH:mm')
+                          .format(payment.createdAt),
+                      style:
+                          TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+              // Amount & Status
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    payment.formattedAmount,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      payment.statusText,
+                      style: TextStyle(
+                        color: statusColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        onTap: () {
-          _showPaymentDetails(payment, context);
-        },
       ),
     );
   }

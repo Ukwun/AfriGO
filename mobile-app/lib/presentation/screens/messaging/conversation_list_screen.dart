@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../config/theme.dart';
 import '../../models/message_model.dart';
 import '../../services/api_service.dart';
+import '../../widgets/modern_card.dart';
+import '../../widgets/animated_button.dart';
 
 // Conversations provider
 final conversationsProvider =
@@ -20,7 +23,7 @@ final conversationUnreadProvider = FutureProvider.autoDispose<int>((ref) async {
 });
 
 class ConversationListScreen extends ConsumerWidget {
-  const ConversationListScreen({Key? key}) : super(key: key);
+  const ConversationListScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

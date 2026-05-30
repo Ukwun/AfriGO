@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../config/theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/modern_components.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -81,19 +82,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
-  /// Validate email format
   bool _isValidEmail(String email) {
     return email.contains('@') && email.contains('.');
   }
 
-  /// Validate password strength (minimum 8 chars, mixed case & numbers)
   bool _isValidPassword(String password) {
     return password.length >= 8 &&
         password.contains(RegExp(r'[A-Z]')) &&
         password.contains(RegExp(r'[0-9]'));
   }
 
-  /// Handle Google Sign-Up
   Future<void> _handleGoogleSignUp() async {
     setState(() => _errorMessage = null);
     try {
@@ -114,7 +112,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
   }
 
-  /// Handle Facebook Sign-Up
   Future<void> _handleFacebookSignUp() async {
     setState(() => _errorMessage = null);
     try {
@@ -135,7 +132,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
   }
 
-  /// Handle Apple Sign-Up
   Future<void> _handleAppleSignUp() async {
     setState(() => _errorMessage = null);
     try {
@@ -155,9 +151,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
   }
 
-  /// Handle registration
   Future<void> _handleRegister() async {
-    // Validate input
     if (_firstNameController.text.isEmpty) {
       setState(() => _errorMessage = 'First name is required');
       return;
@@ -201,10 +195,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     }
 
-    // Clear error
     setState(() => _errorMessage = null);
 
-    // Attempt registration
     await ref.read(authProvider.notifier).register(
           email: _emailController.text.trim(),
           password: _passwordController.text,
@@ -221,12 +213,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               : _countryController.text.trim(),
         );
 
-    // Check result and navigate
     if (!mounted) return;
 
     final authState = ref.read(authProvider);
     if (authState is AuthAuthenticated) {
-      // Navigate to buyer dashboard (email verification can be added later)
       context.go('/dashboard/buyer');
     } else if (authState is AuthError) {
       setState(() => _errorMessage = authState.message);
@@ -239,275 +229,284 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final isLoading = authState is AuthLoading;
 
     return Scaffold(
+      backgroundColor: AfrigoColors.bgLight,
       appBar: AppBar(
-        title: const Text('Create Account'),
+        backgroundColor: Colors.white,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back, color: AfrigoColors.textPrimary),
           onPressed: () => context.pop(),
         ),
-        elevation: 0,
+        centerTitle: true,
+        title: Text(
+          'Create Account',
+          style: AfrigoTypography.soraHeading6.copyWith(
+            color: AfrigoColors.textPrimary,
+          ),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AfrigoSpacing.lg),
+        padding: const EdgeInsets.all(AfrigoSpacing.screenPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Header
             Text(
-              'Get Started on AfriGo',
-              style: AfrigoTypography.headingLarge.copyWith(
-                color: AfrigoColors.primaryDeepGreen,
+              'Get Started on AfriGO',
+              style: AfrigoTypography.soraHeading3.copyWith(
+                color: AfrigoColors.textPrimary,
               ),
             ),
-            const SizedBox(height: AfrigoSpacing.sm),
+            const SizedBox(height: AfrigoSpacing.md),
             Text(
               'Join thousands of traders across Africa',
-              style: AfrigoTypography.bodyMedium.copyWith(
+              style: AfrigoTypography.interBody1.copyWith(
                 color: AfrigoColors.textSecondary,
               ),
             ),
-            const SizedBox(height: AfrigoSpacing.xl),
+            const SizedBox(height: AfrigoSpacing.xxl),
 
-            // Error message
+            // Error Message
             if (_errorMessage != null) ...[
               Container(
                 padding: const EdgeInsets.all(AfrigoSpacing.md),
                 decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  border: Border.all(color: Colors.red.shade200),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  _errorMessage!,
-                  style: AfrigoTypography.bodySmall.copyWith(
-                    color: Colors.red.shade700,
+                  color: AfrigoColors.error.withOpacity(0.1),
+                  border: Border.all(
+                    color: AfrigoColors.error.withOpacity(0.3),
+                    width: 1,
                   ),
+                  borderRadius: BorderRadius.circular(AfriBorderRadius.md),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      color: AfrigoColors.error,
+                      size: 20,
+                    ),
+                    const SizedBox(width: AfrigoSpacing.md),
+                    Expanded(
+                      child: Text(
+                        _errorMessage!,
+                        style: AfrigoTypography.interBody2.copyWith(
+                          color: AfrigoColors.error,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: AfrigoSpacing.lg),
+              const SizedBox(height: AfrigoSpacing.xl),
             ],
 
-            // First Name
-            TextField(
-              controller: _firstNameController,
-              focusNode: _firstNameFocus,
-              enabled: !isLoading,
-              decoration: const InputDecoration(
-                labelText: 'First Name',
-                hintText: 'John',
-                prefixIcon: Icon(Icons.person_outline),
-              ),
-              textInputAction: TextInputAction.next,
-              onSubmitted: (_) => _lastNameFocus.requestFocus(),
-            ),
-            const SizedBox(height: AfrigoSpacing.md),
-
-            // Last Name
-            TextField(
-              controller: _lastNameController,
-              focusNode: _lastNameFocus,
-              enabled: !isLoading,
-              decoration: const InputDecoration(
-                labelText: 'Last Name',
-                hintText: 'Doe',
-                prefixIcon: Icon(Icons.person_outline),
-              ),
-              textInputAction: TextInputAction.next,
-              onSubmitted: (_) => _emailFocus.requestFocus(),
-            ),
-            const SizedBox(height: AfrigoSpacing.md),
-
-            // Email
-            TextField(
-              controller: _emailController,
-              focusNode: _emailFocus,
-              enabled: !isLoading,
-              decoration: const InputDecoration(
-                labelText: 'Email Address',
-                hintText: 'you@example.com',
-                prefixIcon: Icon(Icons.email_outlined),
-              ),
-              keyboardType: TextInputType.emailAddress,
-              textInputAction: TextInputAction.next,
-              onSubmitted: (_) => _passwordFocus.requestFocus(),
-            ),
-            const SizedBox(height: AfrigoSpacing.md),
-
-            // Password
-            TextField(
-              controller: _passwordController,
-              focusNode: _passwordFocus,
-              enabled: !isLoading,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                hintText: '••••••••',
-                prefixIcon: const Icon(Icons.lock_outline),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _showPassword ? Icons.visibility : Icons.visibility_off,
-                  ),
-                  onPressed: () =>
-                      setState(() => _showPassword = !_showPassword),
-                ),
-              ),
-              obscureText: !_showPassword,
-              textInputAction: TextInputAction.next,
-              onSubmitted: (_) => _confirmPasswordFocus.requestFocus(),
-            ),
-            const SizedBox(height: AfrigoSpacing.sm),
-            Text(
-              'Min 8 characters, must include uppercase and numbers',
-              style: AfrigoTypography.bodySmall.copyWith(
-                color: AfrigoColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: AfrigoSpacing.md),
-
-            // Confirm Password
-            TextField(
-              controller: _confirmPasswordController,
-              focusNode: _confirmPasswordFocus,
-              enabled: !isLoading,
-              decoration: InputDecoration(
-                labelText: 'Confirm Password',
-                hintText: '••••••••',
-                prefixIcon: const Icon(Icons.lock_outline),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _showConfirmPassword
-                        ? Icons.visibility
-                        : Icons.visibility_off,
-                  ),
-                  onPressed: () => setState(
-                      () => _showConfirmPassword = !_showConfirmPassword),
-                ),
-              ),
-              obscureText: !_showConfirmPassword,
-              textInputAction: TextInputAction.next,
-              onSubmitted: (_) => _phoneFocus.requestFocus(),
-            ),
-            const SizedBox(height: AfrigoSpacing.md),
-
-            // Phone (Optional)
-            TextField(
-              controller: _phoneController,
-              focusNode: _phoneFocus,
-              enabled: !isLoading,
-              decoration: const InputDecoration(
-                labelText: 'Phone Number (Optional)',
-                hintText: '+254700000000',
-                prefixIcon: Icon(Icons.phone_outlined),
-              ),
-              keyboardType: TextInputType.phone,
-              textInputAction: TextInputAction.next,
-              onSubmitted: (_) => _organizationFocus.requestFocus(),
-            ),
-            const SizedBox(height: AfrigoSpacing.md),
-
-            // Organization (Optional)
-            TextField(
-              controller: _organizationController,
-              focusNode: _organizationFocus,
-              enabled: !isLoading,
-              decoration: const InputDecoration(
-                labelText: 'Organization/Business (Optional)',
-                hintText: 'Your Company Name',
-                prefixIcon: Icon(Icons.business_outlined),
-              ),
-              textInputAction: TextInputAction.next,
-              onSubmitted: (_) => _countryFocus.requestFocus(),
-            ),
-            const SizedBox(height: AfrigoSpacing.md),
-
-            // Country Code (Optional)
-            TextField(
-              controller: _countryController,
-              focusNode: _countryFocus,
-              enabled: !isLoading,
-              decoration: const InputDecoration(
-                labelText: 'Country Code (Optional)',
-                hintText: 'KE, NG, UG, etc',
-                prefixIcon: Icon(Icons.public_outlined),
-              ),
-              textInputAction: TextInputAction.done,
-            ),
-            const SizedBox(height: AfrigoSpacing.lg),
-
-            // User Role Selection
-            Text(
-              'I am a',
-              style: AfrigoTypography.labelLarge.copyWith(
-                color: AfrigoColors.secondaryNavy,
-              ),
-            ),
-            const SizedBox(height: AfrigoSpacing.sm),
-            Wrap(
-              spacing: AfrigoSpacing.sm,
+            // Name Fields Row
+            Row(
               children: [
-                FilterChip(
-                  label: const Text('Buyer'),
-                  selected: _selectedRole == 'buyer',
-                  onSelected: isLoading
-                      ? null
-                      : (selected) {
-                          setState(() => _selectedRole = 'buyer');
-                        },
+                Expanded(
+                  child: _buildTextField(
+                    label: 'First Name',
+                    hint: 'John',
+                    controller: _firstNameController,
+                    prefixIcon: Icons.person_outline,
+                    enabled: !isLoading,
+                  ),
                 ),
-                FilterChip(
-                  label: const Text('Seller'),
-                  selected: _selectedRole == 'seller',
-                  onSelected: isLoading
-                      ? null
-                      : (selected) {
-                          setState(() => _selectedRole = 'seller');
-                        },
-                ),
-                FilterChip(
-                  label: const Text('Exporter'),
-                  selected: _selectedRole == 'exporter',
-                  onSelected: isLoading
-                      ? null
-                      : (selected) {
-                          setState(() => _selectedRole = 'exporter');
-                        },
+                const SizedBox(width: AfrigoSpacing.md),
+                Expanded(
+                  child: _buildTextField(
+                    label: 'Last Name',
+                    hint: 'Doe',
+                    controller: _lastNameController,
+                    prefixIcon: Icons.person_outline,
+                    enabled: !isLoading,
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: AfrigoSpacing.lg),
 
-            // Terms Agreement
-            CheckboxListTile(
-              value: _agreedToTerms,
-              onChanged: isLoading
-                  ? null
-                  : (value) => setState(() => _agreedToTerms = value ?? false),
-              title: const Text(
-                'I agree to the Terms of Service and Privacy Policy',
-                style: AfrigoTypography.bodySmall,
-              ),
-              contentPadding: EdgeInsets.zero,
+            // Email
+            _buildTextField(
+              label: 'Email Address',
+              hint: 'you@example.com',
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              prefixIcon: Icons.email_outlined,
+              enabled: !isLoading,
             ),
             const SizedBox(height: AfrigoSpacing.lg),
 
-            // Register Button
-            ElevatedButton(
-              onPressed: isLoading ? null : _handleRegister,
-              child: isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : const Text('Create Account'),
+            // Password
+            _buildTextField(
+              label: 'Password',
+              hint: '••••••••',
+              controller: _passwordController,
+              obscureText: !_showPassword,
+              prefixIcon: Icons.lock_outline,
+              suffixIcon:
+                  _showPassword ? Icons.visibility : Icons.visibility_off,
+              onSuffixIconTap: () =>
+                  setState(() => _showPassword = !_showPassword),
+              enabled: !isLoading,
+            ),
+            const SizedBox(height: AfrigoSpacing.sm),
+            Text(
+              '⚠️  Minimum 8 characters with uppercase letters and numbers',
+              style: AfrigoTypography.caption.copyWith(
+                color: AfrigoColors.warning,
+              ),
             ),
             const SizedBox(height: AfrigoSpacing.lg),
+
+            // Confirm Password
+            _buildTextField(
+              label: 'Confirm Password',
+              hint: '••••••••',
+              controller: _confirmPasswordController,
+              obscureText: !_showConfirmPassword,
+              prefixIcon: Icons.lock_outline,
+              suffixIcon: _showConfirmPassword
+                  ? Icons.visibility
+                  : Icons.visibility_off,
+              onSuffixIconTap: () =>
+                  setState(() => _showConfirmPassword = !_showConfirmPassword),
+              enabled: !isLoading,
+            ),
+            const SizedBox(height: AfrigoSpacing.lg),
+
+            // Optional Fields Section
+            Text(
+              'Optional Information',
+              style: AfrigoTypography.interBody2Semi.copyWith(
+                color: AfrigoColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: AfrigoSpacing.md),
+
+            _buildTextField(
+              label: 'Phone Number',
+              hint: '+254 700 000 000',
+              controller: _phoneController,
+              keyboardType: TextInputType.phone,
+              prefixIcon: Icons.phone_outlined,
+              enabled: !isLoading,
+            ),
+            const SizedBox(height: AfrigoSpacing.md),
+
+            _buildTextField(
+              label: 'Organization/Business',
+              hint: 'Your Company Name',
+              controller: _organizationController,
+              prefixIcon: Icons.business_outlined,
+              enabled: !isLoading,
+            ),
+            const SizedBox(height: AfrigoSpacing.md),
+
+            _buildTextField(
+              label: 'Country Code',
+              hint: 'KE, NG, UG, etc',
+              controller: _countryController,
+              prefixIcon: Icons.public_outlined,
+              enabled: !isLoading,
+            ),
+            const SizedBox(height: AfrigoSpacing.xl),
+
+            // Role Selection
+            Text(
+              'What role describes you best?',
+              style: AfrigoTypography.interBody2Semi.copyWith(
+                color: AfrigoColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: AfrigoSpacing.md),
+            Wrap(
+              spacing: AfrigoSpacing.md,
+              runSpacing: AfrigoSpacing.md,
+              children: [
+                _buildRoleChip('Buyer', 'buyer'),
+                _buildRoleChip('Seller', 'seller'),
+                _buildRoleChip('Exporter', 'exporter'),
+              ],
+            ),
+            const SizedBox(height: AfrigoSpacing.xl),
+
+            // Terms Agreement
+            Container(
+              padding: const EdgeInsets.all(AfrigoSpacing.md),
+              decoration: BoxDecoration(
+                color: AfrigoColors.primary.withOpacity(0.05),
+                border: Border.all(
+                  color: AfrigoColors.primary.withOpacity(0.2),
+                  width: 1,
+                ),
+                borderRadius: BorderRadius.circular(AfriBorderRadius.md),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Checkbox(
+                    value: _agreedToTerms,
+                    onChanged: isLoading
+                        ? null
+                        : (value) =>
+                            setState(() => _agreedToTerms = value ?? false),
+                    activeColor: AfrigoColors.primary,
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: AfrigoSpacing.xs),
+                      child: RichText(
+                        text: TextSpan(
+                          text: 'I agree to the ',
+                          style: AfrigoTypography.interBody2.copyWith(
+                            color: AfrigoColors.textSecondary,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: 'Terms of Service',
+                              style: AfrigoTypography.interBody2Semi.copyWith(
+                                color: AfrigoColors.primary,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                            TextSpan(
+                              text: ' and ',
+                              style: AfrigoTypography.interBody2.copyWith(
+                                color: AfrigoColors.textSecondary,
+                              ),
+                            ),
+                            TextSpan(
+                              text: 'Privacy Policy',
+                              style: AfrigoTypography.interBody2Semi.copyWith(
+                                color: AfrigoColors.primary,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AfrigoSpacing.xl),
+
+            // Register Button
+            ModernButton(
+              label: 'Create Account',
+              onPressed: isLoading ? () {} : _handleRegister,
+              isLoading: isLoading,
+              height: 56,
+            ),
+            const SizedBox(height: AfrigoSpacing.xl),
 
             // Divider
             Row(
               children: [
-                const Expanded(
-                  child: Divider(
+                Expanded(
+                  child: Container(
                     height: 1,
                     color: AfrigoColors.borderLight,
                   ),
@@ -518,88 +517,189 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   child: Text(
                     'OR',
-                    style: AfrigoTypography.bodySmall.copyWith(
-                      color: AfrigoColors.textSecondary,
+                    style: AfrigoTypography.labelSmall.copyWith(
+                      color: AfrigoColors.textTertiary,
                     ),
                   ),
                 ),
-                const Expanded(
-                  child: Divider(
+                Expanded(
+                  child: Container(
                     height: 1,
                     color: AfrigoColors.borderLight,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: AfrigoSpacing.lg),
+            const SizedBox(height: AfrigoSpacing.xl),
 
-            // Social Login Buttons
+            // Social Sign-up
             Text(
               'Sign up with',
-              style: AfrigoTypography.bodySmall.copyWith(
+              style: AfrigoTypography.interBody2.copyWith(
                 color: AfrigoColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AfrigoSpacing.md),
-
-            // Google Button
-            OutlinedButton.icon(
-              onPressed: isLoading ? null : _handleGoogleSignUp,
-              icon: const Icon(Icons.g_translate),
-              label: const Text('Google'),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size.fromHeight(48),
-              ),
-            ),
-            const SizedBox(height: AfrigoSpacing.sm),
-
-            // Facebook Button
-            OutlinedButton.icon(
-              onPressed: isLoading ? null : _handleFacebookSignUp,
-              icon: const Icon(Icons.facebook),
-              label: const Text('Facebook'),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size.fromHeight(48),
-              ),
-            ),
-            const SizedBox(height: AfrigoSpacing.sm),
-
-            // Apple Button
-            OutlinedButton.icon(
-              onPressed: isLoading ? null : _handleAppleSignUp,
-              icon: const Icon(Icons.apple),
-              label: const Text('Apple'),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size.fromHeight(48),
-              ),
-            ),
             const SizedBox(height: AfrigoSpacing.lg),
+
+            // Social Buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildSocialButton(
+                  Icons.g_translate,
+                  onPressed: isLoading ? null : _handleGoogleSignUp,
+                ),
+                _buildSocialButton(
+                  Icons.facebook,
+                  onPressed: isLoading ? null : _handleFacebookSignUp,
+                ),
+                _buildSocialButton(
+                  Icons.apple,
+                  onPressed: isLoading ? null : _handleAppleSignUp,
+                ),
+              ],
+            ),
+            const SizedBox(height: AfrigoSpacing.xl),
 
             // Login Link
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
+                Text(
                   'Already have an account? ',
-                  style: AfrigoTypography.bodyMedium,
+                  style: AfrigoTypography.interBody2.copyWith(
+                    color: AfrigoColors.textSecondary,
+                  ),
                 ),
                 GestureDetector(
                   onTap: () => context.go('/login'),
                   child: Text(
                     'Sign In',
-                    style: AfrigoTypography.bodyMedium.copyWith(
-                      color: AfrigoColors.primaryDeepGreen,
-                      fontWeight: FontWeight.w600,
+                    style: AfrigoTypography.interBody2Semi.copyWith(
+                      color: AfrigoColors.primary,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: AfrigoSpacing.lg),
+            const SizedBox(height: AfrigoSpacing.xl),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildTextField({
+    required String label,
+    required String hint,
+    required TextEditingController controller,
+    TextInputType keyboardType = TextInputType.text,
+    bool obscureText = false,
+    IconData? prefixIcon,
+    IconData? suffixIcon,
+    VoidCallback? onSuffixIconTap,
+    bool enabled = true,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      obscureText: obscureText,
+      enabled: enabled,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        prefixIcon: prefixIcon != null ? Icon(prefixIcon, size: 20) : null,
+        suffixIcon: suffixIcon != null
+            ? GestureDetector(
+                onTap: onSuffixIconTap,
+                child: Icon(suffixIcon, size: 20),
+              )
+            : null,
+        filled: true,
+        fillColor: AfrigoColors.bgLightAlt,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AfrigoSpacing.lg,
+          vertical: 14,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AfriBorderRadius.md),
+          borderSide: const BorderSide(color: AfrigoColors.borderLight),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AfriBorderRadius.md),
+          borderSide: const BorderSide(color: AfrigoColors.borderLight),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AfriBorderRadius.md),
+          borderSide: const BorderSide(
+            color: AfrigoColors.primary,
+            width: 2,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoleChip(String label, String value) {
+    final isSelected = _selectedRole == value;
+    return Material(
+      child: InkWell(
+        onTap: () => setState(() => _selectedRole = value),
+        borderRadius: BorderRadius.circular(AfriBorderRadius.full),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AfrigoSpacing.lg,
+            vertical: AfrigoSpacing.md,
+          ),
+          decoration: BoxDecoration(
+            color: isSelected ? AfrigoColors.primary : AfrigoColors.bgLightAlt,
+            borderRadius: BorderRadius.circular(AfriBorderRadius.full),
+            border: Border.all(
+              color:
+                  isSelected ? AfrigoColors.primary : AfrigoColors.borderLight,
+              width: isSelected ? 2 : 1,
+            ),
+          ),
+          child: Text(
+            label,
+            style: AfrigoTypography.interBody2Semi.copyWith(
+              color: isSelected ? Colors.white : AfrigoColors.textSecondary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSocialButton(
+    IconData icon, {
+    required Function()? onPressed,
+  }) {
+    return Material(
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(AfriBorderRadius.md),
+        child: Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AfriBorderRadius.md),
+            border: Border.all(
+              color: AfrigoColors.borderLight,
+              width: 1,
+            ),
+            boxShadow: AfrigoElevation.shadow1,
+          ),
+          child: Icon(
+            icon,
+            color: AfrigoColors.textSecondary,
+            size: 24,
+          ),
+        ),
+      ),
+    );
+  }
 }
+

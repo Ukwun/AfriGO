@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../config/theme.dart';
 import '../../models/rfq_model.dart';
 import '../providers/rfq_provider.dart';
+import '../../widgets/modern_card.dart';
+import '../../widgets/animated_button.dart';
 
 class RFQDetailScreen extends ConsumerStatefulWidget {
   final String rfqId;
 
   const RFQDetailScreen({
-    Key? key,
+    super.key,
     required this.rfqId,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<RFQDetailScreen> createState() => _RFQDetailScreenState();
@@ -370,27 +373,13 @@ class _RFQDetailScreenState extends ConsumerState<RFQDetailScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Submit Button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed:
-                              _isSubmittingBid ? null : () => _submitBid(rfq),
-                          child: _isSubmittingBid
-                              ? const SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child:
-                                      CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Text(
-                                  'Submit Bid',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                        ),
+                      // Submit Button with real-time responsiveness
+                      AnimatedPrimaryButton(
+                        label: 'Submit Bid',
+                        onPressed:
+                            _isSubmittingBid ? null : () => _submitBid(rfq),
+                        isLoading: _isSubmittingBid,
+                        isLargeTouchTarget: true,
                       ),
                       const SizedBox(height: 32),
                     ],
@@ -409,9 +398,10 @@ class _RFQDetailScreenState extends ConsumerState<RFQDetailScreen> {
               const SizedBox(height: 16),
               Text('Error: $error'),
               const SizedBox(height: 16),
-              ElevatedButton(
+              AnimatedPrimaryButton(
+                label: 'Retry',
                 onPressed: () => ref.refresh(rfqDetailProvider(widget.rfqId)),
-                child: const Text('Retry'),
+                isLargeTouchTarget: true,
               ),
             ],
           ),
