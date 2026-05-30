@@ -13,11 +13,32 @@ export class AuthService {
     return `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  async register(email: string, password: string, firstName: string, lastName: string): Promise<any> {
+  private normalizeEmail(email: string): string {
+    return email.trim().toLowerCase();
+  }
+
+  private normalizeRole(role?: string): string {
+    const value = (role || 'buyer').trim().toLowerCase();
+    if (value === 'supplier') return 'supplier';
+    if (value === 'seller') return 'seller';
+    if (value === 'exporter') return 'exporter';
+    return 'buyer';
+  }
+
+  async register(
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    role?: string,
+  ): Promise<any> {
+    const normalizedEmail = this.normalizeEmail(email);
+    const normalizedRole = this.normalizeRole(role);
+
     // Check if user exists in Firestore
     const existingUserSnapshot = await this.firebaseService
       .users()
-      .where('email', '==', email)
+      .where('email', '==', normalizedEmail)
       .limit(1)
       .get();
 
@@ -31,7 +52,7 @@ export class AuthService {
     // Create user object
     const newUser = {
       id: this.generateId(),
-      email,
+      email: normalizedEmail,
       passwordHash: hashedPassword,
       firstName,
       lastName,
@@ -42,7 +63,7 @@ export class AuthService {
       accountStatus: 'active',
       trustScore: 0,
       completedTrades: 0,
-      roles: ['buyer'],
+      roles: [normalizedRole],
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -52,7 +73,7 @@ export class AuthService {
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: newUser.id, email: newUser.email },
+      { sub: newUser.id, id: newUser.id, email: newUser.email },
       this.jwtSecret,
       { expiresIn: '24h' }
     );
@@ -75,10 +96,12 @@ export class AuthService {
   }
 
   async login(email: string, password: string): Promise<any> {
+    const normalizedEmail = this.normalizeEmail(email);
+
     // Find user in Firestore
     const userSnapshot = await this.firebaseService
       .users()
-      .where('email', '==', email)
+      .where('email', '==', normalizedEmail)
       .limit(1)
       .get();
 
@@ -87,7 +110,11 @@ export class AuthService {
     }
 
     const userDoc = userSnapshot.docs[0];
-    const user = userDoc.data();
+    const user = userDoc.data() as any;
+
+    if (!user.passwordHash) {
+      throw new BadRequestException('This account cannot use password login. Please sign in with its original provider.');
+    }
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
@@ -97,7 +124,7 @@ export class AuthService {
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: user.id, email: user.email },
+      { sub: user.id, id: user.id, email: user.email },
       this.jwtSecret,
       { expiresIn: '24h' }
     );
@@ -110,10 +137,13 @@ export class AuthService {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        fullName: user.fullName,
-        roles: user.roles,
-        kycStatus: user.kycStatus,
-        emailVerified: user.emailVerified,
+        fullName: user.fullName ?? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim(),
+        roles: user.roles ?? ['buyer'],
+        kycStatus: user.kycStatus ?? 'pending',
+        emailVerified: !!user.emailVerified,
+        phoneVerified: !!user.phoneVerified,
+        trustScore: user.trustScore ?? 0,
+        completedTrades: user.completedTrades ?? 0,
       },
       token,
     };

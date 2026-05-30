@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 enum LiveActorRole { buyer, supplier, exporter }
@@ -45,6 +48,35 @@ class LiveRoleStats {
       deliveredToday: deliveredToday ?? this.deliveredToday,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'openRfqs': openRfqs,
+      'activeQuotes': activeQuotes,
+      'readyLots': readyLots,
+      'bookedShipments': bookedShipments,
+      'inCustoms': inCustoms,
+      'deliveredToday': deliveredToday,
+    };
+  }
+
+  factory LiveRoleStats.fromJson(Map<dynamic, dynamic> json) {
+    int readInt(String key, int fallback) {
+      final value = json[key];
+      if (value is int) return value;
+      if (value is num) return value.toInt();
+      return fallback;
+    }
+
+    return LiveRoleStats(
+      openRfqs: readInt('openRfqs', 5),
+      activeQuotes: readInt('activeQuotes', 14),
+      readyLots: readInt('readyLots', 6),
+      bookedShipments: readInt('bookedShipments', 4),
+      inCustoms: readInt('inCustoms', 2),
+      deliveredToday: readInt('deliveredToday', 3),
+    );
+  }
 }
 
 class LiveActivityEvent {
@@ -63,6 +95,39 @@ class LiveActivityEvent {
   final String title;
   final String subtitle;
   final DateTime timestamp;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'type': type.name,
+      'actor': actor.name,
+      'title': title,
+      'subtitle': subtitle,
+      'timestamp': timestamp.toIso8601String(),
+    };
+  }
+
+  factory LiveActivityEvent.fromJson(Map<String, dynamic> json) {
+    final typeRaw = (json['type'] as String?) ?? LiveEventType.rfqPosted.name;
+    final actorRaw = (json['actor'] as String?) ?? LiveActorRole.buyer.name;
+
+    return LiveActivityEvent(
+      id: (json['id'] as String?) ??
+          'evt-${DateTime.now().microsecondsSinceEpoch}',
+      type: LiveEventType.values.firstWhere(
+        (value) => value.name == typeRaw,
+        orElse: () => LiveEventType.rfqPosted,
+      ),
+      actor: LiveActorRole.values.firstWhere(
+        (value) => value.name == actorRaw,
+        orElse: () => LiveActorRole.buyer,
+      ),
+      title: (json['title'] as String?) ?? 'Market update',
+      subtitle: (json['subtitle'] as String?) ?? 'New activity detected.',
+      timestamp: DateTime.tryParse((json['timestamp'] as String?) ?? '') ??
+          DateTime.now(),
+    );
+  }
 }
 
 class LiveMarketActivityState {
@@ -88,7 +153,8 @@ class LiveMarketActivityState {
 class LiveMarketActivityNotifier
     extends StateNotifier<LiveMarketActivityState> {
   LiveMarketActivityNotifier()
-      : super(
+      : _database = FirebaseDatabase.instance,
+        super(
           LiveMarketActivityState(
             stats: const LiveRoleStats(
               openRfqs: 5,
@@ -117,89 +183,201 @@ class LiveMarketActivityNotifier
               ),
             ],
           ),
+        ) {
+    _rootRef = _database.ref('live_market_activity/v1');
+    _statsRef = _rootRef.child('stats');
+    _eventsRef = _rootRef.child('events');
+    unawaited(_initializeSync());
+  }
+
+  final FirebaseDatabase _database;
+  late final DatabaseReference _rootRef;
+  late final DatabaseReference _statsRef;
+  late final DatabaseReference _eventsRef;
+  StreamSubscription<DatabaseEvent>? _rootSubscription;
+
+  Future<void> _initializeSync() async {
+    try {
+      final statsSnapshot = await _statsRef.get();
+      if (!statsSnapshot.exists) {
+        await _statsRef.set(state.stats.toJson());
+      }
+
+      _rootSubscription = _rootRef.onValue.listen((event) {
+        final raw = event.snapshot.value;
+        if (raw is! Map<dynamic, dynamic>) {
+          return;
+        }
+
+        final statsRaw = raw['stats'];
+        final eventsRaw = raw['events'];
+
+        final resolvedStats = statsRaw is Map<dynamic, dynamic>
+            ? LiveRoleStats.fromJson(statsRaw)
+            : state.stats;
+
+        final resolvedEvents = _decodeEvents(eventsRaw);
+        state = state.copyWith(
+          stats: resolvedStats,
+          events: resolvedEvents.isEmpty ? state.events : resolvedEvents,
         );
+      });
+    } catch (_) {
+      // Keep local-only mode if realtime sync is unavailable.
+    }
+  }
+
+  List<LiveActivityEvent> _decodeEvents(dynamic eventsRaw) {
+    if (eventsRaw is! Map<dynamic, dynamic>) {
+      return const [];
+    }
+
+    final parsed = eventsRaw.values
+        .whereType<Map<dynamic, dynamic>>()
+        .map(
+          (entry) => LiveActivityEvent.fromJson(
+            entry.map((key, value) => MapEntry('$key', value)),
+          ),
+        )
+        .toList(growable: false)
+      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
+    return parsed.take(20).toList(growable: false);
+  }
 
   void buyerPostRfq() {
-    final nextStats = state.stats.copyWith(openRfqs: state.stats.openRfqs + 1);
-    _pushEvent(
+    _publishEvent(
       type: LiveEventType.rfqPosted,
       actor: LiveActorRole.buyer,
       title: 'Buyer posted RFQ',
       subtitle: 'Suppliers can now submit quotes immediately.',
-      stats: nextStats,
     );
   }
 
   void supplierSubmitQuote() {
-    final nextStats = state.stats.copyWith(
-      activeQuotes: state.stats.activeQuotes + 1,
-      openRfqs: state.stats.openRfqs > 0 ? state.stats.openRfqs - 1 : 0,
-    );
-    _pushEvent(
+    _publishEvent(
       type: LiveEventType.quoteSubmitted,
       actor: LiveActorRole.supplier,
       title: 'Supplier submitted quote',
       subtitle: 'Buyer received a new counter-ready quote.',
-      stats: nextStats,
     );
   }
 
   void supplierMarkLotReady() {
-    final nextStats =
-        state.stats.copyWith(readyLots: state.stats.readyLots + 1);
-    _pushEvent(
+    _publishEvent(
       type: LiveEventType.lotReady,
       actor: LiveActorRole.supplier,
       title: 'Lot marked ready',
       subtitle: 'Exporter can now book shipment and customs prep.',
-      stats: nextStats,
     );
   }
 
   void exporterBookShipment() {
-    final nextStats = state.stats.copyWith(
-      readyLots: state.stats.readyLots > 0 ? state.stats.readyLots - 1 : 0,
-      bookedShipments: state.stats.bookedShipments + 1,
-    );
-    _pushEvent(
+    _publishEvent(
       type: LiveEventType.shipmentBooked,
       actor: LiveActorRole.exporter,
       title: 'Exporter booked shipment',
       subtitle: 'Route locked and buyer ETA updated in real time.',
-      stats: nextStats,
     );
   }
 
   void exporterClearCustoms() {
-    final nextStats = state.stats.copyWith(
-      bookedShipments:
-          state.stats.bookedShipments > 0 ? state.stats.bookedShipments - 1 : 0,
-      inCustoms: state.stats.inCustoms + 1,
-    );
-    _pushEvent(
+    _publishEvent(
       type: LiveEventType.customsCleared,
       actor: LiveActorRole.exporter,
       title: 'Customs milestone cleared',
       subtitle: 'Shipment advanced to final-mile release.',
-      stats: nextStats,
     );
   }
 
   void buyerReleasePayment() {
-    final nextStats = state.stats.copyWith(
-      inCustoms: state.stats.inCustoms > 0 ? state.stats.inCustoms - 1 : 0,
-      deliveredToday: state.stats.deliveredToday + 1,
-    );
-    _pushEvent(
+    _publishEvent(
       type: LiveEventType.paymentReleased,
       actor: LiveActorRole.buyer,
       title: 'Buyer released escrow payment',
       subtitle: 'Supplier payout confirmed and transaction closed.',
-      stats: nextStats,
     );
   }
 
-  void _pushEvent({
+  void _publishEvent({
+    required LiveEventType type,
+    required LiveActorRole actor,
+    required String title,
+    required String subtitle,
+  }) {
+    final nextStats = _applyStatMutation(type, state.stats);
+    _pushLocal(
+      type: type,
+      actor: actor,
+      title: title,
+      subtitle: subtitle,
+      stats: nextStats,
+    );
+    unawaited(_writeRemote(type, actor, title, subtitle));
+  }
+
+  LiveRoleStats _applyStatMutation(LiveEventType type, LiveRoleStats current) {
+    switch (type) {
+      case LiveEventType.rfqPosted:
+        return current.copyWith(openRfqs: current.openRfqs + 1);
+      case LiveEventType.quoteSubmitted:
+        return current.copyWith(
+          activeQuotes: current.activeQuotes + 1,
+          openRfqs: current.openRfqs > 0 ? current.openRfqs - 1 : 0,
+        );
+      case LiveEventType.lotReady:
+        return current.copyWith(readyLots: current.readyLots + 1);
+      case LiveEventType.shipmentBooked:
+        return current.copyWith(
+          readyLots: current.readyLots > 0 ? current.readyLots - 1 : 0,
+          bookedShipments: current.bookedShipments + 1,
+        );
+      case LiveEventType.customsCleared:
+        return current.copyWith(
+          bookedShipments:
+              current.bookedShipments > 0 ? current.bookedShipments - 1 : 0,
+          inCustoms: current.inCustoms + 1,
+        );
+      case LiveEventType.paymentReleased:
+        return current.copyWith(
+          inCustoms: current.inCustoms > 0 ? current.inCustoms - 1 : 0,
+          deliveredToday: current.deliveredToday + 1,
+        );
+    }
+  }
+
+  Future<void> _writeRemote(
+    LiveEventType type,
+    LiveActorRole actor,
+    String title,
+    String subtitle,
+  ) async {
+    try {
+      await _statsRef.runTransaction((value) {
+        final currentRaw = value as Map<dynamic, dynamic>?;
+        final current = currentRaw == null
+            ? state.stats
+            : LiveRoleStats.fromJson(currentRaw);
+        final next = _applyStatMutation(type, current);
+        return Transaction.success(next.toJson());
+      });
+
+      final entry = LiveActivityEvent(
+        id: 'evt-${DateTime.now().microsecondsSinceEpoch}',
+        type: type,
+        actor: actor,
+        title: title,
+        subtitle: subtitle,
+        timestamp: DateTime.now(),
+      );
+
+      await _eventsRef.push().set(entry.toJson());
+    } catch (_) {
+      // Local state already updated optimistically.
+    }
+  }
+
+  void _pushLocal({
     required LiveEventType type,
     required LiveActorRole actor,
     required String title,
@@ -217,6 +395,12 @@ class LiveMarketActivityNotifier
 
     final updated = [entry, ...state.events].take(20).toList(growable: false);
     state = state.copyWith(stats: stats, events: updated);
+  }
+
+  @override
+  void dispose() {
+    _rootSubscription?.cancel();
+    super.dispose();
   }
 }
 

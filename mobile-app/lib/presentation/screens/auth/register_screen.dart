@@ -226,6 +226,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           password: _passwordController.text,
           firstName: _firstNameController.text.trim(),
           lastName: _lastNameController.text.trim(),
+          role: _selectedRole,
           phone: _phoneController.text.isEmpty
               ? null
               : _phoneController.text.trim(),

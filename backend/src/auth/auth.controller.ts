@@ -7,7 +7,7 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() body: any): Promise<any> {
-    const { email, password, firstName, lastName } = body;
+    const { email, password, firstName, lastName, role } = body;
 
     // Validation
     if (!email || !password || !firstName || !lastName) {
@@ -18,12 +18,17 @@ export class AuthController {
       throw new BadRequestException('Password must be at least 6 characters');
     }
 
-    if (!email.includes('@')) {
+    if (!String(email).includes('@')) {
       throw new BadRequestException('Invalid email format');
     }
 
-    // Register user (mock for now)
-    return await this.authService.register(email, password, firstName, lastName);
+    return await this.authService.register(
+      String(email),
+      String(password),
+      String(firstName),
+      String(lastName),
+      role ? String(role) : undefined,
+    );
   }
 
   @Post('login')

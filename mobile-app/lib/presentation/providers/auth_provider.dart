@@ -94,6 +94,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String password,
     required String firstName,
     required String lastName,
+    String role = 'buyer',
     String? phone,
     String? organizationName,
     String? countryCode,
@@ -101,15 +102,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = const AuthLoading();
 
     try {
-      print('[AuthNotifier] Registering: $email');
+      final normalizedEmail = email.trim().toLowerCase();
+      print('[AuthNotifier] Registering: $normalizedEmail');
 
       final response = await apiClient.post(
         '/auth/register',
         body: {
-          'email': email,
+          'email': normalizedEmail,
           'password': password,
           'firstName': firstName,
           'lastName': lastName,
+          'role': role,
           if (phone != null) 'phone': phone,
           if (organizationName != null) 'organization': organizationName,
           if (countryCode != null) 'countryCode': countryCode,
@@ -149,12 +152,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = const AuthLoading();
 
     try {
-      print('[AuthNotifier] Logging in: $email');
+      final normalizedEmail = email.trim().toLowerCase();
+      print('[AuthNotifier] Logging in: $normalizedEmail');
 
       final response = await apiClient.post(
         '/auth/login',
         body: {
-          'email': email,
+          'email': normalizedEmail,
           'password': password,
         },
       );
@@ -188,9 +192,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> loginWithGoogle() async {
     state = const AuthLoading();
     try {
-      // TODO: Implement actual Google Sign-In
-      print('[AuthNotifier] Google login requested');
-      state = const AuthUnauthenticated();
+      state = const AuthError(
+        'Google login is not fully configured yet. Use email/password login for now.',
+      );
     } catch (e) {
       state = AuthError(e.toString());
       print('[AuthNotifier] Google login error: $e');
@@ -201,9 +205,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> loginWithFacebook() async {
     state = const AuthLoading();
     try {
-      // TODO: Implement actual Facebook Sign-In
-      print('[AuthNotifier] Facebook login requested');
-      state = const AuthUnauthenticated();
+      state = const AuthError(
+        'Facebook login is not fully configured yet. Use email/password login for now.',
+      );
     } catch (e) {
       state = AuthError(e.toString());
       print('[AuthNotifier] Facebook login error: $e');
@@ -214,9 +218,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> loginWithApple() async {
     state = const AuthLoading();
     try {
-      // TODO: Implement actual Apple Sign-In
-      print('[AuthNotifier] Apple login requested');
-      state = const AuthUnauthenticated();
+      state = const AuthError(
+        'Apple login is not available on this platform/configuration yet.',
+      );
     } catch (e) {
       state = AuthError(e.toString());
       print('[AuthNotifier] Apple login error: $e');
