@@ -491,7 +491,7 @@ class AppTheme {
   static const Color warningOrange = AppColors.warningOrange;
   static const Color errorRed = AppColors.errorRed;
 
-  static const Color textPrimary = AppColors.textPrimary;
+  static const Color textPrimary = AppColors.textDark;
   static const Color textSecondary = AppColors.textSecondary;
   static const Color backgroundLight = AppColors.backgroundLight;
   static const Color surfaceCard = AppColors.surfaceCard;
