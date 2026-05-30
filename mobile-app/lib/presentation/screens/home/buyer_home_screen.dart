@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:animations/animations.dart';
 import '../../../config/colors.dart';
-import '../../../config/theme.dart';
+import '../../providers/live_market_activity_provider.dart';
+import '../../widgets/live_role_exchange_panel.dart';
 import '../../widgets/motion_system.dart';
 
 /// Buyer Home Screen - Procurement focused on sourcing
@@ -63,6 +63,13 @@ class _BuyerHomeScreenState extends ConsumerState<BuyerHomeScreen>
                 begin: const Offset(0, 0.3),
                 duration: const Duration(milliseconds: 500),
                 child: _buildCreateRFQButton(context),
+              ),
+              const SizedBox(height: 20),
+
+              // ========== LIVE ROLE INTERACTION ==========
+              FadeInTransition(
+                duration: const Duration(milliseconds: 450),
+                child: const LiveRoleExchangePanel(role: LiveActorRole.buyer),
               ),
               const SizedBox(height: 32),
 
