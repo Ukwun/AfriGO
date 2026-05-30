@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../config/colors.dart';
 import '../../providers/live_market_activity_provider.dart';
+import '../../widgets/experience_shortcuts_strip.dart';
 import '../../widgets/live_role_exchange_panel.dart';
 import '../../widgets/motion_system.dart';
 
@@ -71,6 +72,11 @@ class _ExporterHomeScreenState extends ConsumerState<ExporterHomeScreen>
                 duration: const Duration(milliseconds: 450),
                 child:
                     const LiveRoleExchangePanel(role: LiveActorRole.exporter),
+              ),
+              const SizedBox(height: 12),
+              const FadeInTransition(
+                duration: Duration(milliseconds: 420),
+                child: ExperienceShortcutsStrip(roleLabel: 'Exporter'),
               ),
               const SizedBox(height: 32),
 

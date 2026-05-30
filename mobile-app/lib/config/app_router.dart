@@ -27,6 +27,9 @@ import '../presentation/screens/trading/lots/lot_photo_upload_screen.dart';
 import '../presentation/screens/trading/lots/lot_qr_display_screen.dart';
 import '../presentation/screens/trading/lots/lot_tracking_screen.dart';
 import '../presentation/screens/trading/lots/lot_history_screen.dart';
+import '../presentation/screens/user/profile_settings_screen.dart';
+import '../presentation/screens/user/notification_center_screen.dart';
+import '../presentation/screens/user/app_settings_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -183,6 +186,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           subtitle: 'Live chat with suppliers, buyers, and logistics teams.',
           icon: Icons.chat_bubble_outline,
         ),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationCenterScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const AppSettingsScreen(),
       ),
       GoRoute(
         path: '/analytics',

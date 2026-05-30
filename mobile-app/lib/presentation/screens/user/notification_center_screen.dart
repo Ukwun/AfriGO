@@ -1,18 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../widgets/motion_system.dart';
-import '../../../config/colors.dart';
-import '../../../config/theme.dart';
-import '../../../data/services/notification_service.dart';
+import 'package:go_router/go_router.dart';
 
-/// NOTIFICATION CENTER SCREEN
-/// Real-time notification display for all trading activity
-/// Shows: Trade offers, counter offers, payments, shipments, alerts
-/// Features: Real-time updates via WebSocket, swipe to dismiss, action buttons
-/// Status: Production-ready with animations and interactions
+import '../../../config/colors.dart';
+import '../../providers/live_market_activity_provider.dart';
 
 class NotificationCenterScreen extends ConsumerStatefulWidget {
-  const NotificationCenterScreen({Key? key}) : super(key: key);
+  const NotificationCenterScreen({super.key});
 
   @override
   ConsumerState<NotificationCenterScreen> createState() =>
@@ -20,443 +14,227 @@ class NotificationCenterScreen extends ConsumerStatefulWidget {
 }
 
 class _NotificationCenterScreenState
-    extends ConsumerState<NotificationCenterScreen>
-    with TickerProviderStateMixin {
-  final List<NotificationItem> _notifications = [];
-  late AnimationController _slideController;
-
-  @override
-  void initState() {
-    super.initState();
-    _slideController = AnimationController(
-      duration: Duration(milliseconds: 400),
-      vsync: this,
-    );
-  }
-
-  @override
-  void dispose() {
-    _slideController.dispose();
-    super.dispose();
-  }
+    extends ConsumerState<NotificationCenterScreen> {
+  final Set<String> _readIds = <String>{};
 
   @override
   Widget build(BuildContext context) {
-    final notificationStream = ref.watch(notificationStreamProvider);
+    final live = ref.watch(liveMarketActivityProvider);
+    final events = live.events;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.backgroundLight,
         elevation: 0,
-        title: Text(
-          'Notifications',
-          style: AppTheme.headlineMedium.copyWith(
-            color: AppColors.textPrimary,
-          ),
+        title: const Text('Notifications'),
+        leading: IconButton(
+          onPressed: () => context.pop(),
+          icon: const Icon(Icons.arrow_back),
         ),
         actions: [
-          if (_notifications.isNotEmpty)
-            TextButton.icon(
-              onPressed: _clearAll,
-              icon: Icon(Icons.delete_sweep, color: AppColors.error),
-              label: Text(
-                'Clear',
-                style: TextStyle(color: AppColors.error),
+          TextButton(
+            onPressed: events.isEmpty
+                ? null
+                : () {
+                    setState(() {
+                      _readIds.addAll(events.map((e) => e.id));
+                    });
+                  },
+            child: const Text('Mark all read'),
+          ),
+        ],
+      ),
+      body: events.isEmpty
+          ? const _EmptyNotifications()
+          : RefreshIndicator(
+              onRefresh: () async {
+                await Future<void>.delayed(const Duration(milliseconds: 450));
+              },
+              child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(12, 6, 12, 20),
+                itemCount: events.length,
+                itemBuilder: (context, index) {
+                  final event = events[index];
+                  final isRead = _readIds.contains(event.id);
+                  return Dismissible(
+                    key: ValueKey(event.id),
+                    direction: DismissDirection.endToStart,
+                    onDismissed: (_) {
+                      setState(() => _readIds.add(event.id));
+                    },
+                    background: Container(
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: 18),
+                      margin: const EdgeInsets.only(bottom: 10),
+                      decoration: BoxDecoration(
+                        color: AppColors.errorRed,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.check, color: Colors.white),
+                    ),
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0.95, end: 1),
+                      duration: Duration(milliseconds: 180 + (index * 40)),
+                      curve: Curves.easeOut,
+                      builder: (context, value, child) => Opacity(
+                        opacity: value,
+                        child: Transform.scale(scale: value, child: child),
+                      ),
+                      child: _NotificationTile(
+                        title: event.title,
+                        subtitle: event.subtitle,
+                        timestamp: event.timestamp,
+                        isRead: isRead,
+                        onTap: () {
+                          setState(() => _readIds.add(event.id));
+                          if (event.type == LiveEventType.rfqPosted) {
+                            context.push('/rfqs');
+                            return;
+                          }
+                          if (event.type == LiveEventType.shipmentBooked ||
+                              event.type == LiveEventType.customsCleared) {
+                            context.push('/tracking');
+                            return;
+                          }
+                          context.push('/analytics');
+                        },
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
-        ],
-      ),
-      body: notificationStream.when(
-        loading: () => _buildLoading(),
-        error: (error, stack) => _buildError(error),
-        data: (event) {
-          // Add incoming notification
-          if (!_notifications.any((n) => n.id == event['id'])) {
-            _notifications.insert(0, NotificationItem.fromMap(event));
-          }
-          return _buildNotificationList();
-        },
-      ),
     );
   }
+}
 
-  Widget _buildLoading() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 16),
-          Text(
-            'Loading notifications...',
-            style: AppTheme.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
-            ),
+class _NotificationTile extends StatelessWidget {
+  const _NotificationTile({
+    required this.title,
+    required this.subtitle,
+    required this.timestamp,
+    required this.isRead,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final DateTime timestamp;
+  final bool isRead;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceCard,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isRead ? AppColors.borderDefault : AppColors.accentBlue,
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildError(Object error) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error, color: AppColors.error, size: 48),
-          SizedBox(height: 16),
-          Text(
-            'Error loading notifications',
-            style: AppTheme.bodyMedium.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNotificationList() {
-    if (_notifications.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              Icons.notifications_none,
-              color: AppColors.textSecondary,
-              size: 64,
-            ),
-            SizedBox(height: 16),
-            Text(
-              'No notifications yet',
-              style: AppTheme.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: isRead
+                    ? AppColors.borderDefault.withValues(alpha: 0.4)
+                    : AppColors.accentBlueLight,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                isRead ? Icons.notifications_none : Icons.notifications_active,
+                size: 18,
+                color: isRead ? AppColors.textSecondary : AppColors.accentBlue,
               ),
             ),
-            SizedBox(height: 8),
-            Text(
-              'Your trading activity will appear here',
-              style: AppTheme.bodySmall.copyWith(
-                color: AppColors.textTertiary,
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: AppColors.textDark,
+                      fontSize: 13,
+                      fontWeight: isRead ? FontWeight.w600 : FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    _timeAgo(timestamp),
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
-      );
-    }
-
-    return ListView.builder(
-      itemCount: _notifications.length,
-      padding: EdgeInsets.symmetric(vertical: 8),
-      itemBuilder: (context, index) {
-        final notification = _notifications[index];
-        return SlideInTransition(
-          delay: index * 50,
-          child: Dismissible(
-            key: ValueKey(notification.id),
-            direction: DismissDirection.endToStart,
-            onDismissed: (direction) {
-              setState(() => _notifications.removeAt(index));
-            },
-            background: Container(
-              color: AppColors.error,
-              alignment: Alignment.centerRight,
-              padding: EdgeInsets.only(right: 16),
-              child: Icon(Icons.delete, color: Colors.white),
-            ),
-            child: _buildNotificationCard(notification),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildNotificationCard(NotificationItem notification) {
-    Color accentColor;
-    IconData iconData;
-
-    switch (notification.type) {
-      case 'TRADE_OFFER':
-        accentColor = AppColors.primary;
-        iconData = Icons.shopping_bag_outlined;
-        break;
-      case 'COUNTER_OFFER':
-        accentColor = Color(0xFF8B5CF6);
-        iconData = Icons.price_change;
-        break;
-      case 'PAYMENT_CONFIRMED':
-        accentColor = AppColors.success;
-        iconData = Icons.check_circle_outline;
-        break;
-      case 'PAYMENT_RELEASED':
-        accentColor = AppColors.success;
-        iconData = Icons.account_balance_wallet;
-        break;
-      case 'SHIPMENT_CREATED':
-        accentColor = Color(0xFF3B82F6);
-        iconData = Icons.local_shipping_outlined;
-        break;
-      case 'SHIPMENT_UPDATE':
-        accentColor = Color(0xFF3B82F6);
-        iconData = Icons.location_on_outlined;
-        break;
-      case 'TEMPERATURE_ALERT':
-        accentColor = AppColors.error;
-        iconData = Icons.warning_outlined;
-        break;
-      case 'FRAUD_ALERT':
-        accentColor = AppColors.error;
-        iconData = Icons.security_outlined;
-        break;
-      default:
-        accentColor = AppColors.textSecondary;
-        iconData = Icons.notifications_outlined;
-    }
-
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderLight),
-        boxShadow: [
-          BoxShadow(
-            color: accentColor.withOpacity(0.1),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Background accent bar
-          Positioned(
-            left: 0,
-            top: 0,
-            bottom: 0,
-            child: Container(
-              width: 4,
-              decoration: BoxDecoration(
-                color: accentColor,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  bottomLeft: Radius.circular(12),
-                ),
-              ),
-            ),
-          ),
-
-          // Content
-          Padding(
-            padding: EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header
-                Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: accentColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        iconData,
-                        color: accentColor,
-                        size: 20,
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            notification.title,
-                            style: AppTheme.labelMedium.copyWith(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            _formatTime(notification.timestamp),
-                            style: AppTheme.bodySmall.copyWith(
-                              color: AppColors.textTertiary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (!notification.isRead)
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: accentColor,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                  ],
-                ),
-
-                if (notification.body.isNotEmpty) ...[
-                  SizedBox(height: 8),
-                  Text(
-                    notification.body,
-                    style: AppTheme.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-
-                // Action buttons (if applicable)
-                if (notification.actions.isNotEmpty) ...[
-                  SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    children: notification.actions.map((action) {
-                      return SizedBox(
-                        height: 32,
-                        child: OutlinedButton.icon(
-                          onPressed: () => _handleAction(action),
-                          icon: Icon(
-                            action == 'view'
-                                ? Icons.open_in_new
-                                : action == 'accept'
-                                    ? Icons.check
-                                    : Icons.close,
-                            size: 14,
-                          ),
-                          label: Text(
-                            action == 'view'
-                                ? 'View'
-                                : action == 'accept'
-                                    ? 'Accept'
-                                    : 'Decline',
-                            style: AppTheme.bodySmall,
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(horizontal: 8),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
-
-                // Metadata (for trade data)
-                if (notification.metadata.isNotEmpty) ...[
-                  SizedBox(height: 8),
-                  Container(
-                    padding: EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.background,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        if (notification.metadata['price'] != null)
-                          Text(
-                            '\$${notification.metadata['price']}/kg',
-                            style: AppTheme.labelSmall.copyWith(
-                              color: accentColor,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        if (notification.metadata['quantity'] != null)
-                          Text(
-                            '${notification.metadata['quantity']}kg',
-                            style: AppTheme.labelSmall.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        if (notification.metadata['total'] != null)
-                          Text(
-                            'Total: \$${notification.metadata['total']}',
-                            style: AppTheme.labelSmall.copyWith(
-                              color: accentColor,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
 
-  void _handleAction(String action) {
-    // Handle notification actions
-    // Navigate to appropriate screen
-    print('Action: $action');
-  }
-
-  void _clearAll() {
-    setState(() => _notifications.clear());
-  }
-
-  String _formatTime(DateTime time) {
-    final now = DateTime.now();
-    final difference = now.difference(time);
-
-    if (difference.inSeconds < 60) {
-      return 'Just now';
-    } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
-    } else {
-      return '${difference.inDays}d ago';
-    }
+  String _timeAgo(DateTime dateTime) {
+    final diff = DateTime.now().difference(dateTime);
+    if (diff.inMinutes < 1) return 'just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return '${diff.inDays}d ago';
   }
 }
 
-/// Notification Item Model
-class NotificationItem {
-  final String id;
-  final String type; // TRADE_OFFER, COUNTER_OFFER, PAYMENT_CONFIRMED, etc.
-  final String title;
-  final String body;
-  final DateTime timestamp;
-  final List<String> actions; // view, accept, decline, etc.
-  final Map<String, dynamic> metadata; // price, quantity, total, etc.
-  bool isRead;
+class _EmptyNotifications extends StatelessWidget {
+  const _EmptyNotifications();
 
-  NotificationItem({
-    required this.id,
-    required this.type,
-    required this.title,
-    required this.body,
-    required this.timestamp,
-    this.actions = const [],
-    this.metadata = const {},
-    this.isRead = false,
-  });
-
-  factory NotificationItem.fromMap(Map<String, dynamic> map) {
-    return NotificationItem(
-      id: map['id'] ?? 'notif_${DateTime.now().millisecondsSinceEpoch}',
-      type: map['type'] ?? 'NOTIFICATION',
-      title: map['title'] ?? '',
-      body: map['body'] ?? '',
-      timestamp:
-          map['timestamp'] is DateTime ? map['timestamp'] : DateTime.now(),
-      actions: (map['actions'] as List<dynamic>?)?.cast<String>() ?? [],
-      metadata: map['metadata'] as Map<String, dynamic>? ?? {},
-      isRead: map['isRead'] ?? false,
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(Icons.notifications_none,
+              size: 46, color: AppColors.textSecondary),
+          SizedBox(height: 10),
+          Text(
+            'No notifications yet',
+            style: TextStyle(
+              color: AppColors.textDark,
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            'Live role activity updates will appear here.',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
