@@ -1,12 +1,14 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../presentation/screens/onboarding/splash_screen.dart';
 import '../presentation/screens/onboarding/welcome_screen.dart';
 import '../presentation/screens/auth/login_screen.dart';
 import '../presentation/screens/auth/register_screen.dart';
-import '../presentation/screens/dashboard/buyer_dashboard_screen.dart';
-import '../presentation/screens/dashboard/seller_dashboard_screen.dart';
-import '../presentation/screens/dashboard/exporter_dashboard_screen.dart';
+import '../presentation/screens/home/buyer_home_screen.dart';
+import '../presentation/screens/home/supplier_home_screen.dart';
+import '../presentation/screens/home/exporter_home_screen.dart';
+import '../presentation/screens/common/feature_placeholder_screen.dart';
 import '../presentation/screens/trading/trading_screen.dart';
 import '../presentation/screens/trading/create_rfq_screen.dart';
 import '../presentation/screens/trading/trade_detail_screen.dart';
@@ -48,15 +50,221 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/dashboard/buyer',
-        builder: (context, state) => const BuyerDashboardScreen(),
+        builder: (context, state) => const Scaffold(
+          backgroundColor: Color(0xFFF7F8FA),
+          body: BuyerHomeScreen(),
+        ),
       ),
       GoRoute(
         path: '/dashboard/seller',
-        builder: (context, state) => const SellerDashboardScreen(),
+        builder: (context, state) => const Scaffold(
+          backgroundColor: Color(0xFFF7F8FA),
+          body: SupplierHomeScreen(),
+        ),
       ),
       GoRoute(
         path: '/dashboard/exporter',
-        builder: (context, state) => const ExporterDashboardScreen(),
+        builder: (context, state) => const Scaffold(
+          backgroundColor: Color(0xFFF7F8FA),
+          body: ExporterHomeScreen(),
+        ),
+      ),
+
+      // ==================== HOME DASHBOARD ACTION ROUTES ====================
+
+      GoRoute(
+        path: '/rfqs',
+        builder: (context, state) => const FeaturePlaceholderScreen(
+          title: 'Open RFQs',
+          subtitle: 'Active requests and supplier responses in real time.',
+          icon: Icons.request_quote_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/rfqs/create',
+        builder: (context, state) => const CreateRFQScreen(),
+      ),
+      GoRoute(
+        path: '/rfqs/detail/:rfqId',
+        builder: (context, state) => FeaturePlaceholderScreen(
+          title: 'RFQ ${state.pathParameters['rfqId']}',
+          subtitle: 'Detailed RFQ timeline, supplier bids, and negotiation.',
+          icon: Icons.description_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/rfqs/edit/:rfqId',
+        builder: (context, state) => FeaturePlaceholderScreen(
+          title: 'Edit RFQ ${state.pathParameters['rfqId']}',
+          subtitle: 'Update quantity, delivery terms, and compliance notes.',
+          icon: Icons.edit_note_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/shipments',
+        builder: (context, state) => const FeaturePlaceholderScreen(
+          title: 'Shipments',
+          subtitle: 'Track active shipments, ETAs, and quality checks live.',
+          icon: Icons.local_shipping_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/shipments/detail/:shipmentId',
+        builder: (context, state) => FeaturePlaceholderScreen(
+          title: 'Shipment ${state.pathParameters['shipmentId']}',
+          subtitle: 'Live route map, temperature telemetry, and milestones.',
+          icon: Icons.pin_drop_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/lots',
+        builder: (context, state) => const FeaturePlaceholderScreen(
+          title: 'Active Lots',
+          subtitle: 'Manage inventory, offers, and lot lifecycle.',
+          icon: Icons.inventory_2_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/lots/create',
+        builder: (context, state) => const CreateLotScreen(),
+      ),
+      GoRoute(
+        path: '/lots/detail/:lotId',
+        builder: (context, state) => FeaturePlaceholderScreen(
+          title: 'Lot ${state.pathParameters['lotId']}',
+          subtitle: 'Quality score, bids received, and shipping readiness.',
+          icon: Icons.qr_code_2_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/lots/edit/:lotId',
+        builder: (context, state) => FeaturePlaceholderScreen(
+          title: 'Edit Lot ${state.pathParameters['lotId']}',
+          subtitle: 'Update lot metadata, pricing, and stock allocation.',
+          icon: Icons.tune_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/payments',
+        builder: (context, state) => const FeaturePlaceholderScreen(
+          title: 'Payments',
+          subtitle: 'Escrow timeline, payout status, and transaction history.',
+          icon: Icons.account_balance_wallet_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/contracts',
+        builder: (context, state) => const FeaturePlaceholderScreen(
+          title: 'Contracts',
+          subtitle: 'Manage active agreements and milestones.',
+          icon: Icons.description_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/contracts/detail/:contractId',
+        builder: (context, state) => FeaturePlaceholderScreen(
+          title: 'Contract ${state.pathParameters['contractId']}',
+          subtitle: 'Contract clauses, signatures, and compliance checks.',
+          icon: Icons.gavel_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/contracts/manage/:contractId',
+        builder: (context, state) => FeaturePlaceholderScreen(
+          title: 'Manage Contract ${state.pathParameters['contractId']}',
+          subtitle: 'Amendments, delivery updates, and payment milestones.',
+          icon: Icons.manage_accounts_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/messages',
+        builder: (context, state) => const FeaturePlaceholderScreen(
+          title: 'Messages',
+          subtitle: 'Live chat with suppliers, buyers, and logistics teams.',
+          icon: Icons.chat_bubble_outline,
+        ),
+      ),
+      GoRoute(
+        path: '/analytics',
+        builder: (context, state) => const FeaturePlaceholderScreen(
+          title: 'Analytics',
+          subtitle: 'Trade trends, pricing movement, and demand forecasts.',
+          icon: Icons.bar_chart_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/marketplace/supplier/:supplierId',
+        builder: (context, state) => FeaturePlaceholderScreen(
+          title: 'Supplier ${state.pathParameters['supplierId']}',
+          subtitle:
+              'Supplier profile, trust score, and historical performance.',
+          icon: Icons.verified_user_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/dossiers',
+        builder: (context, state) => const FeaturePlaceholderScreen(
+          title: 'Dossiers',
+          subtitle: 'Export documentation, approvals, and customs packets.',
+          icon: Icons.folder_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/dossiers/detail/:dossierId',
+        builder: (context, state) => FeaturePlaceholderScreen(
+          title: 'Dossier ${state.pathParameters['dossierId']}',
+          subtitle: 'Document status, missing items, and verification trail.',
+          icon: Icons.fact_check_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/dossiers/view/:dossierId',
+        builder: (context, state) => FeaturePlaceholderScreen(
+          title: 'View Dossier ${state.pathParameters['dossierId']}',
+          subtitle: 'Full export packet preview and audit stamps.',
+          icon: Icons.visibility_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/warehouse',
+        builder: (context, state) => const FeaturePlaceholderScreen(
+          title: 'Warehouse',
+          subtitle: 'Slot utilization, occupancy, and storage activity.',
+          icon: Icons.warehouse_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/tracking',
+        builder: (context, state) => const FeaturePlaceholderScreen(
+          title: 'Tracking',
+          subtitle: 'Real-time visibility into export shipment progress.',
+          icon: Icons.my_location_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/tracking/detail/:trackingId',
+        builder: (context, state) => FeaturePlaceholderScreen(
+          title: 'Tracking ${state.pathParameters['trackingId']}',
+          subtitle: 'Granular events, checkpoints, and ETA projection.',
+          icon: Icons.location_searching_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/exports/create',
+        builder: (context, state) => const FeaturePlaceholderScreen(
+          title: 'Create Export Order',
+          subtitle:
+              'Initialize a new export workflow and compliance checklist.',
+          icon: Icons.add_chart_outlined,
+        ),
+      ),
+      GoRoute(
+        path: '/pipeline',
+        builder: (context, state) => const FeaturePlaceholderScreen(
+          title: 'Export Pipeline',
+          subtitle: 'Pipeline stages with live status and bottleneck signals.',
+          icon: Icons.timeline_outlined,
+        ),
       ),
 
       // ==================== TRADING & RFQ ROUTES ====================

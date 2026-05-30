@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:animations/animations.dart';
 import '../../../config/colors.dart';
 import '../../../config/theme.dart';
-import '../../providers/role_provider.dart';
 import '../../widgets/motion_system.dart';
 import '../../widgets/modern_components.dart';
 
@@ -150,7 +150,7 @@ class _SupplierHomeScreenState extends ConsumerState<SupplierHomeScreen>
 
               // ========== QUICK ACTIONS ==========
               _buildSectionHeader(
-                icon: Icons.lightning_bolt_outlined,
+                icon: Icons.bolt_outlined,
                 title: 'Quick Actions',
               ),
               const SizedBox(height: 12),
@@ -160,7 +160,7 @@ class _SupplierHomeScreenState extends ConsumerState<SupplierHomeScreen>
                     child: ScaleInTransition(
                       child: _buildQuickActionButton(
                         context,
-                        icon: Icons.document_outlined,
+                        icon: Icons.description_outlined,
                         label: 'Contracts',
                         onTap: () => context.push('/contracts'),
                       ),
