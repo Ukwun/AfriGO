@@ -38,6 +38,30 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _agreedToTerms = false;
   String? _errorMessage;
 
+  String _dashboardRouteForSelectedRole(String role) {
+    switch (role.toLowerCase()) {
+      case 'seller':
+      case 'supplier':
+        return '/dashboard/seller';
+      case 'exporter':
+        return '/dashboard/exporter';
+      default:
+        return '/dashboard/buyer';
+    }
+  }
+
+  String _dashboardRouteForAuthUser(AuthUser user) {
+    final normalizedRoles = user.roles.map((r) => r.toLowerCase()).toList();
+    if (normalizedRoles.contains('seller') ||
+        normalizedRoles.contains('supplier')) {
+      return '/dashboard/seller';
+    }
+    if (normalizedRoles.contains('exporter')) {
+      return '/dashboard/exporter';
+    }
+    return '/dashboard/buyer';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -100,7 +124,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
       final authState = ref.read(authProvider);
       if (authState is AuthAuthenticated) {
-        context.go('/dashboard/buyer');
+        context.go(_dashboardRouteForAuthUser(authState.user));
       } else if (authState is AuthError) {
         setState(() => _errorMessage = authState.message);
       }
@@ -120,7 +144,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
       final authState = ref.read(authProvider);
       if (authState is AuthAuthenticated) {
-        context.go('/dashboard/buyer');
+        context.go(_dashboardRouteForAuthUser(authState.user));
       } else if (authState is AuthError) {
         setState(() => _errorMessage = authState.message);
       }
@@ -140,7 +164,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
       final authState = ref.read(authProvider);
       if (authState is AuthAuthenticated) {
-        context.go('/dashboard/buyer');
+        context.go(_dashboardRouteForAuthUser(authState.user));
       } else if (authState is AuthError) {
         setState(() => _errorMessage = authState.message);
       }
@@ -217,7 +241,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     final authState = ref.read(authProvider);
     if (authState is AuthAuthenticated) {
-      context.go('/dashboard/buyer');
+      context.go(_dashboardRouteForSelectedRole(_selectedRole));
     } else if (authState is AuthError) {
       setState(() => _errorMessage = authState.message);
     }
@@ -234,7 +258,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: AfrigoColors.textPrimary),
+          icon: const Icon(Icons.arrow_back, color: AfrigoColors.textPrimary),
           onPressed: () => context.pop(),
         ),
         centerTitle: true,
@@ -280,7 +304,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.error_outline,
                       color: AfrigoColors.error,
                       size: 20,
@@ -702,4 +726,3 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 }
-

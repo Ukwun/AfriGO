@@ -452,9 +452,10 @@ class _ExporterHomeScreenState extends ConsumerState<ExporterHomeScreen>
     required String documents,
   }) {
     final isApproved = status == 'approved';
+    final dossierId = Uri.encodeComponent(title);
 
     return GestureDetector(
-      onTap: () => context.push('/dossiers/detail/$title'),
+      onTap: () => context.push('/dossiers/detail/$dossierId'),
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surfaceCard,
@@ -474,7 +475,7 @@ class _ExporterHomeScreenState extends ConsumerState<ExporterHomeScreen>
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () => context.push('/dossiers/detail/$title'),
+            onTap: () => context.push('/dossiers/detail/$dossierId'),
             borderRadius: BorderRadius.circular(14),
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -584,7 +585,7 @@ class _ExporterHomeScreenState extends ConsumerState<ExporterHomeScreen>
                     child: ElevatedButton(
                       onPressed: () {
                         HapticFeedback.lightImpact();
-                        context.push('/dossiers/view/$title');
+                        context.push('/dossiers/view/$dossierId');
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: isApproved

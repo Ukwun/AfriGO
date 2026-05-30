@@ -17,6 +17,50 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _showPassword = false;
   String? _errorMessage;
 
+  String _dashboardRouteForUser(AuthUser user) {
+    final normalizedRoles = user.roles.map((r) => r.toLowerCase()).toList();
+    if (normalizedRoles.contains('seller') ||
+        normalizedRoles.contains('supplier')) {
+      return '/dashboard/seller';
+    }
+    if (normalizedRoles.contains('exporter')) {
+      return '/dashboard/exporter';
+    }
+    return '/dashboard/buyer';
+  }
+
+  Future<void> _handleLogin() async {
+    if (_emailController.text.trim().isEmpty ||
+        _passwordController.text.trim().isEmpty) {
+      setState(() {
+        _errorMessage = 'Email and password are required';
+      });
+      return;
+    }
+
+    setState(() => _errorMessage = null);
+
+    await ref.read(authProvider.notifier).login(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+
+    if (!mounted) return;
+
+    final authState = ref.read(authProvider);
+    if (authState is AuthAuthenticated) {
+      context.go(_dashboardRouteForUser(authState.user));
+      return;
+    }
+
+    if (authState is AuthError) {
+      setState(() => _errorMessage = authState.message);
+      return;
+    }
+
+    setState(() => _errorMessage = 'Unable to sign in. Please try again.');
+  }
+
   @override
   void initState() {
     super.initState();
@@ -71,10 +115,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: AfrigoSpacing.lg),
               TextField(
                 controller: _emailController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Email',
                   hintText: 'name@example.com',
-                  prefixIcon: const Icon(Icons.mail_outline),
+                  prefixIcon: Icon(Icons.mail_outline),
                 ),
                 keyboardType: TextInputType.emailAddress,
               ),
@@ -97,7 +141,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: AfrigoSpacing.xxl),
               ModernButton(
-                onPressed: () {},
+                onPressed: _handleLogin,
                 isLoading: isLoading,
                 child: const Text('Sign In'),
               ),

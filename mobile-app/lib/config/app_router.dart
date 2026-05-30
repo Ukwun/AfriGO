@@ -10,7 +10,7 @@ import '../presentation/screens/home/supplier_home_screen.dart';
 import '../presentation/screens/home/exporter_home_screen.dart';
 import '../presentation/screens/common/feature_placeholder_screen.dart';
 import '../presentation/screens/trading/trading_screen.dart';
-import '../presentation/screens/trading/create_rfq_screen.dart';
+import '../presentation/screens/trading/create_rfq_screen_modern.dart';
 import '../presentation/screens/trading/trade_detail_screen.dart';
 import '../presentation/screens/trading/seller_rfq_list_screen.dart';
 import '../presentation/screens/trading/submit_bid_screen.dart';
@@ -212,7 +212,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/dossiers/detail/:dossierId',
         builder: (context, state) => FeaturePlaceholderScreen(
-          title: 'Dossier ${state.pathParameters['dossierId']}',
+          title:
+              'Dossier ${Uri.decodeComponent(state.pathParameters['dossierId']!)}',
           subtitle: 'Document status, missing items, and verification trail.',
           icon: Icons.fact_check_outlined,
         ),
@@ -220,7 +221,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/dossiers/view/:dossierId',
         builder: (context, state) => FeaturePlaceholderScreen(
-          title: 'View Dossier ${state.pathParameters['dossierId']}',
+          title:
+              'View Dossier ${Uri.decodeComponent(state.pathParameters['dossierId']!)}',
           subtitle: 'Full export packet preview and audit stamps.',
           icon: Icons.visibility_outlined,
         ),
