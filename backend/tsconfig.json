@@ -20,6 +20,24 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
+  "include": [
+    "src/main.ts",
+    "src/app.module.ts",
+    "src/app.controller.ts",
+    "src/app.service.ts",
+    "src/auth/**/*.ts",
+    "src/firebase/**/*.ts",
+    "src/config/**/*.ts",
+    "src/common/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test",
+    "**/*spec.ts",
+    "src/**/*.tsx",
+    "src/admin/**/*",
+    "src/fraud-detection/**/*",
+    "src/websocket/**/*"
+  ]
 }
