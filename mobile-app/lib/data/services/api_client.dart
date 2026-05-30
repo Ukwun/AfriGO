@@ -9,7 +9,9 @@ class ApiClient {
   // Cloud backend deployed to Render
   // Updated: May 28, 2026
   static const String _baseUrl = 'https://afrigo-backend-1v22.onrender.com/api';
-  static const Duration _timeout = Duration(seconds: 120);
+  static const Duration _connectTimeout = Duration(seconds: 20);
+  static const Duration _receiveTimeout = Duration(seconds: 45);
+  static const Duration _sendTimeout = Duration(seconds: 30);
 
   factory ApiClient() {
     return _instance;
@@ -19,9 +21,9 @@ class ApiClient {
     _dio = Dio(
       BaseOptions(
         baseUrl: _baseUrl,
-        connectTimeout: _timeout,
-        receiveTimeout: _timeout,
-        sendTimeout: _timeout,
+        connectTimeout: _connectTimeout,
+        receiveTimeout: _receiveTimeout,
+        sendTimeout: _sendTimeout,
         contentType: Headers.jsonContentType,
         responseType: ResponseType.json,
         validateStatus: (status) => status != null && status < 500,
@@ -70,7 +72,9 @@ class ApiClient {
 
   Future<Map<String, dynamic>> get(String endpoint) async {
     try {
-      final response = await _dio.get(endpoint);
+      final response = await _requestWithRetry(
+        () => _dio.get(endpoint),
+      );
 
       // Check if response indicates an error (4xx status code)
       if (response.statusCode != null && response.statusCode! >= 400) {
@@ -85,7 +89,7 @@ class ApiClient {
         final errorData = e.response?.data as Map<String, dynamic>;
         throw Exception(errorData['message'] ?? e.message ?? 'Request failed');
       }
-      throw Exception(e.message ?? 'Request failed');
+      throw Exception(_friendlyNetworkError(e));
     } catch (e) {
       rethrow;
     }
@@ -96,7 +100,9 @@ class ApiClient {
     required Map<String, dynamic> body,
   }) async {
     try {
-      final response = await _dio.post(endpoint, data: body);
+      final response = await _requestWithRetry(
+        () => _dio.post(endpoint, data: body),
+      );
 
       // Check if response indicates an error (4xx status code)
       if (response.statusCode != null && response.statusCode! >= 400) {
@@ -111,7 +117,7 @@ class ApiClient {
         final errorData = e.response?.data as Map<String, dynamic>;
         throw Exception(errorData['message'] ?? e.message ?? 'Request failed');
       }
-      throw Exception(e.message ?? 'Request failed');
+      throw Exception(_friendlyNetworkError(e));
     } catch (e) {
       rethrow;
     }
@@ -122,8 +128,16 @@ class ApiClient {
     required Map<String, dynamic> body,
   }) async {
     try {
-      final response = await _dio.put(endpoint, data: body);
+      final response = await _requestWithRetry(
+        () => _dio.put(endpoint, data: body),
+      );
       return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data is Map) {
+        final errorData = e.response?.data as Map<String, dynamic>;
+        throw Exception(errorData['message'] ?? e.message ?? 'Request failed');
+      }
+      throw Exception(_friendlyNetworkError(e));
     } catch (e) {
       rethrow;
     }
@@ -131,9 +145,45 @@ class ApiClient {
 
   Future<void> delete(String endpoint) async {
     try {
-      await _dio.delete(endpoint);
+      await _requestWithRetry(
+        () => _dio.delete(endpoint),
+      );
+    } on DioException catch (e) {
+      throw Exception(_friendlyNetworkError(e));
     } catch (e) {
       rethrow;
+    }
+  }
+
+  Future<Response<dynamic>> _requestWithRetry(
+    Future<Response<dynamic>> Function() request,
+  ) async {
+    try {
+      return await request();
+    } on DioException catch (e) {
+      final shouldRetry = e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.connectionError ||
+          e.type == DioExceptionType.receiveTimeout;
+
+      if (!shouldRetry) {
+        rethrow;
+      }
+
+      // Render can cold-start or mobile DNS can briefly fail; retry once.
+      await Future<void>.delayed(const Duration(milliseconds: 800));
+      return request();
+    }
+  }
+
+  String _friendlyNetworkError(DioException e) {
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.receiveTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.connectionError:
+        return 'Network connection failed. Please check internet access and try again.';
+      default:
+        return e.message ?? 'Request failed';
     }
   }
 
