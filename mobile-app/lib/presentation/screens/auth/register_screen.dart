@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../config/theme.dart';
@@ -260,7 +261,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AfrigoColors.textPrimary),
-          onPressed: () => context.pop(),
+          onPressed: () => context.canPop() ? context.pop() : context.go('/welcome'),
         ),
         centerTitle: true,
         title: Text(
@@ -290,40 +291,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
             ),
             const SizedBox(height: AfrigoSpacing.xxl),
-
-            // Error Message
-            if (_errorMessage != null) ...[
-              Container(
-                padding: const EdgeInsets.all(AfrigoSpacing.md),
-                decoration: BoxDecoration(
-                  color: AfrigoColors.error.withOpacity(0.1),
-                  border: Border.all(
-                    color: AfrigoColors.error.withOpacity(0.3),
-                    width: 1,
-                  ),
-                  borderRadius: BorderRadius.circular(AfriBorderRadius.md),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      color: AfrigoColors.error,
-                      size: 20,
-                    ),
-                    const SizedBox(width: AfrigoSpacing.md),
-                    Expanded(
-                      child: Text(
-                        _errorMessage!,
-                        style: AfrigoTypography.interBody2.copyWith(
-                          color: AfrigoColors.error,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AfrigoSpacing.xl),
-            ],
 
             // Name Fields Row
             Row(
@@ -518,9 +485,44 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
             const SizedBox(height: AfrigoSpacing.xl),
 
+            // Error Message
+            if (_errorMessage != null) ...[
+              Container(
+                padding: const EdgeInsets.all(AfrigoSpacing.md),
+                decoration: BoxDecoration(
+                  color: AfrigoColors.error.withOpacity(0.1),
+                  border: Border.all(
+                    color: AfrigoColors.error.withOpacity(0.3),
+                    width: 1,
+                  ),
+                  borderRadius: BorderRadius.circular(AfriBorderRadius.md),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      color: AfrigoColors.error,
+                      size: 20,
+                    ),
+                    const SizedBox(width: AfrigoSpacing.md),
+                    Expanded(
+                      child: Text(
+                        _errorMessage!,
+                        style: AfrigoTypography.interBody2.copyWith(
+                          color: AfrigoColors.error,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AfrigoSpacing.md),
+            ],
+
             // Register Button
             ModernButton(
               label: 'Create Account',
+              loadingLabel: 'Creating account...',
               onPressed: isLoading ? () {} : _handleRegister,
               isLoading: isLoading,
               height: 56,
@@ -572,15 +574,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _buildSocialButton(
-                  Icons.g_translate,
+                  SvgPicture.asset(
+                    'assets/icons/google_logo.svg',
+                    width: 24,
+                    height: 24,
+                  ),
                   onPressed: isLoading ? null : _handleGoogleSignUp,
                 ),
                 _buildSocialButton(
-                  Icons.facebook,
+                  const Icon(Icons.facebook, color: AfrigoColors.textSecondary, size: 24),
                   onPressed: isLoading ? null : _handleFacebookSignUp,
                 ),
                 _buildSocialButton(
-                  Icons.apple,
+                  const Icon(Icons.apple, color: AfrigoColors.textSecondary, size: 24),
                   onPressed: isLoading ? null : _handleAppleSignUp,
                 ),
               ],
@@ -698,7 +704,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Widget _buildSocialButton(
-    IconData icon, {
+    Widget child, {
     required Function()? onPressed,
   }) {
     return Material(
@@ -717,13 +723,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
             boxShadow: AfrigoElevation.shadow1,
           ),
-          child: Icon(
-            icon,
-            color: AfrigoColors.textSecondary,
-            size: 24,
-          ),
+          child: Center(child: child),
         ),
       ),
     );
   }
 }
+

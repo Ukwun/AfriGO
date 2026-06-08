@@ -51,6 +51,7 @@ dependencies:
   webview_flutter: ^4.2.0
   animations: ^2.0.0
   google_fonts: ^6.0.0
+  flutter_svg: ^2.0.0
   
   # Lot Management & Photo Upload
   image_picker: ^1.0.0
@@ -92,7 +93,5 @@ flutter:
   #       - asset: assets/fonts/Sora-Bold.ttf
   #         weight: 700
   
-  # Images/assets (commented out - not used yet)
-  # assets:
-  #   - assets/images/
-  #   - assets/icons/
+  assets:
+    - assets/icons/

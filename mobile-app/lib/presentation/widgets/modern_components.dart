@@ -4,6 +4,7 @@ import '../../config/theme.dart';
 /// Modern Primary Button with ripple effect and animation
 class ModernButton extends StatefulWidget {
   final String? label;
+  final String? loadingLabel;
   final Widget? child;
   final VoidCallback onPressed;
   final bool isLoading;
@@ -15,6 +16,7 @@ class ModernButton extends StatefulWidget {
   const ModernButton({
     super.key,
     this.label,
+    this.loadingLabel,
     this.child,
     required this.onPressed,
     this.isLoading = false,
@@ -82,34 +84,28 @@ class _ModernButtonState extends State<ModernButton>
                 ? AfrigoElevation.shadow2
                 : [],
           ),
-          child: widget.isLoading
-              ? SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation(
-                      widget.isSecondary ? AfrigoColors.primary : Colors.white,
-                    ),
-                  ),
-                )
-              : widget.child != null
-                  ? Center(child: widget.child!)
-                  : Row(
+          child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: widget.isLoading
+                  ? Row(
+                      key: const ValueKey('loading'),
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (widget.icon != null) ...[
-                          Icon(
-                            widget.icon,
-                            color: widget.isSecondary
-                                ? AfrigoColors.primary
-                                : Colors.white,
-                            size: 20,
+                        SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(
+                              widget.isSecondary
+                                  ? AfrigoColors.primary
+                                  : Colors.white,
+                            ),
                           ),
-                          const SizedBox(width: AfrigoSpacing.sm),
-                        ],
+                        ),
+                        const SizedBox(width: AfrigoSpacing.sm),
                         Text(
-                          widget.label ?? '',
+                          widget.loadingLabel ?? widget.label ?? '',
                           style: AfrigoTypography.buttonLarge.copyWith(
                             color: widget.isSecondary
                                 ? AfrigoColors.primary
@@ -117,7 +113,37 @@ class _ModernButtonState extends State<ModernButton>
                           ),
                         ),
                       ],
-                    ),
+                    )
+                  : widget.child != null
+                      ? Center(
+                          key: const ValueKey('child'),
+                          child: widget.child!,
+                        )
+                      : Row(
+                          key: const ValueKey('label'),
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (widget.icon != null) ...[
+                              Icon(
+                                widget.icon,
+                                color: widget.isSecondary
+                                    ? AfrigoColors.primary
+                                    : Colors.white,
+                                size: 20,
+                              ),
+                              const SizedBox(width: AfrigoSpacing.sm),
+                            ],
+                            Text(
+                              widget.label ?? '',
+                              style: AfrigoTypography.buttonLarge.copyWith(
+                                color: widget.isSecondary
+                                    ? AfrigoColors.primary
+                                    : Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+            ),
         ),
       ),
     );

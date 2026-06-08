@@ -86,7 +86,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         backgroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () => context.canPop() ? context.pop() : context.go('/welcome'),
         ),
       ),
       body: SingleChildScrollView(
@@ -105,14 +105,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
               const SizedBox(height: AfrigoSpacing.xxl),
-              if (_errorMessage != null)
-                ModernErrorState(
-                  title: 'Login Error',
-                  message: _errorMessage!,
-                  icon: Icons.error_outline,
-                ),
-              if (_errorMessage != null)
-                const SizedBox(height: AfrigoSpacing.lg),
               TextField(
                 controller: _emailController,
                 decoration: const InputDecoration(
@@ -140,10 +132,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 obscureText: !_showPassword,
               ),
               const SizedBox(height: AfrigoSpacing.xxl),
+              if (_errorMessage != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(AfrigoSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AfrigoColors.error.withOpacity(0.1),
+                    border: Border.all(
+                      color: AfrigoColors.error.withOpacity(0.3),
+                      width: 1,
+                    ),
+                    borderRadius: BorderRadius.circular(AfriBorderRadius.md),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        color: AfrigoColors.error,
+                        size: 20,
+                      ),
+                      const SizedBox(width: AfrigoSpacing.md),
+                      Expanded(
+                        child: Text(
+                          _errorMessage!,
+                          style: AfrigoTypography.interBody2.copyWith(
+                            color: AfrigoColors.error,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AfrigoSpacing.md),
+              ],
               ModernButton(
+                label: 'Sign In',
+                loadingLabel: 'Signing in...',
                 onPressed: _handleLogin,
                 isLoading: isLoading,
-                child: const Text('Sign In'),
               ),
               const SizedBox(height: AfrigoSpacing.xxl),
               Row(
