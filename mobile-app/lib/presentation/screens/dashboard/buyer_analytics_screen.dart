@@ -1,275 +1,176 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class BuyerAnalyticsScreen extends ConsumerStatefulWidget {
+import '../../providers/dashboard_records_provider.dart';
+
+class BuyerAnalyticsScreen extends ConsumerWidget {
   const BuyerAnalyticsScreen({super.key});
 
   @override
-  ConsumerState<BuyerAnalyticsScreen> createState() =>
-      _BuyerAnalyticsScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final orders = ref.watch(dashboardRecordsProvider('orders'));
+    final payments = ref.watch(dashboardRecordsProvider('payments'));
 
-class _BuyerAnalyticsScreenState extends ConsumerState<BuyerAnalyticsScreen>
-    with TickerProviderStateMixin {
-  late AnimationController _fadeController;
-
-  @override
-  void initState() {
-    super.initState();
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
+    return Scaffold(
+      appBar: AppBar(title: const Text('Trade analytics')),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(dashboardRecordsProvider('orders'));
+          ref.invalidate(dashboardRecordsProvider('payments'));
+          await Future.wait([
+            ref.read(dashboardRecordsProvider('orders').future),
+            ref.read(dashboardRecordsProvider('payments').future),
+          ]);
+        },
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Text(
+              'Calculated from your verified AfriGO records',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            orders.when(
+              loading: _loading,
+              error: (_, __) => _error(
+                () => ref.invalidate(dashboardRecordsProvider('orders')),
+              ),
+              data: (orderRecords) => payments.when(
+                loading: _loading,
+                error: (_, __) => _error(
+                  () => ref.invalidate(dashboardRecordsProvider('payments')),
+                ),
+                data: (paymentRecords) =>
+                    _Analytics(records: orderRecords, payments: paymentRecords),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
-    _fadeController.forward();
   }
 
-  @override
-  void dispose() {
-    _fadeController.dispose();
-    super.dispose();
+  Widget _loading() => const Padding(
+        padding: EdgeInsets.all(32),
+        child: Center(child: CircularProgressIndicator()),
+      );
+
+  Widget _error(VoidCallback retry) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(children: [
+            const Icon(Icons.cloud_off_outlined, size: 40),
+            const SizedBox(height: 12),
+            const Text(
+              'Analytics could not refresh from Firebase.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: retry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+            ),
+          ]),
+        ),
+      );
+}
+
+class _Analytics extends StatelessWidget {
+  const _Analytics({required this.records, required this.payments});
+  final List<Map<String, dynamic>> records;
+  final List<Map<String, dynamic>> payments;
+
+  double _amount(Map<String, dynamic> record) {
+    final value = record['amount'] ?? record['totalAmount'] ?? 0;
+    return value is num ? value.toDouble() : double.tryParse('$value') ?? 0;
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final verifiedPayments = payments.where((payment) {
+      final status = (payment['status'] ?? '').toString().toLowerCase();
+      return status == 'successful' ||
+          status == 'succeeded' ||
+          status == 'completed';
+    }).toList();
+    final spent =
+        verifiedPayments.fold<double>(0, (sum, item) => sum + _amount(item));
+    final currency = verifiedPayments.isEmpty
+        ? ''
+        : (verifiedPayments.first['currency'] ?? '').toString().toUpperCase();
+    final completedOrders = records.where((order) {
+      final status = (order['status'] ?? '').toString().toLowerCase();
+      return status == 'completed' || status == 'delivered';
+    }).length;
+    final activeOrders = records.length - completedOrders;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Analytics'),
-        elevation: 0,
-        scrolledUnderElevation: 0,
-      ),
-      body: FadeTransition(
-        opacity:
-            CurvedAnimation(parent: _fadeController, curve: Curves.easeOut),
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildMetricsRow(theme),
-                const SizedBox(height: 24),
-                _buildChartSection(theme),
-                const SizedBox(height: 24),
-                _buildTopSuppliersSection(theme),
-              ],
+    if (records.isEmpty && payments.isEmpty) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(children: [
+            const Icon(Icons.analytics_outlined, size: 48),
+            const SizedBox(height: 12),
+            Text('No trade analytics yet',
+                style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            const Text(
+              'Metrics will appear after your first real order or verified payment. AfriGO does not manufacture sample performance.',
+              textAlign: TextAlign.center,
             ),
-          ),
+          ]),
         ),
-      ),
-    );
-  }
+      );
+    }
 
-  Widget _buildMetricsRow(ThemeData theme) {
-    final metrics = [
-      {'label': 'Total Spent', 'value': '\$45,600', 'color': Colors.blue},
-      {'label': 'Avg Order', 'value': '\$1,850', 'color': Colors.green},
-      {'label': 'Orders', 'value': '24', 'color': Colors.purple},
-      {'label': 'Savings', 'value': '\$3,200', 'color': Colors.orange},
+    final metrics = <(String, String, IconData)>[
+      ('Verified spend', '$currency ${spent.toStringAsFixed(2)}',
+          Icons.account_balance_wallet_outlined),
+      ('Orders', '${records.length}', Icons.receipt_long_outlined),
+      ('Completed', '$completedOrders', Icons.check_circle_outline),
+      ('Active', '$activeOrders', Icons.pending_actions_outlined),
     ];
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Row(
-        children: List.generate(
-          metrics.length,
-          (index) => Padding(
-            padding:
-                EdgeInsets.only(right: index < metrics.length - 1 ? 12 : 0),
-            child: ScaleTransition(
-              scale: CurvedAnimation(
-                  parent: _fadeController, curve: Curves.elasticOut),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        metrics[index]['label'] as String,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        metrics[index]['value'] as String,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: metrics[index]['color'] as Color,
-                        ),
-                      ),
-                    ],
-                  ),
+    return LayoutBuilder(builder: (context, constraints) {
+      final columns = constraints.maxWidth >= 700 ? 4 : 2;
+      return GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: metrics.length,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: columns,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1.35,
+        ),
+        itemBuilder: (context, index) {
+          final metric = metrics[index];
+          return TweenAnimationBuilder<double>(
+            tween: Tween(begin: .94, end: 1),
+            duration: Duration(milliseconds: 220 + index * 70),
+            curve: Curves.easeOutBack,
+            builder: (context, value, child) =>
+                Transform.scale(scale: value, child: child),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(metric.$3),
+                    const Spacer(),
+                    Text(metric.$2,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            )),
+                    Text(metric.$1),
+                  ],
                 ),
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildChartSection(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Purchase Trends',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: _buildBarChart(theme),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBarChart(ThemeData theme) {
-    final data = [45, 38, 52, 48, 61, 55, 42];
-    final maxValue = data.reduce((a, b) => a > b ? a : b).toDouble();
-
-    return SizedBox(
-      height: 200,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: List.generate(
-          data.length,
-          (index) => Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Expanded(
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: data[index] / maxValue),
-                  duration: Duration(milliseconds: 800 + (100 * index)),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) {
-                    return Container(
-                      width: 30,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                          colors: [
-                            theme.colorScheme.primary,
-                            theme.colorScheme.primary.withOpacity(0.5),
-                          ],
-                        ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(4),
-                          topRight: Radius.circular(4),
-                        ),
-                      ),
-                      height: (160 * value),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index],
-                style: theme.textTheme.bodySmall,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTopSuppliersSection(ThemeData theme) {
-    final suppliers = [
-      {'name': 'Premium Agriculture', 'rating': 4.8, 'orders': 12},
-      {'name': 'Fresh Produce Co.', 'rating': 4.6, 'orders': 8},
-      {'name': 'Global Farms', 'rating': 4.9, 'orders': 4},
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Top Suppliers',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Column(
-          children: List.generate(
-            suppliers.length,
-            (index) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${index + 1}',
-                            style: theme.textTheme.labelLarge?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: theme.colorScheme.primary,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              suppliers[index]['name'] as String,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.star,
-                                  size: 14,
-                                  color: Colors.amber,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${suppliers[index]['rating']} • ${suppliers[index]['orders']} orders',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+          );
+        },
+      );
+    });
   }
 }

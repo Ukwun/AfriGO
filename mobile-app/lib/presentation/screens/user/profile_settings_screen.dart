@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../config/colors.dart';
 import '../../providers/auth_provider.dart';
-import '../../../data/services/api_client.dart';
 
 class ProfileSettingsScreen extends ConsumerStatefulWidget {
   const ProfileSettingsScreen({super.key});
@@ -27,39 +28,52 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
   }
 
   Future<void> _loadProfile() async {
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    if (firebaseUser == null) return;
     try {
-      final response = await ApiClient().get('/auth/me');
-      final user = response['user'] as Map<String, dynamic>? ?? const {};
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(firebaseUser.uid)
+          .get(const GetOptions(source: Source.serverAndCache));
+      final user = snapshot.data() ?? const <String, dynamic>{};
       if (!mounted) return;
       setState(() {
         _phoneController.text = user['phone']?.toString() ?? '';
         _companyController.text = user['organization']?.toString() ?? '';
         _countryController.text = user['countryCode']?.toString() ?? '';
       });
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not load profile: $error')),
-      );
+    } catch (_) {
+      // Identity details already come from the restored Firebase auth state.
+      // Editable fields remain empty until Firestore connectivity returns.
     }
   }
 
   Future<void> _saveProfile() async {
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    if (firebaseUser == null) return;
     setState(() => _saving = true);
     try {
-      await ApiClient().patch('/auth/me', body: {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(firebaseUser.uid)
+          .update({
         'phone': _phoneController.text.trim(),
         'organization': _companyController.text.trim(),
         'countryCode': _countryController.text.trim(),
+        'updatedAt': FieldValue.serverTimestamp(),
       });
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Profile updated successfully.')),
       );
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save profile: $error')),
+        const SnackBar(
+          content: Text(
+            'Profile was not saved. Check connectivity and try again.',
+          ),
+        ),
       );
     } finally {
       if (mounted) setState(() => _saving = false);

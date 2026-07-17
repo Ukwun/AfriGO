@@ -30,11 +30,7 @@ import '../presentation/screens/trading/lots/lot_history_screen.dart';
 import '../presentation/screens/user/profile_settings_screen.dart';
 import '../presentation/screens/user/notification_center_screen.dart';
 import '../presentation/screens/user/app_settings_screen.dart';
-import '../presentation/screens/dashboard/supplier_sales_screen.dart';
-import '../presentation/screens/dashboard/supplier_payments_screen.dart';
 import '../presentation/screens/dashboard/buyer_analytics_screen.dart';
-import '../presentation/screens/dashboard/buyer_shipments_screen.dart';
-import '../presentation/screens/dashboard/buyer_marketplace_screen.dart';
 import '../presentation/screens/dashboard/buyer_more_screen.dart';
 import '../presentation/screens/dashboard/exporter_contracts_screen.dart';
 import '../presentation/screens/dashboard/exporter_warehouse_screen.dart';
@@ -62,6 +58,8 @@ import '../presentation/screens/trading/create_export_order_screen.dart';
 import '../presentation/screens/dashboard/dossier_detail_screen.dart';
 import '../presentation/screens/dashboard/dossier_view_screen.dart';
 import '../presentation/screens/dashboard/tracking_detail_screen.dart';
+import '../presentation/widgets/production_dashboard.dart';
+import '../presentation/widgets/dashboard_role.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
@@ -159,12 +157,31 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/supplier/sales',
         name: 'supplier_sales',
-        builder: (context, state) => const SupplierSalesScreen(),
+        builder: (context, state) => const ProductionDashboard(
+          role: DashboardRole.supplier,
+          headline: 'Sales activity',
+          description: 'Orders and contracts confirmed for your account.',
+          actionLabel: 'Create a lot',
+          actionRoute: '/lots/create',
+          feeds: [
+            DashboardFeed(resource: 'orders', title: 'Orders', route: '/trading'),
+            DashboardFeed(resource: 'contracts', title: 'Contracts', route: '/contracts'),
+          ],
+        ),
       ),
       GoRoute(
         path: '/supplier/payments',
         name: 'supplier_payments',
-        builder: (context, state) => const SupplierPaymentsScreen(),
+        builder: (context, state) => const ProductionDashboard(
+          role: DashboardRole.supplier,
+          headline: 'Payments',
+          description: 'Only verified payment and escrow records are shown.',
+          actionLabel: 'View contracts',
+          actionRoute: '/contracts',
+          feeds: [
+            DashboardFeed(resource: 'payments', title: 'Payments', route: '/payments'),
+          ],
+        ),
       ),
       GoRoute(
         path: '/supplier/profile',
@@ -180,12 +197,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/buyer/shipments',
         name: 'buyer_shipments',
-        builder: (context, state) => const BuyerShipmentsScreen(),
+        builder: (context, state) => const ShipmentListScreen(),
       ),
       GoRoute(
         path: '/buyer/marketplace',
         name: 'buyer_marketplace',
-        builder: (context, state) => const BuyerMarketplaceScreen(),
+        builder: (context, state) => const MarketplaceScreen(),
       ),
       GoRoute(
         path: '/buyer/more',
@@ -202,12 +219,22 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/exporter/warehouse',
         name: 'exporter_warehouse',
-        builder: (context, state) => const ExporterWarehouseScreen(),
+        builder: (context, state) => const ProductionDashboard(
+          role: DashboardRole.exporter,
+          headline: 'Warehouse activity',
+          description: 'Lots and shipments assigned to your export operation.',
+          actionLabel: 'Create export order',
+          actionRoute: '/exports/create',
+          feeds: [
+            DashboardFeed(resource: 'lots', title: 'Lots', route: '/lots'),
+            DashboardFeed(resource: 'shipments', title: 'Shipments', route: '/shipments'),
+          ],
+        ),
       ),
       GoRoute(
         path: '/exporter/tracking',
         name: 'exporter_tracking',
-        builder: (context, state) => const ExporterTrackingScreen(),
+        builder: (context, state) => const ShipmentListScreen(),
       ),
       GoRoute(
         path: '/exporter/dossiers',

@@ -1,51 +1,37 @@
-// ignore_for_file: avoid_print
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/services/api_client.dart';
 import '../../domain/models/lot_model.dart';
 
-final lotsProvider = FutureProvider<List<LotModel>>((ref) async {
-  final apiClient = ApiClient();
-  try {
-    final response = await apiClient.get('/lots?scope=marketplace');
-    final List<dynamic> lotsData = response['data'] ?? [];
-    return lotsData
-        .map((lot) => LotModel.fromJson(lot as Map<String, dynamic>))
-        .toList();
-  } catch (e) {
-    print('❌ Error fetching lots: $e');
-    rethrow;
-  }
-});
+Future<List<LotModel>> _marketplaceLots({String? category}) async {
+  final snapshot = await FirebaseFirestore.instance
+      .collection('lots')
+      .where('status', isEqualTo: 'active')
+      .limit(100)
+      .get(const GetOptions(source: Source.serverAndCache));
+  return snapshot.docs
+      .map((document) => LotModel.fromJson({
+            'id': document.id,
+            ...document.data(),
+          }))
+      .where((lot) =>
+          category == null ||
+          lot.productType.toLowerCase() == category.toLowerCase())
+      .toList(growable: false);
+}
+
+final lotsProvider = FutureProvider<List<LotModel>>(
+  (ref) => _marketplaceLots(),
+);
 
 final lotByCategoryProvider =
-    FutureProvider.family<List<LotModel>, String>((ref, category) async {
-  final apiClient = ApiClient();
-  try {
-    final response = await apiClient.get(
-      '/lots?scope=marketplace&category=${Uri.encodeQueryComponent(category)}',
-    );
-    final List<dynamic> lotsData = response['data'] ?? [];
-    return lotsData
-        .map((lot) => LotModel.fromJson(lot as Map<String, dynamic>))
-        .where(
-          (lot) => lot.productType.toLowerCase() == category.toLowerCase(),
-        )
-        .toList();
-  } catch (e) {
-    print('❌ Error fetching lots by category: $e');
-    rethrow;
-  }
-});
+    FutureProvider.family<List<LotModel>, String>(
+  (ref, category) => _marketplaceLots(category: category),
+);
 
 final lotDetailProvider =
     FutureProvider.family<LotModel, String>((ref, lotId) async {
-  final apiClient = ApiClient();
-  try {
-    final response = await apiClient.get('/lots/$lotId');
-    return LotModel.fromJson(response);
-  } catch (e) {
-    print('❌ Error fetching lot: $e');
-    rethrow;
-  }
+  final snapshot =
+      await FirebaseFirestore.instance.collection('lots').doc(lotId).get();
+  if (!snapshot.exists) throw StateError('Lot not found');
+  return LotModel.fromJson({'id': snapshot.id, ...snapshot.data()!});
 });
