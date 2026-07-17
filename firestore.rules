@@ -72,6 +72,24 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /export_orders/{orderId} {
+      allow read: if participant(resource.data);
+      allow create: if signedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.exporterId == request.auth.uid
+        && request.auth.uid in request.resource.data.participantIds
+        && request.resource.data.status == 'draft'
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+          == 'exporter'
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.kycStatus
+          == 'verified';
+      allow update: if participant(resource.data)
+        && resource.data.ownerId == request.auth.uid
+        && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.participantIds == resource.data.participantIds;
+      allow delete: if false;
+    }
+
     match /{collection}/{documentId} {
       allow read: if participant(resource.data);
       allow write: if false;

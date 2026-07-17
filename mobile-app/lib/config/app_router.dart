@@ -32,34 +32,26 @@ import '../presentation/screens/user/notification_center_screen.dart';
 import '../presentation/screens/user/app_settings_screen.dart';
 import '../presentation/screens/dashboard/buyer_analytics_screen.dart';
 import '../presentation/screens/dashboard/buyer_more_screen.dart';
-import '../presentation/screens/dashboard/exporter_contracts_screen.dart';
 import '../presentation/screens/dashboard/exporter_warehouse_screen.dart';
 import '../presentation/screens/dashboard/exporter_tracking_screen.dart';
-import '../presentation/screens/dashboard/exporter_dossiers_screen.dart';
 // New real screens
 import '../presentation/screens/trading/rfq_list_screen.dart';
 import '../presentation/screens/trading/rfq_detail_screen.dart';
 import '../presentation/screens/trading/shipment_list_screen.dart';
-import '../presentation/screens/trading/lots_list_screen.dart';
-import '../presentation/screens/dashboard/payments_screen.dart';
-import '../presentation/screens/dashboard/contracts_list_screen.dart';
-import '../presentation/screens/dashboard/analytics_screen.dart';
 import '../presentation/screens/dashboard/export_pipeline_screen.dart';
 import '../presentation/screens/messaging/messages_screen.dart';
 // New real implementation screens
 import '../presentation/screens/trading/rfq_edit_screen.dart';
 import '../presentation/screens/trading/shipment_detail_screen.dart';
-import '../presentation/screens/trading/lot_detail_screen.dart';
 import '../presentation/screens/trading/lot_edit_screen.dart';
-import '../presentation/screens/trading/contract_detail_screen.dart';
 import '../presentation/screens/trading/contract_manage_screen.dart';
 import '../presentation/screens/trading/supplier_profile_screen.dart';
-import '../presentation/screens/trading/create_export_order_screen.dart';
-import '../presentation/screens/dashboard/dossier_detail_screen.dart';
-import '../presentation/screens/dashboard/dossier_view_screen.dart';
+import '../presentation/screens/trading/create_export_request_screen.dart';
 import '../presentation/screens/dashboard/tracking_detail_screen.dart';
 import '../presentation/widgets/production_dashboard.dart';
 import '../presentation/widgets/dashboard_role.dart';
+import '../presentation/screens/shared/live_resource_screen.dart';
+import '../presentation/screens/shared/live_record_detail_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
@@ -214,7 +206,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/exporter/contracts',
         name: 'exporter_contracts',
-        builder: (context, state) => const ExporterContractsScreen(),
+        builder: (context, state) => const LiveResourceScreen(
+          resource: 'contracts',
+          title: 'Export contracts',
+          emptyMessage: 'Contracts assigned to your export operation will appear here.',
+          detailRoute: '/contracts/detail',
+        ),
       ),
       GoRoute(
         path: '/exporter/warehouse',
@@ -239,7 +236,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/exporter/dossiers',
         name: 'exporter_dossiers',
-        builder: (context, state) => const ExporterDossiersScreen(),
+        builder: (context, state) => const LiveResourceScreen(
+          resource: 'quality_inspections',
+          title: 'Quality dossiers',
+          emptyMessage: 'Verified inspection records will appear here.',
+          detailRoute: '/dossiers/detail',
+        ),
       ),
 
       // ==================== HOME DASHBOARD ACTION ROUTES ====================
@@ -279,7 +281,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/lots',
-        builder: (context, state) => const LotsListScreen(),
+        builder: (context, state) => const LiveResourceScreen(
+          resource: 'lots',
+          title: 'My lots',
+          emptyMessage: 'Create a real inventory lot to begin trading.',
+          detailRoute: '/lots/detail',
+        ),
       ),
       GoRoute(
         path: '/lots/create',
@@ -289,7 +296,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/lots/detail/:lotId',
         builder: (context, state) {
           final lotId = state.pathParameters['lotId']!;
-          return LotDetailScreen(lotId: lotId);
+          return LiveRecordDetailScreen(
+            resource: 'lots',
+            recordId: lotId,
+            title: 'Lot details',
+          );
         },
       ),
       GoRoute(
@@ -301,17 +312,38 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/payments',
-        builder: (context, state) => const PaymentsScreen(),
+        builder: (context, state) => const LiveResourceScreen(
+          resource: 'payments',
+          title: 'Payments',
+          emptyMessage: 'Verified payment and escrow activity will appear here.',
+        ),
+      ),
+      GoRoute(
+        path: '/orders',
+        builder: (context, state) => const LiveResourceScreen(
+          resource: 'orders',
+          title: 'Orders',
+          emptyMessage: 'Orders created from accepted offers will appear here.',
+        ),
       ),
       GoRoute(
         path: '/contracts',
-        builder: (context, state) => const ContractsListScreen(),
+        builder: (context, state) => const LiveResourceScreen(
+          resource: 'contracts',
+          title: 'Contracts',
+          emptyMessage: 'Contracts created from accepted offers will appear here.',
+          detailRoute: '/contracts/detail',
+        ),
       ),
       GoRoute(
         path: '/contracts/detail/:contractId',
         builder: (context, state) {
           final contractId = state.pathParameters['contractId']!;
-          return ContractDetailScreen(contractId: contractId);
+          return LiveRecordDetailScreen(
+            resource: 'contracts',
+            recordId: contractId,
+            title: 'Contract details',
+          );
         },
       ),
       GoRoute(
@@ -339,7 +371,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/analytics',
-        builder: (context, state) => const AnalyticsScreen(),
+        builder: (context, state) => const BuyerAnalyticsScreen(),
       ),
       GoRoute(
         path: '/marketplace/supplier/:supplierId',
@@ -350,20 +382,33 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/dossiers',
-        builder: (context, state) => const ExporterDossiersScreen(),
+        builder: (context, state) => const LiveResourceScreen(
+          resource: 'quality_inspections',
+          title: 'Quality dossiers',
+          emptyMessage: 'Verified inspection activity will appear here.',
+          detailRoute: '/dossiers/detail',
+        ),
       ),
       GoRoute(
         path: '/dossiers/detail/:dossierId',
         builder: (context, state) {
           final dossierId = state.pathParameters['dossierId']!;
-          return DossierDetailScreen(dossierId: dossierId);
+          return LiveRecordDetailScreen(
+            resource: 'quality_inspections',
+            recordId: dossierId,
+            title: 'Inspection details',
+          );
         },
       ),
       GoRoute(
         path: '/dossiers/view/:dossierId',
         builder: (context, state) {
           final dossierId = state.pathParameters['dossierId']!;
-          return DossierViewScreen(dossierId: dossierId);
+          return LiveRecordDetailScreen(
+            resource: 'quality_inspections',
+            recordId: dossierId,
+            title: 'Inspection details',
+          );
         },
       ),
       GoRoute(
@@ -383,7 +428,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/exports/create',
-        builder: (context, state) => const CreateExportOrderScreen(),
+        builder: (context, state) => const CreateExportRequestScreen(),
       ),
       GoRoute(
         path: '/pipeline',

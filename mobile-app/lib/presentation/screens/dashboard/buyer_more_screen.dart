@@ -30,12 +30,7 @@ class BuyerMoreScreen extends ConsumerWidget {
                     {
                       'label': 'My Orders',
                       'icon': Icons.shopping_cart,
-                      'route': '/rfqs'
-                    },
-                    {
-                      'label': 'Saved Suppliers',
-                      'icon': Icons.favorite,
-                      'route': '/rfqs'
+                      'route': '/orders'
                     },
                   ],
                   context,
@@ -53,11 +48,6 @@ class BuyerMoreScreen extends ConsumerWidget {
                     {
                       'label': 'Settings',
                       'icon': Icons.settings,
-                      'route': '/settings'
-                    },
-                    {
-                      'label': 'Help & Support',
-                      'icon': Icons.help_center,
                       'route': '/settings'
                     },
                   ],
@@ -95,7 +85,8 @@ class BuyerMoreScreen extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withOpacity(0.1),
+                            color: theme.colorScheme.primary
+                                .withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(10)),
                         child: Icon(items[index]['icon'],
                             color: theme.colorScheme.primary, size: 22),

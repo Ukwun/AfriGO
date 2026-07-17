@@ -1,6 +1,9 @@
+// ignore_for_file: avoid_print, unused_local_variable
+
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'api_client.dart';
 
 /// Lot Service
@@ -98,13 +101,11 @@ class LotService {
             customMetadata: {'lotId': lotId, 'ownerId': user.uid},
           ));
       final downloadUrl = await task.ref.getDownloadURL();
-      final lot = await _apiClient.get('/lots/$lotId');
-      final current = lot['photoUrls'];
-      final photoUrls = current is List
-          ? current.map((value) => value.toString()).toList()
-          : <String>[];
-      photoUrls.add(downloadUrl);
-      await _apiClient.patch('/lots/$lotId', body: {'photoUrls': photoUrls});
+      await FirebaseFirestore.instance.collection('lots').doc(lotId).update({
+        'photoUrls': FieldValue.arrayUnion([downloadUrl]),
+        'status': 'active',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
       final photoBytes = await photoFile.readAsBytes();
 
       print('✅ Photo ${photoIndex + 1} uploaded (${photoBytes.length} bytes)');
