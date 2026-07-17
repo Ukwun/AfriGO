@@ -5,7 +5,6 @@ enum UserRole {
   supplier, // Product sellers, commodity producers
   buyer, // Importers, retailers, distributors
   exporter, // Export-focused businesses, warehouse operators
-  admin, // Compliance, finance, operations
 }
 
 /// Navigation item configuration
@@ -29,7 +28,6 @@ class RoleNavigationConfig {
       UserRole.supplier => _supplierNavigation,
       UserRole.buyer => _buyerNavigation,
       UserRole.exporter => _exporterNavigation,
-      UserRole.admin => _adminNavigation,
     };
   }
 
@@ -118,41 +116,11 @@ class RoleNavigationConfig {
     ),
   ];
 
-  /// ADMIN Navigation (Desktop, Data-focused)
-  /// Priority: Compliance, dashboards, dense data
-  static final _adminNavigation = [
-    NavigationItem(
-      label: 'Dashboard',
-      icon: Icons.dashboard,
-      routePath: '/admin/dashboard',
-    ),
-    NavigationItem(
-      label: 'Users',
-      icon: Icons.people,
-      routePath: '/admin/users',
-    ),
-    NavigationItem(
-      label: 'Transactions',
-      icon: Icons.receipt,
-      routePath: '/admin/transactions',
-    ),
-    NavigationItem(
-      label: 'Compliance',
-      icon: Icons.verified_user,
-      routePath: '/admin/compliance',
-    ),
-    NavigationItem(
-      label: 'More',
-      icon: Icons.more_horiz,
-      routePath: '/admin/more',
-    ),
-  ];
-
   /// Get button height for role (larger for suppliers, standard for others)
   static double getButtonHeight(UserRole role) {
     return switch (role) {
       UserRole.supplier => 64.0, // Larger buttons for mobile-first supplier
-      UserRole.logistics => 56.0, // Large for gloved/outdoor use
+      UserRole.exporter => 56.0, // Large for gloved/outdoor use
       _ => 48.0, // Standard for others
     };
   }
@@ -162,14 +130,13 @@ class RoleNavigationConfig {
     return switch (role) {
       UserRole.supplier => 5, // Show 5 items (card-based)
       UserRole.buyer => 10, // Show 10 items
-      UserRole.logistics => 8, // Show 8 items
-      UserRole.admin => 25, // Show 25+ items (dense)
+      UserRole.exporter => 8, // Show 8 items
     };
   }
 
-  /// Determine if role prefers cards (suppliers, logistics) vs tables (buyer, admin)
+  /// Determine if role prefers cards (suppliers, exporters) vs tables (buyer, admin)
   static bool prefersCardLayout(UserRole role) {
-    return role == UserRole.supplier || role == UserRole.logistics;
+    return role == UserRole.supplier || role == UserRole.exporter;
   }
 
   /// Get emphasized color for role
@@ -177,28 +144,26 @@ class RoleNavigationConfig {
     return switch (role) {
       UserRole.supplier => const Color(0xFF0F5B46), // Brand green (Action)
       UserRole.buyer => const Color(0xFF1E88E5), // Blue (Data)
-      UserRole.logistics => const Color(0xFFFF9800), // Orange (Location)
-      UserRole.admin => const Color(0xFF6C63FF), // Purple (Control)
+      UserRole.exporter => const Color(0xFFFF9800), // Orange (Location)
     };
   }
 
   /// Get role-specific app bar title
   static String getAppBarTitle(UserRole role) {
     return switch (role) {
-      UserRole.supplier => 'AfriGO Seller',
+      UserRole.supplier => 'AfriGO Supplier',
       UserRole.buyer => 'AfriGO Buyer',
-      UserRole.logistics => 'AfriGO Logistics',
-      UserRole.admin => 'AfriGO Admin',
+      UserRole.exporter => 'AfriGO Exporter',
     };
   }
 
   /// Check if role should show advanced features
   static bool showAdvancedFeatures(UserRole role) {
-    return role == UserRole.buyer || role == UserRole.admin;
+    return role == UserRole.buyer;
   }
 
   /// Check if role needs real-time updates
   static bool needsRealtimeUpdates(UserRole role) {
-    return role == UserRole.logistics || role == UserRole.admin;
+    return role == UserRole.exporter;
   }
 }

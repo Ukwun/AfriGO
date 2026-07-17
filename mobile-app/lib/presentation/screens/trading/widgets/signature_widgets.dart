@@ -10,10 +10,10 @@ class SignaturePreviewWidget extends StatelessWidget {
   final bool isCapturing;
 
   const SignaturePreviewWidget({
-    Key? key,
+    super.key,
     this.signatureImage,
     this.isCapturing = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -80,11 +80,11 @@ class SignatureStatusIndicator extends StatelessWidget {
   final DateTime? signedAt;
 
   const SignatureStatusIndicator({
-    Key? key,
+    super.key,
     required this.isSigned,
     this.signerName,
     this.signedAt,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -164,11 +164,11 @@ class ContractTermCard extends StatelessWidget {
   final IconData icon;
 
   const ContractTermCard({
-    Key? key,
+    super.key,
     required this.label,
     required this.value,
     required this.icon,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -212,10 +212,10 @@ class BothPartiesSyncIndicator extends StatelessWidget {
   final DateTime? lastSyncTime;
 
   const BothPartiesSyncIndicator({
-    Key? key,
+    super.key,
     required this.isSynced,
     this.lastSyncTime,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -283,9 +283,9 @@ class ImmutabilityGuaranteeWidget extends StatelessWidget {
   final String contractId;
 
   const ImmutabilityGuaranteeWidget({
-    Key? key,
+    super.key,
     required this.contractId,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -350,11 +350,11 @@ class RealTimeEventBadge extends StatefulWidget {
   final bool isVisible;
 
   const RealTimeEventBadge({
-    Key? key,
+    super.key,
     required this.eventType,
     required this.eventMessage,
     required this.isVisible,
-  }) : super(key: key);
+  });
 
   @override
   State<RealTimeEventBadge> createState() => _RealTimeEventBadgeState();

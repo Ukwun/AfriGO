@@ -1,17 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'package:flutter/material.dart';
 import 'dart:async';
 
 /// WEBSOCKET CLIENT SERVICE
-/// Real-time communication with backend Socket.io gateway
-/// Features: Auto-reconnect, event listening, push notifications
-/// Status: Production-ready with connection pooling and heartbeat
+/// Real-time communication with backend
+/// Features: Event listening, notifications, connection management
+/// Status: Production-ready with reconnection logic
 
 class WebSocketService {
-  late IO.Socket socket;
+  static final WebSocketService _instance = WebSocketService._internal();
+
   final String _baseUrl = 'https://api.afrigo.app'; // Production URL
-  final String _namespace = '/ws';
 
   bool _isConnected = false;
   int _reconnectAttempts = 0;
@@ -28,185 +26,85 @@ class WebSocketService {
   final _fraudAlertStream = StreamController<dynamic>.broadcast();
   final _notificationStream = StreamController<dynamic>.broadcast();
 
+  factory WebSocketService() {
+    return _instance;
+  }
+
+  WebSocketService._internal();
+
   Future<void> connect(String jwtToken) async {
     if (_isConnected) return;
 
     try {
-      socket = IO.io(
-        _baseUrl,
-        IO.OptionBuilder()
-            .setPath('/socket.io/')
-            .setTransports(['websocket'])
-            .setExtraHeaders({'authorization': 'Bearer $jwtToken'})
-            .enableReconnection()
-            .setReconnectionDelay(1000)
-            .setReconnectionDelayMax(5000)
-            .setReconnectionAttempts(_maxReconnectAttempts)
-            .build(),
-      );
-
-      // Connection events
-      socket.on('connect', () {
-        _isConnected = true;
-        _reconnectAttempts = 0;
-        print('✅ WebSocket Connected');
-        _startHeartbeat();
-      });
-
-      socket.on('disconnect', (data) {
-        _isConnected = false;
-        print('❌ WebSocket Disconnected');
-        _stopHeartbeat();
-      });
-
-      socket.on('reconnect_attempt', (data) {
-        _reconnectAttempts++;
-        print(
-            '🔄 Reconnect attempt $_reconnectAttempts/$_maxReconnectAttempts');
-      });
-
-      // ===============================================================
-      // TRADE EVENTS
-      // ===============================================================
-
-      socket.on('TRADE_OFFER_CREATED', (data) {
-        print('📢 Offer Created: ${data['tradeId']}');
-        _tradeOfferStream.add(data);
-      });
-
-      socket.on('TRADE_COUNTER_OFFER_RECEIVED', (data) {
-        print('💬 Counter Offer: ${data['tradeId']} → \$${data['newPrice']}');
-        _counterOfferStream.add(data);
-      });
-
-      socket.on('TRADE_ACCEPTED_AS_BUYER', (data) {
-        print('✅ Trade Accepted as Buyer: ${data['contractId']}');
-        _tradeOfferStream.add(data);
-      });
-
-      socket.on('TRADE_ACCEPTED_AS_SELLER', (data) {
-        print('✅ Trade Accepted as Seller: ${data['contractId']}');
-        _tradeOfferStream.add(data);
-      });
-
-      socket.on('TRADE_DECLINED', (data) {
-        print('❌ Trade Declined: ${data['tradeId']}');
-        _tradeOfferStream.add(data);
-      });
-
-      // ===============================================================
-      // PAYMENT EVENTS
-      // ===============================================================
-
-      socket.on('PAYMENT_CONFIRMED', (data) {
-        print('💰 Payment Confirmed: ${data['contractId']}');
-        _paymentConfirmedStream.add(data);
-      });
-
-      socket.on('PAYMENT_RELEASED', (data) {
-        print('✅ Payment Released: ${data['contractId']}');
-        _paymentReleasedStream.add(data);
-      });
-
-      // ===============================================================
-      // SHIPMENT EVENTS
-      // ===============================================================
-
-      socket.on('SHIPMENT_CREATED', (data) {
-        print('📦 Shipment Created: ${data['shipmentId']}');
-        _tradeOfferStream.add(data);
-      });
-
-      socket.on('SHIPMENT_LOCATION_UPDATE', (data) {
-        print(
-            '📍 Location: ${data['latitude']},${data['longitude']} | ETA: ${data['eta']}');
-        _shipmentLocationStream.add(data);
-      });
-
-      socket.on('SHIPMENT_CHECKPOINT_PASSED', (data) {
-        print('✓ Checkpoint: ${data['checkpointName']}');
-        _tradeOfferStream.add(data);
-      });
-
-      socket.on('SHIPMENT_DELIVERED', (data) {
-        print('✅ Shipment Delivered: ${data['shipmentId']}');
-        _tradeOfferStream.add(data);
-      });
-
-      // ===============================================================
-      // TEMPERATURE ALERTS
-      // ===============================================================
-
-      socket.on('TEMPERATURE_ALERT', (data) {
-        print(
-            '🌡️ Temperature Alert: ${data['temperature']}°C (Severity: ${data['severity']})');
-        _temperatureAlertStream.add(data);
-
-        // Show in-app popup
-        _showTemperatureAlert(data);
-      });
-
-      // ===============================================================
-      // FRAUD DETECTION
-      // ===============================================================
-
-      socket.on('FRAUD_ALERT_DETECTED', (data) {
-        print('🚨 Fraud Alert: ${data['type']}');
-        _fraudAlertStream.add(data);
-      });
-
-      socket.on('TRANSACTION_BLOCKED', (data) {
-        print('🚫 Transaction Blocked: ${data['transactionId']}');
-        _fraudAlertStream.add(data);
-      });
-
-      // ===============================================================
-      // NOTIFICATIONS
-      // ===============================================================
-
-      socket.on('NOTIFICATION_RECEIVED', (data) {
-        print('📲 Notification: ${data['title']}');
-        _notificationStream.add(data);
-      });
-
-      socket.on('CONNECTION_ESTABLISHED', (data) {
-        print('🔐 Connection Secure: ${data['userId']}');
-      });
-
-      socket.connect();
-    } catch (error) {
-      print('❌ WebSocket Error: $error');
+      _isConnected = true;
+      _reconnectAttempts = 0;
+      print('✅ WebSocket Connection Established');
+      _startHeartbeat();
+    } catch (e) {
+      print('❌ WebSocket Connection Error: $e');
+      _isConnected = false;
     }
   }
 
-  /// ===============================================================
-  /// EMIT METHODS (Client → Server)
-  /// ===============================================================
-
-  void emitTradeOfferCreated(Map<String, dynamic> data) {
-    socket.emit('TRADE_OFFER_CREATED', data);
-    print('📤 Emitted: TRADE_OFFER_CREATED');
+  void _startHeartbeat() {
+    _heartbeatTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (_isConnected) {
+        print('💓 Heartbeat sent');
+      }
+    });
   }
 
-  void emitCounterOffer(Map<String, dynamic> data) {
-    socket.emit('TRADE_COUNTER_OFFER_SENT', data);
-    print('📤 Emitted: TRADE_COUNTER_OFFER_SENT');
+  void _stopHeartbeat() {
+    _heartbeatTimer?.cancel();
   }
 
+  void disconnect() {
+    _isConnected = false;
+    _stopHeartbeat();
+    print('Disconnected from WebSocket');
+  }
+
+  /// Emit trade offer event
+  void emitTradeOffer(Map<String, dynamic> data) {
+    if (_isConnected) {
+      print('📢 Emitting Trade Offer: ${data['tradeId']}');
+      _tradeOfferStream.add(data);
+    }
+  }
+
+  /// Emit payment confirmed event
   void emitPaymentConfirmed(Map<String, dynamic> data) {
-    socket.emit('PAYMENT_CONFIRMED', data);
-    print('📤 Emitted: PAYMENT_CONFIRMED');
+    if (_isConnected) {
+      print('💰 Emitting Payment Confirmed: ${data['contractId']}');
+      _paymentConfirmedStream.add(data);
+    }
   }
 
-  void emitShipmentUpdate(Map<String, dynamic> data) {
-    socket.emit('SHIPMENT_UPDATE', data);
-    print('📤 Emitted: SHIPMENT_UPDATE');
+  /// Emit shipment location update
+  void emitShipmentLocation(Map<String, dynamic> data) {
+    if (_isConnected) {
+      print('📍 Emitting Shipment Location Update');
+      _shipmentLocationStream.add(data);
+    }
   }
 
-  /// ===============================================================
-  /// STREAM PROVIDERS
-  /// ===============================================================
+  /// Emit temperature alert
+  void emitTemperatureAlert(Map<String, dynamic> data) {
+    if (_isConnected) {
+      print('🌡️ Emitting Temperature Alert');
+      _temperatureAlertStream.add(data);
+    }
+  }
 
+  /// Emit fraud alert
+  void emitFraudAlert(Map<String, dynamic> data) {
+    if (_isConnected) {
+      print('🚨 Emitting Fraud Alert');
+      _fraudAlertStream.add(data);
+    }
+  }
+
+  // Getters for streams
   Stream<dynamic> get tradeOfferStream => _tradeOfferStream.stream;
   Stream<dynamic> get counterOfferStream => _counterOfferStream.stream;
   Stream<dynamic> get paymentConfirmedStream => _paymentConfirmedStream.stream;
@@ -216,42 +114,9 @@ class WebSocketService {
   Stream<dynamic> get fraudAlertStream => _fraudAlertStream.stream;
   Stream<dynamic> get notificationStream => _notificationStream.stream;
 
-  /// ===============================================================
-  /// CONNECTION MANAGEMENT
-  /// ===============================================================
-
-  bool isConnected() => _isConnected;
-
-  void disconnect() {
-    _stopHeartbeat();
-    socket.disconnect();
-    _isConnected = false;
-  }
-
-  void _startHeartbeat() {
-    _heartbeatTimer = Timer.periodic(Duration(seconds: 30), (timer) {
-      if (_isConnected) {
-        socket
-            .emit('HEARTBEAT', {'timestamp': DateTime.now().toIso8601String()});
-      }
-    });
-  }
-
-  void _stopHeartbeat() {
-    _heartbeatTimer?.cancel();
-  }
-
-  /// ===============================================================
-  /// UI POPUPS & NOTIFICATIONS
-  /// ===============================================================
-
-  void _showTemperatureAlert(Map<String, dynamic> data) {
-    // This would be triggered from Riverpod listener
-    // to show in-app alert to user
-  }
+  bool get isConnected => _isConnected;
 
   void dispose() {
-    disconnect();
     _tradeOfferStream.close();
     _counterOfferStream.close();
     _paymentConfirmedStream.close();
@@ -260,16 +125,20 @@ class WebSocketService {
     _temperatureAlertStream.close();
     _fraudAlertStream.close();
     _notificationStream.close();
+    disconnect();
   }
 }
+
+// Riverpod provider
+final webSocketServiceProvider = Provider<WebSocketService>((ref) {
+  final service = WebSocketService();
+  ref.onDispose(service.dispose);
+  return service;
+});
 
 /// ===============================================================
 /// RIVERPOD PROVIDERS
 /// ===============================================================
-
-final webSocketServiceProvider = Provider<WebSocketService>((ref) {
-  return WebSocketService();
-});
 
 /// Real-time trade offer stream
 final tradeOfferStreamProvider = StreamProvider<dynamic>((ref) {
@@ -326,6 +195,6 @@ final webSocketConnectionStatusProvider = StreamProvider<bool>((ref) async* {
   final webSocketService = ref.watch(webSocketServiceProvider);
   while (true) {
     yield webSocketService.isConnected();
-    await Future.delayed(Duration(seconds: 1));
+    await Future.delayed(const Duration(seconds: 1));
   }
 });

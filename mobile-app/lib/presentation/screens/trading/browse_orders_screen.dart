@@ -29,7 +29,7 @@ final sellerOrdersProvider =
 final orderTypeFilterProvider = StateProvider<String>((ref) => 'all');
 
 class BrowseOrdersScreen extends ConsumerWidget {
-  const BrowseOrdersScreen({Key? key}) : super(key: key);
+  const BrowseOrdersScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

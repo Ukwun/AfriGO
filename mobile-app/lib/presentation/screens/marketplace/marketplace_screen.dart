@@ -5,7 +5,7 @@ import '../../../presentation/providers/lots_provider.dart';
 import '../../../domain/models/lot_model.dart';
 
 class MarketplaceScreen extends ConsumerStatefulWidget {
-  const MarketplaceScreen({Key? key}) : super(key: key);
+  const MarketplaceScreen({super.key});
 
   @override
   ConsumerState<MarketplaceScreen> createState() => _MarketplaceScreenState();

@@ -20,9 +20,9 @@ class LotHistoryScreen extends ConsumerStatefulWidget {
   final String lotId;
 
   const LotHistoryScreen({
-    Key? key,
+    super.key,
     required this.lotId,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<LotHistoryScreen> createState() => _LotHistoryScreenState();

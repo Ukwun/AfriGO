@@ -196,7 +196,7 @@ final realTimeContractEventProvider =
     StreamProvider.family<Map<String, dynamic>, String>((ref, tradeId) {
   // This would connect to WebSocket and broadcast real-time events
   // For now, returns an empty stream that can be extended with actual WebSocket
-  return Stream.empty();
+  return const Stream.empty();
 });
 
 // ============================================================================

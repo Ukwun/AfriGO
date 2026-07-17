@@ -21,8 +21,8 @@ class ProductListingScreen extends ConsumerStatefulWidget {
   const ProductListingScreen({
     this.initialSearchQuery,
     this.filterCategory,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<ProductListingScreen> createState() =>
@@ -34,7 +34,7 @@ class _ProductListingScreenState extends ConsumerState<ProductListingScreen>
   late TextEditingController _searchController;
   late ScrollController _scrollController;
   late AnimationController _fadeController;
-  String _sortBy = 'relevance';
+  final String _sortBy = 'relevance';
   String _selectedCategory = '';
   bool _isLoadingMore = false;
 
@@ -45,7 +45,7 @@ class _ProductListingScreenState extends ConsumerState<ProductListingScreen>
         TextEditingController(text: widget.initialSearchQuery ?? '');
     _scrollController = ScrollController();
     _fadeController =
-        AnimationController(duration: Duration(milliseconds: 400));
+        AnimationController(duration: const Duration(milliseconds: 400));
 
     // Listen to scroll for infinite scroll
     _scrollController.addListener(_handleScroll);
@@ -78,7 +78,7 @@ class _ProductListingScreenState extends ConsumerState<ProductListingScreen>
       if (!_isLoadingMore) {
         setState(() => _isLoadingMore = true);
         ref.read(productsSearchProvider.notifier).loadMore();
-        Future.delayed(Duration(milliseconds: 500), () {
+        Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) setState(() => _isLoadingMore = false);
         });
       }
@@ -152,7 +152,7 @@ class _ProductListingScreenState extends ConsumerState<ProductListingScreen>
           icon: Icon(Icons.filter_list, color: AppColors.textPrimary),
           onPressed: _showAdvancedFilters,
         ),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
       ],
     );
   }
@@ -162,12 +162,12 @@ class _ProductListingScreenState extends ConsumerState<ProductListingScreen>
       duration: 400,
       delay: 100,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: TextField(
           controller: _searchController,
           onChanged: (value) {
             // Debounce search
-            Future.delayed(Duration(milliseconds: 300), () {
+            Future.delayed(const Duration(milliseconds: 300), () {
               if (mounted && _searchController.text == value) {
                 _handleSearch(value);
               }
@@ -178,10 +178,12 @@ class _ProductListingScreenState extends ConsumerState<ProductListingScreen>
             hintStyle: AppTheme.bodyMedium.copyWith(
               color: AppColors.textSecondary.withOpacity(0.6),
             ),
-            prefixIcon: Icon(Icons.search, color: AppColors.textSecondary),
+            prefixIcon:
+                const Icon(Icons.search, color: AppColors.textSecondary),
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
-                    icon: Icon(Icons.clear, color: AppColors.textSecondary),
+                    icon:
+                        const Icon(Icons.clear, color: AppColors.textSecondary),
                     onPressed: () {
                       _searchController.clear();
                       _handleSearch('');
@@ -200,9 +202,10 @@ class _ProductListingScreenState extends ConsumerState<ProductListingScreen>
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.primary, width: 2),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
             ),
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
           style: AppTheme.bodyMedium.copyWith(
             color: AppColors.textPrimary,
@@ -222,14 +225,14 @@ class _ProductListingScreenState extends ConsumerState<ProductListingScreen>
         height: 50,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
-          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           itemCount: categories.length,
           itemBuilder: (context, index) {
             final category = categories[index];
             final isSelected = _selectedCategory == category ||
                 (category == 'All' && _selectedCategory == '');
             return Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
               child: _FilterChip(
                 label: category,
                 isSelected: isSelected,
@@ -249,7 +252,7 @@ class _ProductListingScreenState extends ConsumerState<ProductListingScreen>
 
     return ListView.builder(
       controller: _scrollController,
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       itemCount: products.length + (_isLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == products.length) {
@@ -275,11 +278,11 @@ class _ProductListingScreenState extends ConsumerState<ProductListingScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(
+          const CircularProgressIndicator(
             strokeWidth: 3,
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             'Loading products...',
             style: AppTheme.bodyMedium.copyWith(
@@ -292,7 +295,7 @@ class _ProductListingScreenState extends ConsumerState<ProductListingScreen>
   }
 
   Widget _buildLoadingMoreIndicator() {
-    return Padding(
+    return const Padding(
       padding: EdgeInsets.symmetric(vertical: 16),
       child: Center(
         child: SizedBox(
@@ -312,15 +315,15 @@ class _ProductListingScreenState extends ConsumerState<ProductListingScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 48, color: AppColors.error),
-          SizedBox(height: 16),
+          const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+          const SizedBox(height: 16),
           Text(
             'Failed to load products',
             style: AppTheme.headlineSmall.copyWith(
               color: AppColors.textPrimary,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             error,
             style: AppTheme.bodySmall.copyWith(
@@ -328,14 +331,14 @@ class _ProductListingScreenState extends ConsumerState<ProductListingScreen>
             ),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () {
               ref.refresh(productsSearchProvider);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
-              padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -357,23 +360,23 @@ class _ProductListingScreenState extends ConsumerState<ProductListingScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.shopping_bag_outlined,
+          const Icon(Icons.shopping_bag_outlined,
               size: 64, color: AppColors.textSecondary),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             'No products found',
             style: AppTheme.headlineSmall.copyWith(
               color: AppColors.textPrimary,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'Try adjusting your search or filters',
             style: AppTheme.bodyMedium.copyWith(
               color: AppColors.textSecondary,
             ),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () {
               _searchController.clear();
@@ -382,7 +385,7 @@ class _ProductListingScreenState extends ConsumerState<ProductListingScreen>
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
-              padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -423,8 +426,7 @@ class _ProductCard extends ConsumerWidget {
   const _ProductCard({
     required this.product,
     required this.onTap,
-    Key? key,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -433,7 +435,7 @@ class _ProductCard extends ConsumerWidget {
     return GestureDetector(
       onTap: onTap,
       child: Card(
-        margin: EdgeInsets.symmetric(vertical: 8),
+        margin: const EdgeInsets.symmetric(vertical: 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: BorderSide(color: AppColors.borderLight, width: 0.5),
@@ -450,7 +452,7 @@ class _ProductCard extends ConsumerWidget {
                 Container(
                   height: 200,
                   width: double.infinity,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     borderRadius:
                         BorderRadius.vertical(top: Radius.circular(12)),
                     color: AppColors.background,
@@ -472,7 +474,7 @@ class _ProductCard extends ConsumerWidget {
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         color: AppColors.borderLight,
-                        child: Center(
+                        child: const Center(
                           child: Icon(Icons.image_not_supported,
                               color: AppColors.textSecondary, size: 40),
                         ),
@@ -487,7 +489,8 @@ class _ProductCard extends ConsumerWidget {
                     top: 8,
                     left: 8,
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: _getQualityColor(product.quality),
                         borderRadius: BorderRadius.circular(6),
@@ -508,7 +511,7 @@ class _ProductCard extends ConsumerWidget {
                   child: ScaleTransition(
                     scale: Tween<double>(begin: 1, end: 1.2).animate(
                       CurvedAnimation(
-                        parent: AlwaysStoppedAnimation(0.5),
+                        parent: const AlwaysStoppedAnimation(0.5),
                         curve: Curves.easeOut,
                       ),
                     ),
@@ -521,7 +524,7 @@ class _ProductCard extends ConsumerWidget {
                             .toggleFavorite(product.id);
                       },
                       child: Container(
-                        padding: EdgeInsets.all(6),
+                        padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.9),
                           shape: BoxShape.circle,
@@ -544,7 +547,7 @@ class _ProductCard extends ConsumerWidget {
 
             // Content
             Padding(
-              padding: EdgeInsets.all(12),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -558,7 +561,7 @@ class _ProductCard extends ConsumerWidget {
                     ),
                   ),
 
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
 
                   // Seller info
                   Row(
@@ -568,7 +571,7 @@ class _ProductCard extends ConsumerWidget {
                         backgroundImage: NetworkImage(product.sellerAvatarUrl),
                         onBackgroundImageError: (_, __) {},
                       ),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -583,16 +586,16 @@ class _ProductCard extends ConsumerWidget {
                             ),
                             Row(
                               children: [
-                                Icon(Icons.star,
+                                const Icon(Icons.star,
                                     size: 14, color: AppColors.warning),
-                                SizedBox(width: 2),
+                                const SizedBox(width: 2),
                                 Text(
                                   '${product.sellerRating}',
                                   style: AppTheme.labelSmall.copyWith(
                                     color: AppColors.textSecondary,
                                   ),
                                 ),
-                                SizedBox(width: 4),
+                                const SizedBox(width: 4),
                                 Text(
                                   '(${product.sellerReviews})',
                                   style: AppTheme.labelSmall.copyWith(
@@ -607,7 +610,7 @@ class _ProductCard extends ConsumerWidget {
                     ],
                   ),
 
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
 
                   // Price & quantity
                   Row(
@@ -635,7 +638,7 @@ class _ProductCard extends ConsumerWidget {
                         ],
                       ),
                       Container(
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 8,
                           vertical: 4,
                         ),
@@ -656,14 +659,14 @@ class _ProductCard extends ConsumerWidget {
                     ],
                   ),
 
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
 
                   // Location + Days left
                   Row(
                     children: [
-                      Icon(Icons.location_on_outlined,
+                      const Icon(Icons.location_on_outlined,
                           size: 14, color: AppColors.textSecondary),
-                      SizedBox(width: 4),
+                      const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           product.location,
@@ -674,7 +677,7 @@ class _ProductCard extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       if (product.daysUntilExpiry != null)
                         Text(
                           '${product.daysUntilExpiry} days left',
@@ -687,7 +690,7 @@ class _ProductCard extends ConsumerWidget {
                     ],
                   ),
 
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
                   // Action buttons
                   SizedBox(
@@ -699,7 +702,7 @@ class _ProductCard extends ConsumerWidget {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        padding: EdgeInsets.symmetric(vertical: 10),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
                       ),
                       child: Text(
                         'View & Make Offer',
@@ -722,12 +725,12 @@ class _ProductCard extends ConsumerWidget {
     switch (quality.toLowerCase()) {
       case 'grade a':
       case 'premium':
-        return Color(0xFF2ECC71); // Green
+        return const Color(0xFF2ECC71); // Green
       case 'grade b':
       case 'standard':
-        return Color(0xFF3498DB); // Blue
+        return const Color(0xFF3498DB); // Blue
       default:
-        return Color(0xFF95A5A6); // Gray
+        return const Color(0xFF95A5A6); // Gray
     }
   }
 }
@@ -742,8 +745,7 @@ class _FilterChip extends StatefulWidget {
     required this.label,
     required this.isSelected,
     required this.onTap,
-    Key? key,
-  }) : super(key: key);
+  });
 
   @override
   State<_FilterChip> createState() => _FilterChipState();
@@ -757,7 +759,7 @@ class _FilterChipState extends State<_FilterChip>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
       vsync: this,
     );
     if (widget.isSelected) {
@@ -824,8 +826,7 @@ class _AdvancedFilterSheet extends StatefulWidget {
 
   const _AdvancedFilterSheet({
     required this.onApply,
-    Key? key,
-  }) : super(key: key);
+  });
 
   @override
   State<_AdvancedFilterSheet> createState() => _AdvancedFilterSheetState();
@@ -835,18 +836,18 @@ class _AdvancedFilterSheetState extends State<_AdvancedFilterSheet> {
   double _minPrice = 0;
   double _maxPrice = 100;
   String _sortBy = 'relevance';
-  Set<String> _qualityFilters = {};
+  final Set<String> _qualityFilters = {};
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
       ),
       child: SingleChildScrollView(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -862,13 +863,14 @@ class _AdvancedFilterSheetState extends State<_AdvancedFilterSheet> {
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.close, color: AppColors.textSecondary),
+                    icon:
+                        const Icon(Icons.close, color: AppColors.textSecondary),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
               ),
 
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
 
               // Price Range
               Text(
@@ -877,7 +879,7 @@ class _AdvancedFilterSheetState extends State<_AdvancedFilterSheet> {
                   color: AppColors.textPrimary,
                 ),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               RangeSlider(
                 values: RangeValues(_minPrice, _maxPrice),
                 min: 0,
@@ -909,7 +911,7 @@ class _AdvancedFilterSheetState extends State<_AdvancedFilterSheet> {
                 ],
               ),
 
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
 
               // Quality filter
               Text(
@@ -918,7 +920,7 @@ class _AdvancedFilterSheetState extends State<_AdvancedFilterSheet> {
                   color: AppColors.textPrimary,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
                 children: ['Grade A', 'Grade B', 'Standard', 'Premium']
@@ -938,7 +940,7 @@ class _AdvancedFilterSheetState extends State<_AdvancedFilterSheet> {
                     .toList(),
               ),
 
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
 
               // Sort by
               Text(
@@ -947,7 +949,7 @@ class _AdvancedFilterSheetState extends State<_AdvancedFilterSheet> {
                   color: AppColors.textPrimary,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               DropdownButton<String>(
                 value: _sortBy,
                 isExpanded: true,
@@ -975,7 +977,7 @@ class _AdvancedFilterSheetState extends State<_AdvancedFilterSheet> {
                     .toList(),
               ),
 
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
 
               // Action buttons
               Row(
@@ -995,10 +997,10 @@ class _AdvancedFilterSheetState extends State<_AdvancedFilterSheet> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: Text('Reset'),
+                      child: const Text('Reset'),
                     ),
                   ),
-                  SizedBox(width: 12),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
@@ -1015,7 +1017,7 @@ class _AdvancedFilterSheetState extends State<_AdvancedFilterSheet> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: Text(
+                      child: const Text(
                         'Apply',
                         style: TextStyle(color: Colors.white),
                       ),

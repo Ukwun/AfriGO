@@ -90,14 +90,14 @@ class BrowseLotsScreen extends ConsumerWidget {
               child: lotsAsync.when(
                 data: (lots) {
                   if (filteredLots.isEmpty) {
-                    return Center(
+                    return const Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.shopping_bag_outlined,
+                          Icon(Icons.shopping_bag_outlined,
                               size: 64, color: Colors.grey),
-                          const SizedBox(height: 16),
-                          const Text('No lots found',
+                          SizedBox(height: 16),
+                          Text('No lots found',
                               style:
                                   TextStyle(fontSize: 18, color: Colors.grey)),
                         ],
@@ -270,7 +270,7 @@ class BrowseLotsScreen extends ConsumerWidget {
                       const Icon(Icons.star, color: Colors.amber, size: 14),
                       const SizedBox(width: 4),
                       Text(
-                        '${lot.averageRating.toStringAsFixed(1)}',
+                        lot.averageRating.toStringAsFixed(1),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
@@ -310,7 +310,7 @@ class BrowseLotsScreen extends ConsumerWidget {
                     children: [
                       Text(
                         '\$${lot.pricePerUnit.toStringAsFixed(2)} per ${lot.quantityUnit}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppTheme.primaryGreen,
                           fontWeight: FontWeight.bold,
                           fontSize: 13,

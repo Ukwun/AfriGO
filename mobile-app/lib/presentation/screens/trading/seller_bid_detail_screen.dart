@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 class SellerBidDetailScreen extends StatelessWidget {
   final String bidId;
-  const SellerBidDetailScreen({Key? key, required this.bidId})
-      : super(key: key);
+  const SellerBidDetailScreen({super.key, required this.bidId});
 
   @override
   Widget build(BuildContext context) {

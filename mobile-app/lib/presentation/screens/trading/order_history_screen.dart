@@ -12,7 +12,7 @@ final pastOrdersProvider =
 });
 
 class OrderHistoryScreen extends ConsumerWidget {
-  const OrderHistoryScreen({Key? key}) : super(key: key);
+  const OrderHistoryScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

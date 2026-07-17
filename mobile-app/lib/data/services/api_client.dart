@@ -2,199 +2,121 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiClient {
-  static final ApiClient _instance = ApiClient._internal();
-  late Dio _dio;
-  String? _token;
-
-  // Cloud backend deployed to Render
-  // Updated: May 28, 2026
-  static const String _baseUrl = 'https://afrigo-backend-1v22.onrender.com/api';
-  static const Duration _connectTimeout = Duration(seconds: 20);
-  static const Duration _receiveTimeout = Duration(seconds: 45);
-  static const Duration _sendTimeout = Duration(seconds: 30);
-
-  factory ApiClient() {
-    return _instance;
-  }
-
   ApiClient._internal() {
-    _dio = Dio(
-      BaseOptions(
-        baseUrl: _baseUrl,
-        connectTimeout: _connectTimeout,
-        receiveTimeout: _receiveTimeout,
-        sendTimeout: _sendTimeout,
-        contentType: Headers.jsonContentType,
-        responseType: ResponseType.json,
-        validateStatus: (status) => status != null && status < 500,
-      ),
-    );
-
-    // Add token interceptor
-    _dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) async {
-          _token = await _getStoredToken();
-          if (_token != null) {
-            options.headers['Authorization'] = 'Bearer $_token';
-          }
-          print('🌐 ${options.method} ${options.path}');
-          return handler.next(options);
-        },
-        onResponse: (response, handler) {
-          print('✅ ${response.statusCode} ${response.requestOptions.path}');
-          return handler.next(response);
-        },
-        onError: (error, handler) {
-          print('❌ ${error.message} (${error.type})');
-          return handler.next(error);
-        },
-      ),
-    );
+    _dio = Dio(BaseOptions(
+      baseUrl: _baseUrl,
+      connectTimeout: const Duration(seconds: 20),
+      receiveTimeout: const Duration(seconds: 45),
+      sendTimeout: const Duration(seconds: 30),
+      contentType: Headers.jsonContentType,
+      responseType: ResponseType.json,
+      validateStatus: (status) => status != null && status < 500,
+    ));
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        final token = await _storedToken();
+        if (token != null) options.headers['Authorization'] = 'Bearer $token';
+        handler.next(options);
+      },
+      onError: (error, handler) => handler.next(error),
+    ));
   }
 
-  Future<String?> _getStoredToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('auth_token');
+  static final ApiClient _instance = ApiClient._internal();
+  factory ApiClient() => _instance;
+
+  static const _baseUrl = String.fromEnvironment(
+    'AFRIGO_API_URL',
+    defaultValue:
+        'https://europe-west1-afrigo-62e9b.cloudfunctions.net/api/api',
+  );
+  late final Dio _dio;
+
+  String get baseUrl => _dio.options.baseUrl;
+
+  String _endpoint(String endpoint) {
+    if (endpoint == '/api') return '';
+    return endpoint.startsWith('/api/') ? endpoint.substring(4) : endpoint;
   }
 
-  Future<void> _saveToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('auth_token', token);
-    _token = token;
-  }
+  Future<String?> _storedToken() async =>
+      (await SharedPreferences.getInstance()).getString('auth_token');
 
-  Future<void> _clearToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('auth_token');
-    _token = null;
-  }
-
-  Future<Map<String, dynamic>> get(String endpoint) async {
-    try {
-      final response = await _requestWithRetry(
-        () => _dio.get(endpoint),
-      );
-
-      // Check if response indicates an error (4xx status code)
-      if (response.statusCode != null && response.statusCode! >= 400) {
-        final data = response.data as Map<String, dynamic>?;
-        final errorMsg = data?['message'] ?? 'Request failed';
-        throw Exception(errorMsg);
-      }
-
-      return response.data as Map<String, dynamic>;
-    } on DioException catch (e) {
-      if (e.response != null && e.response?.data is Map) {
-        final errorData = e.response?.data as Map<String, dynamic>;
-        throw Exception(errorData['message'] ?? e.message ?? 'Request failed');
-      }
-      throw Exception(_friendlyNetworkError(e));
-    } catch (e) {
-      rethrow;
-    }
-  }
+  Future<Map<String, dynamic>> get(String endpoint) =>
+      _request(() => _dio.get(_endpoint(endpoint)));
 
   Future<Map<String, dynamic>> post(
     String endpoint, {
     required Map<String, dynamic> body,
-  }) async {
-    try {
-      final response = await _requestWithRetry(
-        () => _dio.post(endpoint, data: body),
-      );
-
-      // Check if response indicates an error (4xx status code)
-      if (response.statusCode != null && response.statusCode! >= 400) {
-        final data = response.data as Map<String, dynamic>?;
-        final errorMsg = data?['message'] ?? 'Request failed';
-        throw Exception(errorMsg);
-      }
-
-      return response.data as Map<String, dynamic>;
-    } on DioException catch (e) {
-      if (e.response != null && e.response?.data is Map) {
-        final errorData = e.response?.data as Map<String, dynamic>;
-        throw Exception(errorData['message'] ?? e.message ?? 'Request failed');
-      }
-      throw Exception(_friendlyNetworkError(e));
-    } catch (e) {
-      rethrow;
-    }
-  }
+    Map<String, String>? headers,
+  }) =>
+      _request(() => _dio.post(_endpoint(endpoint),
+          data: body,
+          options: headers == null ? null : Options(headers: headers)));
 
   Future<Map<String, dynamic>> put(
     String endpoint, {
     required Map<String, dynamic> body,
-  }) async {
-    try {
-      final response = await _requestWithRetry(
-        () => _dio.put(endpoint, data: body),
-      );
-      return response.data as Map<String, dynamic>;
-    } on DioException catch (e) {
-      if (e.response != null && e.response?.data is Map) {
-        final errorData = e.response?.data as Map<String, dynamic>;
-        throw Exception(errorData['message'] ?? e.message ?? 'Request failed');
-      }
-      throw Exception(_friendlyNetworkError(e));
-    } catch (e) {
-      rethrow;
-    }
-  }
+  }) =>
+      _request(() => _dio.put(_endpoint(endpoint), data: body));
 
-  Future<void> delete(String endpoint) async {
-    try {
-      await _requestWithRetry(
-        () => _dio.delete(endpoint),
-      );
-    } on DioException catch (e) {
-      throw Exception(_friendlyNetworkError(e));
-    } catch (e) {
-      rethrow;
-    }
-  }
+  Future<Map<String, dynamic>> patch(
+    String endpoint, {
+    required Map<String, dynamic> body,
+  }) =>
+      _request(() => _dio.patch(_endpoint(endpoint), data: body));
 
-  Future<Response<dynamic>> _requestWithRetry(
-    Future<Response<dynamic>> Function() request,
+  Future<Map<String, dynamic>> delete(String endpoint) =>
+      _request(() => _dio.delete(_endpoint(endpoint)));
+
+  Future<Map<String, dynamic>> _request(
+    Future<Response<dynamic>> Function() operation,
   ) async {
     try {
-      return await request();
-    } on DioException catch (e) {
-      final shouldRetry = e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.connectionError ||
-          e.type == DioExceptionType.receiveTimeout;
-
-      if (!shouldRetry) {
-        rethrow;
+      Response<dynamic> response;
+      try {
+        response = await operation();
+      } on DioException catch (error) {
+        if (!_retryable(error)) rethrow;
+        await Future<void>.delayed(const Duration(milliseconds: 800));
+        response = await operation();
       }
-
-      // Render can cold-start or mobile DNS can briefly fail; retry once.
-      await Future<void>.delayed(const Duration(milliseconds: 800));
-      return request();
+      final data = response.data;
+      if ((response.statusCode ?? 500) >= 400) {
+        final message = data is Map ? data['message'] : null;
+        throw Exception(message ?? 'Request failed (${response.statusCode})');
+      }
+      if (data == null) return <String, dynamic>{};
+      if (data is Map<String, dynamic>) return data;
+      if (data is Map) return Map<String, dynamic>.from(data);
+      throw Exception('Invalid response from server');
+    } on DioException catch (error) {
+      final data = error.response?.data;
+      if (data is Map && data['message'] != null) {
+        throw Exception(data['message']);
+      }
+      throw Exception(_networkMessage(error));
     }
   }
 
-  String _friendlyNetworkError(DioException e) {
-    switch (e.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.receiveTimeout:
-      case DioExceptionType.sendTimeout:
-      case DioExceptionType.connectionError:
-        return 'Network connection failed. Please check internet access and try again.';
-      default:
-        return e.message ?? 'Request failed';
-    }
-  }
+  bool _retryable(DioException error) =>
+      error.type == DioExceptionType.connectionTimeout ||
+      error.type == DioExceptionType.receiveTimeout ||
+      error.type == DioExceptionType.connectionError;
 
-  void setToken(String token) {
-    _token = token;
-    _saveToken(token);
+  String _networkMessage(DioException error) => _retryable(error)
+      ? 'Network connection failed. Check your connection and try again.'
+      : error.message ?? 'Request failed';
+
+  Future<void> setToken(String token) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString('auth_token', token);
     _dio.options.headers['Authorization'] = 'Bearer $token';
   }
 
   Future<void> logout() async {
-    await _clearToken();
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.remove('auth_token');
     _dio.options.headers.remove('Authorization');
   }
 }

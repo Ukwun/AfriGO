@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../models/order_model.dart';
+import '../../models/order_model.dart';
 import 'auth_provider.dart';
 
 final ordersServiceProvider = Provider((ref) {
@@ -33,7 +33,7 @@ class OrdersService {
   Future<OrderModel> getOrder(String orderId) async {
     try {
       final token = auth is AuthAuthenticated ? auth.token : null;
-      
+
       final response = await http.get(
         Uri.parse('$baseUrl/api/orders/$orderId'),
         headers: {
@@ -149,12 +149,4 @@ class OrdersService {
       throw Exception('Error updating order: $e');
     }
   }
-}
-
-// Import this if not present
-import '../providers/auth_provider.dart';
-
-class AuthAuthenticated {
-  final String token;
-  AuthAuthenticated({required this.token});
 }

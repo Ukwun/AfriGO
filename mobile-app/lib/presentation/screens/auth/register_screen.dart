@@ -42,8 +42,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     switch (role.toLowerCase()) {
       case 'seller':
       case 'supplier':
+      case 'farmer':
         return '/dashboard/seller';
       case 'exporter':
+      case 'member':
         return '/dashboard/exporter';
       default:
         return '/dashboard/buyer';
@@ -53,10 +55,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String _dashboardRouteForAuthUser(AuthUser user) {
     final normalizedRoles = user.roles.map((r) => r.toLowerCase()).toList();
     if (normalizedRoles.contains('seller') ||
-        normalizedRoles.contains('supplier')) {
+        normalizedRoles.contains('supplier') ||
+        normalizedRoles.contains('farmer')) {
       return '/dashboard/seller';
     }
-    if (normalizedRoles.contains('exporter')) {
+    if (normalizedRoles.contains('exporter') ||
+        normalizedRoles.contains('member')) {
       return '/dashboard/exporter';
     }
     return '/dashboard/buyer';
@@ -119,7 +123,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _handleGoogleSignUp() async {
     setState(() => _errorMessage = null);
     try {
-      await ref.read(authProvider.notifier).loginWithGoogle();
+      await ref
+          .read(authProvider.notifier)
+          .loginWithGoogle(role: _selectedRole);
       if (!mounted) return;
 
       final authState = ref.read(authProvider);
@@ -139,7 +145,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _handleFacebookSignUp() async {
     setState(() => _errorMessage = null);
     try {
-      await ref.read(authProvider.notifier).loginWithFacebook();
+      await ref
+          .read(authProvider.notifier)
+          .loginWithFacebook(role: _selectedRole);
       if (!mounted) return;
 
       final authState = ref.read(authProvider);
@@ -159,7 +167,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _handleAppleSignUp() async {
     setState(() => _errorMessage = null);
     try {
-      await ref.read(authProvider.notifier).loginWithApple();
+      await ref.read(authProvider.notifier).loginWithApple(role: _selectedRole);
       if (!mounted) return;
 
       final authState = ref.read(authProvider);
@@ -255,6 +263,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     return Scaffold(
       backgroundColor: AfrigoColors.bgLight,
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -271,7 +280,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AfrigoSpacing.screenPadding),
+        padding: const EdgeInsets.all(AfrigoSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -450,7 +459,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               runSpacing: AfrigoSpacing.md,
               children: [
                 _buildRoleChip('Buyer', 'buyer'),
-                _buildRoleChip('Seller', 'seller'),
+                _buildRoleChip('Supplier', 'supplier'),
                 _buildRoleChip('Exporter', 'exporter'),
               ],
             ),

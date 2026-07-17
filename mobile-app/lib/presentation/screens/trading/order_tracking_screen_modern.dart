@@ -156,7 +156,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
                       const SizedBox(
                         height: AfrigoSpacing.lg,
                       ),
-                      Divider(
+                      const Divider(
                         color: AfrigoColors.borderLight,
                         height: AfrigoSpacing.lg,
                       ),

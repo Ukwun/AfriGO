@@ -18,8 +18,8 @@ class CounterOfferScreen extends ConsumerStatefulWidget {
 
   const CounterOfferScreen({
     required this.offerId,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<CounterOfferScreen> createState() => _CounterOfferScreenState();
@@ -59,7 +59,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
           );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Row(
             children: [
               Icon(Icons.check_circle, color: Colors.white),
@@ -72,7 +72,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
         ),
       );
 
-      Future.delayed(Duration(milliseconds: 1500), () {
+      Future.delayed(const Duration(milliseconds: 1500), () {
         context.go('/contracts/${widget.offerId}');
       });
     } catch (error) {
@@ -89,7 +89,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
   Future<void> _submitCounterOffer() async {
     if (_counterPriceController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Please enter a counter price'),
           backgroundColor: AppColors.warning,
         ),
@@ -107,7 +107,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
           );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Row(
             children: [
               Icon(Icons.send, color: Colors.white),
@@ -144,13 +144,13 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
           );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Offer declined'),
           backgroundColor: AppColors.warning,
         ),
       );
 
-      Future.delayed(Duration(milliseconds: 1000), () {
+      Future.delayed(const Duration(milliseconds: 1000), () {
         context.pop();
       });
     } catch (error) {
@@ -188,7 +188,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
           labelColor: AppColors.primary,
           unselectedLabelColor: AppColors.textSecondary,
           indicatorColor: AppColors.primary,
-          tabs: [
+          tabs: const [
             Tab(text: 'History'),
             Tab(text: 'Counter'),
           ],
@@ -207,11 +207,11 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(
+          const CircularProgressIndicator(
             strokeWidth: 3,
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             'Loading negotiation...',
             style: AppTheme.bodyMedium.copyWith(
@@ -228,15 +228,15 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 48, color: AppColors.error),
-          SizedBox(height: 16),
+          const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+          const SizedBox(height: 16),
           Text(
             'Failed to load offer',
             style: AppTheme.headlineSmall.copyWith(
               color: AppColors.textPrimary,
             ),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () {
               ref.refresh(offerDetailProvider(widget.offerId));
@@ -270,7 +270,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
   Widget _buildHistoryTab(OfferDetail offer) {
     return SingleChildScrollView(
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             // Current status header
@@ -278,14 +278,14 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
               delay: 100,
               child: _buildStatusHeader(offer),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // Negotiation timeline
             FadeInTransition(
               delay: 150,
               child: _buildNegotiationTimeline(offer),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // Product summary
             FadeInTransition(
@@ -293,7 +293,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
               child: _buildProductSummary(offer),
             ),
 
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
           ],
         ),
       ),
@@ -310,7 +310,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
         isWaitingForResponse ? Icons.hourglass_empty : Icons.check_circle;
 
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: statusColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
@@ -319,7 +319,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
       child: Row(
         children: [
           Icon(statusIcon, color: statusColor, size: 24),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -331,7 +331,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   offer.latestCounterOffer?.respondedAt != null
                       ? 'Last response: ${_formatTime(offer.latestCounterOffer!.respondedAt)}'
@@ -358,7 +358,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
             color: AppColors.textPrimary,
           ),
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         ...List.generate(
           offer.negotiationHistory.length,
           (index) {
@@ -382,7 +382,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
     int index,
   ) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -421,14 +421,14 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
             ],
           ),
 
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
 
           // Content
           Expanded(
             child: SlideInTransition(
               delay: index * 50,
               child: Container(
-                padding: EdgeInsets.all(12),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: AppColors.cardBackground,
                   borderRadius: BorderRadius.circular(12),
@@ -457,11 +457,11 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
                       ],
                     ),
 
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
 
                     // Offer details
                     Container(
-                      padding: EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: AppColors.background,
                         borderRadius: BorderRadius.circular(8),
@@ -487,7 +487,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
                               ),
                             ],
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -505,7 +505,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
                               ),
                             ],
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -530,9 +530,9 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
 
                     // Message if provided
                     if (item.message != null && item.message!.isNotEmpty) ...[
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Container(
-                        padding: EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
@@ -547,7 +547,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
                     ],
 
                     // Status indicator
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         Icon(
@@ -559,7 +559,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
                               ? AppColors.warning
                               : AppColors.success,
                         ),
-                        SizedBox(width: 4),
+                        const SizedBox(width: 4),
                         Text(
                           item.status == 'PENDING'
                               ? 'Awaiting response'
@@ -592,9 +592,9 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
             color: AppColors.textPrimary,
           ),
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         Container(
-          padding: EdgeInsets.all(12),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: AppColors.cardBackground,
             borderRadius: BorderRadius.circular(12),
@@ -616,7 +616,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
                       ),
                     ),
                   ),
-                  SizedBox(width: 12),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -628,7 +628,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
                           offer.productCategory,
                           style: AppTheme.bodySmall.copyWith(
@@ -641,13 +641,13 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
                 ],
               ),
               Divider(color: AppColors.borderLight),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               _buildDetailRow('Lot ID', offer.lotId),
-              SizedBox(height: 6),
+              const SizedBox(height: 6),
               _buildDetailRow('Seller', offer.sellerName),
-              SizedBox(height: 6),
+              const SizedBox(height: 6),
               _buildDetailRow('Quality Grade', offer.qualityGrade),
-              SizedBox(height: 6),
+              const SizedBox(height: 6),
               _buildDetailRow('Harvest Date', offer.harvestDate),
             ],
           ),
@@ -681,7 +681,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
 
     return SingleChildScrollView(
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             // Current counter offer display
@@ -690,14 +690,14 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
                 delay: 100,
                 child: _buildCurrentCounterDisplay(offer.latestCounterOffer!),
               ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // Price suggestion card
             FadeInTransition(
               delay: 150,
               child: _buildPriceSuggestion(offer),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // Counter form
             FadeInTransition(
@@ -705,7 +705,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
               child: _buildCounterForm(offer),
             ),
 
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // Action buttons
             ScaleInTransition(
@@ -713,7 +713,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
               child: _buildActionButtons(offer),
             ),
 
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
           ],
         ),
       ),
@@ -722,7 +722,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
 
   Widget _buildCurrentCounterDisplay(CounterOfferData counter) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.primary.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
@@ -741,7 +741,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
                 ),
               ),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppColors.primary,
                   borderRadius: BorderRadius.circular(6),
@@ -755,7 +755,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
               ),
             ],
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -768,7 +768,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     '\$${counter.price.toStringAsFixed(2)}/kg',
                     style: AppTheme.headlineSmall.copyWith(
@@ -787,7 +787,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     '\$${(counter.price * counter.quantity).toStringAsFixed(2)}',
                     style: AppTheme.headlineSmall.copyWith(
@@ -800,9 +800,9 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
             ],
           ),
           if (counter.message != null && counter.message!.isNotEmpty) ...[
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Container(
-              padding: EdgeInsets.all(8),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: AppColors.background,
                 borderRadius: BorderRadius.circular(8),
@@ -827,7 +827,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
     final isBetter = difference < 0;
 
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
@@ -842,7 +842,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
               color: AppColors.textSecondary,
             ),
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -855,7 +855,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     '\$${initialPrice.toStringAsFixed(2)}/kg',
                     style: AppTheme.labelMedium.copyWith(
@@ -864,7 +864,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
                   ),
                 ],
               ),
-              Icon(Icons.arrow_right_alt, color: AppColors.textSecondary),
+              const Icon(Icons.arrow_right_alt, color: AppColors.textSecondary),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -874,7 +874,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     '\$${currentPrice.toStringAsFixed(2)}/kg',
                     style: AppTheme.labelMedium.copyWith(
@@ -886,9 +886,9 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
               ),
             ],
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Container(
-            padding: EdgeInsets.all(8),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: isBetter
                   ? AppColors.success.withOpacity(0.1)
@@ -902,7 +902,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
                   size: 14,
                   color: isBetter ? AppColors.success : AppColors.warning,
                 ),
-                SizedBox(width: 6),
+                const SizedBox(width: 6),
                 Text(
                   '${isBetter ? '-' : '+'}${difference.abs().toStringAsFixed(1)}% ${isBetter ? 'better' : 'higher'} than your offer',
                   style: AppTheme.bodySmall.copyWith(
@@ -919,7 +919,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
 
   Widget _buildCounterForm(OfferDetail offer) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
@@ -934,7 +934,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
               color: AppColors.textPrimary,
             ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
 
           // Price input
           Column(
@@ -946,22 +946,23 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
                   color: AppColors.textPrimary,
                 ),
               ),
-              SizedBox(height: 6),
+              const SizedBox(height: 6),
               TextField(
                 controller: _counterPriceController,
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 decoration: InputDecoration(
                   hintText: 'Enter price per kg',
                   suffixText: '/kg',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  prefixIcon: Icon(Icons.attach_money),
+                  prefixIcon: const Icon(Icons.attach_money),
                 ),
               ),
             ],
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
 
           // Message
           Column(
@@ -973,7 +974,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
                   color: AppColors.textPrimary,
                 ),
               ),
-              SizedBox(height: 6),
+              const SizedBox(height: 6),
               TextField(
                 controller: _counterMessageController,
                 maxLines: 3,
@@ -987,19 +988,19 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
               ),
             ],
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
 
           // Info box
           Container(
-            padding: EdgeInsets.all(8),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: AppColors.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
-                Icon(Icons.info, size: 16, color: AppColors.primary),
-                SizedBox(width: 8),
+                const Icon(Icons.info, size: 16, color: AppColors.primary),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Seller will receive your counter-offer instantly via notification',
@@ -1026,7 +1027,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
           child: ElevatedButton.icon(
             onPressed: _isAccepting ? null : _acceptCounterOffer,
             icon: _isAccepting
-                ? SizedBox(
+                ? const SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
@@ -1034,7 +1035,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   )
-                : Icon(Icons.check_circle),
+                : const Icon(Icons.check_circle),
             label: Text(
               _isAccepting ? 'Accepting...' : 'Accept Counter Offer',
               style: AppTheme.labelLarge,
@@ -1048,7 +1049,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
             ),
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
 
         // Send counter button
         SizedBox(
@@ -1057,7 +1058,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
           child: ElevatedButton.icon(
             onPressed: _isSubmittingCounter ? null : _submitCounterOffer,
             icon: _isSubmittingCounter
-                ? SizedBox(
+                ? const SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
@@ -1065,7 +1066,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   )
-                : Icon(Icons.send),
+                : const Icon(Icons.send),
             label: Text(
               _isSubmittingCounter ? 'Sending...' : 'Send Counter Offer',
               style: AppTheme.labelLarge,
@@ -1079,7 +1080,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
             ),
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
 
         // Decline button
         SizedBox(
@@ -1087,14 +1088,14 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
           height: 48,
           child: OutlinedButton.icon(
             onPressed: _isDeclining ? null : _declineOffer,
-            icon: Icon(Icons.close),
+            icon: const Icon(Icons.close),
             label: Text(
               _isDeclining ? 'Declining...' : 'Decline Offer',
               style: AppTheme.labelMedium,
             ),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.error,
-              side: BorderSide(color: AppColors.error),
+              side: const BorderSide(color: AppColors.error),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),

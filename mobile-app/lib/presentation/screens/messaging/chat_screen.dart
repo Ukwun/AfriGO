@@ -25,11 +25,11 @@ class ChatScreen extends ConsumerStatefulWidget {
   final String? otherUserAvatar;
 
   const ChatScreen({
-    Key? key,
+    super.key,
     required this.otherUserId,
     required this.otherUserName,
     this.otherUserAvatar,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<ChatScreen> createState() => _ChatScreenState();

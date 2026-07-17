@@ -69,12 +69,12 @@ class LiveRoleStats {
     }
 
     return LiveRoleStats(
-      openRfqs: readInt('openRfqs', 5),
-      activeQuotes: readInt('activeQuotes', 14),
-      readyLots: readInt('readyLots', 6),
-      bookedShipments: readInt('bookedShipments', 4),
-      inCustoms: readInt('inCustoms', 2),
-      deliveredToday: readInt('deliveredToday', 3),
+      openRfqs: readInt('openRfqs', 0),
+      activeQuotes: readInt('activeQuotes', 0),
+      readyLots: readInt('readyLots', 0),
+      bookedShipments: readInt('bookedShipments', 0),
+      inCustoms: readInt('inCustoms', 0),
+      deliveredToday: readInt('deliveredToday', 0),
     );
   }
 }
@@ -154,36 +154,17 @@ class LiveMarketActivityNotifier
     extends StateNotifier<LiveMarketActivityState> {
   LiveMarketActivityNotifier()
       : _database = FirebaseDatabase.instance,
-        super(
-          LiveMarketActivityState(
-            stats: const LiveRoleStats(
-              openRfqs: 5,
-              activeQuotes: 14,
-              readyLots: 6,
-              bookedShipments: 4,
-              inCustoms: 2,
-              deliveredToday: 3,
-            ),
-            events: [
-              LiveActivityEvent(
-                id: 'evt-boot-1',
-                type: LiveEventType.shipmentBooked,
-                actor: LiveActorRole.exporter,
-                title: 'Shipment slot booked',
-                subtitle: 'Exporter locked vessel space for June 2 route.',
-                timestamp: DateTime.now().subtract(const Duration(minutes: 4)),
-              ),
-              LiveActivityEvent(
-                id: 'evt-boot-2',
-                type: LiveEventType.quoteSubmitted,
-                actor: LiveActorRole.supplier,
-                title: 'Quote submitted',
-                subtitle: 'Supplier responded to Cocoa RFQ in real time.',
-                timestamp: DateTime.now().subtract(const Duration(minutes: 8)),
-              ),
-            ],
+        super(const LiveMarketActivityState(
+          stats: LiveRoleStats(
+            openRfqs: 0,
+            activeQuotes: 0,
+            readyLots: 0,
+            bookedShipments: 0,
+            inCustoms: 0,
+            deliveredToday: 0,
           ),
-        ) {
+          events: [],
+        )) {
     _rootRef = _database.ref('live_market_activity/v1');
     _statsRef = _rootRef.child('stats');
     _eventsRef = _rootRef.child('events');
@@ -198,11 +179,6 @@ class LiveMarketActivityNotifier
 
   Future<void> _initializeSync() async {
     try {
-      final statsSnapshot = await _statsRef.get();
-      if (!statsSnapshot.exists) {
-        await _statsRef.set(state.stats.toJson());
-      }
-
       _rootSubscription = _rootRef.onValue.listen((event) {
         final raw = event.snapshot.value;
         if (raw is! Map<dynamic, dynamic>) {
@@ -219,7 +195,7 @@ class LiveMarketActivityNotifier
         final resolvedEvents = _decodeEvents(eventsRaw);
         state = state.copyWith(
           stats: resolvedStats,
-          events: resolvedEvents.isEmpty ? state.events : resolvedEvents,
+          events: resolvedEvents,
         );
       });
     } catch (_) {

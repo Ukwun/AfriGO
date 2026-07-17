@@ -1,6 +1,6 @@
-import 'dart:typed_data';
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'api_client.dart';
 
 /// Lot Service
@@ -82,12 +82,32 @@ class LotService {
     try {
       print('📸 Uploading photo ${photoIndex + 1} for lot $lotId...');
 
-      // For now, just log the photo upload
-      // TODO: Implement multipart upload when ApiClient supports it
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw StateError('Authentication is required');
+      final extension = photoFile.path.split('.').last.toLowerCase();
+      final safeExtension = ['jpg', 'jpeg', 'png', 'webp'].contains(extension)
+          ? extension
+          : 'jpg';
+      final reference = FirebaseStorage.instance.ref(
+        'lots/$lotId/${user.uid}_${photoIndex}_${DateTime.now().microsecondsSinceEpoch}.$safeExtension',
+      );
+      final task = await reference.putFile(
+          photoFile,
+          SettableMetadata(
+            contentType: safeExtension == 'png' ? 'image/png' : 'image/jpeg',
+            customMetadata: {'lotId': lotId, 'ownerId': user.uid},
+          ));
+      final downloadUrl = await task.ref.getDownloadURL();
+      final lot = await _apiClient.get('/lots/$lotId');
+      final current = lot['photoUrls'];
+      final photoUrls = current is List
+          ? current.map((value) => value.toString()).toList()
+          : <String>[];
+      photoUrls.add(downloadUrl);
+      await _apiClient.patch('/lots/$lotId', body: {'photoUrls': photoUrls});
       final photoBytes = await photoFile.readAsBytes();
 
-      print(
-          '✅ Photo ${photoIndex + 1} ready for upload (${photoBytes.length} bytes)');
+      print('✅ Photo ${photoIndex + 1} uploaded (${photoBytes.length} bytes)');
     } catch (e) {
       print('❌ Photo Upload Error: $e');
       rethrow;
@@ -215,7 +235,7 @@ class LotService {
 
     // In real implementation, would connect to WebSocket
     // For now, returns a stream placeholder
-    return Stream.empty();
+    return const Stream.empty();
   }
 
   /// Verify lot by scanning QR code

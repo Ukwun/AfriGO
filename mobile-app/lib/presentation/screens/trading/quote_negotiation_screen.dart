@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../models/quote_model.dart';
-import '../../services/api_service.dart';
+import '../../../models/quote_model.dart';
+import '../../../services/api_service.dart';
 
 // Single quote provider
 final singleQuoteProvider =
@@ -15,9 +15,9 @@ class QuoteNegotiationScreen extends ConsumerStatefulWidget {
   final String quoteId;
 
   const QuoteNegotiationScreen({
-    Key? key,
+    super.key,
     required this.quoteId,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<QuoteNegotiationScreen> createState() =>
@@ -68,10 +68,10 @@ class _QuoteNegotiationScreenState
   }
 
   Widget _buildNegotiationView(BuildContext context, QuoteModel quote) {
-    final originalTotal = quote.pricePerUnit * quote.quantity;
-    final suggestedTotal = quote.suggestedTotalPrice;
-    final savings = originalTotal - suggestedTotal;
-    final savingsPercent = (savings / originalTotal * 100);
+    final originalTotal = quote.quotedPrice * quote.quotedQuantity;
+    final suggestedTotal = originalTotal;
+    const savings = 0.0;
+    const savingsPercent = 0.0;
 
     return SingleChildScrollView(
       child: Column(
@@ -79,7 +79,7 @@ class _QuoteNegotiationScreenState
         children: [
           // Quote status header
           Container(
-            color: _getStatusColor(quote.status).withOpacity(0.1),
+            color: _getStatusColor(quote.status).withAlpha(26),
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,7 +116,7 @@ class _QuoteNegotiationScreenState
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  quote.productName,
+                  'Lot: ${quote.lotId}',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -124,7 +124,7 @@ class _QuoteNegotiationScreenState
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${quote.quantity} ${quote.quantityUnit}',
+                  '${quote.quotedQuantity.toStringAsFixed(2)} ${quote.quantityUnit}',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[600],
@@ -151,7 +151,7 @@ class _QuoteNegotiationScreenState
                 // Seller's listed price
                 _buildPriceRow(
                   label: 'Seller\'s Listed Price',
-                  pricePerUnit: quote.pricePerUnit,
+                  pricePerUnit: quote.quotedPrice,
                   total: originalTotal,
                   isOriginal: true,
                 ),
@@ -168,7 +168,7 @@ class _QuoteNegotiationScreenState
                 // Current offer
                 _buildPriceRow(
                   label: 'Current Offer',
-                  pricePerUnit: quote.suggestedPricePerUnit,
+                  pricePerUnit: quote.quotedPrice,
                   total: suggestedTotal,
                   isOriginal: false,
                 ),
@@ -233,9 +233,9 @@ class _QuoteNegotiationScreenState
                   _buildCounterOfferPreview(
                     counterPrice:
                         double.tryParse(_counterPriceController.text) ?? 0,
-                    originalPrice: quote.pricePerUnit,
-                    currentPrice: quote.suggestedPricePerUnit,
-                    quantity: quote.quantity,
+                    originalPrice: quote.quotedPrice,
+                    currentPrice: quote.quotedPrice,
+                    quantity: quote.quotedQuantity,
                   ),
                 const SizedBox(height: 16),
                 _buildInputField(
@@ -433,6 +433,14 @@ class _QuoteNegotiationScreenState
                   color: Colors.blue,
                 ),
               ),
+              const SizedBox(height: 8),
+              Text(
+                'Total: \$${counterTotal.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                ),
+              ),
             ],
           ),
           Column(
@@ -504,6 +512,7 @@ class _QuoteNegotiationScreenState
   Future<void> _submitCounterOffer(
       BuildContext context, QuoteModel quote) async {
     setState(() => _isSubmitting = true);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     try {
       final apiService = ref.read(apiServiceProvider);
@@ -514,49 +523,43 @@ class _QuoteNegotiationScreenState
         notes: _notesController.text.isNotEmpty ? _notesController.text : null,
       );
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Counter offer sent!')),
-        );
-        _counterPriceController.clear();
-        _notesController.clear();
-      }
+      if (!mounted) return;
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(content: Text('Counter offer sent!')),
+      );
+      _counterPriceController.clear();
+      _notesController.clear();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
-      }
+      if (!mounted) return;
+      scaffoldMessenger.showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
     } finally {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-      }
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
   Future<void> _acceptQuote(BuildContext context, String quoteId) async {
     setState(() => _isSubmitting = true);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
 
     try {
       final apiService = ref.read(apiServiceProvider);
       final order = await apiService.acceptQuote(quoteId);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Offer accepted! Order created.')),
-        );
-        context.go('/orders/${order.id}');
-      }
+      if (!mounted) return;
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(content: Text('Offer accepted! Order created.')),
+      );
+      router.go('/orders/${order.id}');
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
-      }
+      if (!mounted) return;
+      scaffoldMessenger.showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
     } finally {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-      }
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 

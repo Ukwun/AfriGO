@@ -23,8 +23,8 @@ class AnimatedPrimaryButton extends StatefulWidget {
     this.width,
     this.borderRadius = 12,
     this.isLargeTouchTarget = false,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<AnimatedPrimaryButton> createState() => _AnimatedPrimaryButtonState();
@@ -111,7 +111,7 @@ class _AnimatedPrimaryButtonState extends State<AnimatedPrimaryButton>
             ),
             child: Center(
               child: widget.isLoading
-                  ? SizedBox(
+                  ? const SizedBox(
                       height: 20,
                       width: 20,
                       child: CircularProgressIndicator(
@@ -152,8 +152,8 @@ class AnimatedSecondaryButton extends StatefulWidget {
     this.isEnabled = true,
     this.padding,
     this.width,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<AnimatedSecondaryButton> createState() =>
@@ -230,7 +230,7 @@ class _AnimatedSecondaryButtonState extends State<AnimatedSecondaryButton>
               borderRadius: BorderRadius.circular(8),
             ),
             child: widget.isLoading
-                ? SizedBox(
+                ? const SizedBox(
                     height: 20,
                     width: 20,
                     child: CircularProgressIndicator(
@@ -270,8 +270,8 @@ class AnimatedAccentButton extends StatefulWidget {
     this.isEnabled = true,
     this.padding,
     this.width,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<AnimatedAccentButton> createState() => _AnimatedAccentButtonState();
@@ -347,7 +347,7 @@ class _AnimatedAccentButtonState extends State<AnimatedAccentButton>
               borderRadius: BorderRadius.circular(8),
             ),
             child: widget.isLoading
-                ? SizedBox(
+                ? const SizedBox(
                     height: 20,
                     width: 20,
                     child: CircularProgressIndicator(
@@ -396,8 +396,8 @@ class AnimatedOutlinedButton extends StatefulWidget {
     this.width,
     this.borderRadius = 12,
     this.isLargeTouchTarget = false,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<AnimatedOutlinedButton> createState() => _AnimatedOutlinedButtonState();
@@ -535,8 +535,8 @@ class AnimatedTextButton extends StatefulWidget {
     this.padding,
     this.width,
     this.isLargeTouchTarget = false,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<AnimatedTextButton> createState() => _AnimatedTextButtonState();

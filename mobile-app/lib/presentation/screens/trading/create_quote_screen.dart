@@ -16,9 +16,9 @@ class CreateQuoteScreen extends ConsumerStatefulWidget {
   final String lotId;
 
   const CreateQuoteScreen({
-    Key? key,
+    super.key,
     required this.lotId,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<CreateQuoteScreen> createState() => _CreateQuoteScreenState();

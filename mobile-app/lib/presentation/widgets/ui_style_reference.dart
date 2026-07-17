@@ -174,6 +174,8 @@ class UIStyleGuide {
 
 /// Example Screen Showing All Button Styles
 class ButtonStylesExampleScreen extends StatelessWidget {
+  const ButtonStylesExampleScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -256,9 +258,9 @@ class ButtonStylesExampleScreen extends StatelessWidget {
           // Card Styles Section
           const SectionHeader('Card Styles'),
           const SizedBox(height: 12),
-          ModernCard(
+          const ModernCard(
             borderRadius: 16,
-            child: const Text('Modern Card (16px radius)'),
+            child: Text('Modern Card (16px radius)'),
           ),
           const SizedBox(height: 12),
           ModernCard(
@@ -268,13 +270,13 @@ class ButtonStylesExampleScreen extends StatelessWidget {
             child: const Text('Floating Card (Interactive)'),
           ),
           const SizedBox(height: 12),
-          LayeredCard(
+          const LayeredCard(
             layers: 2,
-            child: const Text('Layered Card (Visual Depth)'),
+            child: Text('Layered Card (Visual Depth)'),
           ),
           const SizedBox(height: 12),
-          FloatingPanel(
-            child: const Text('Floating Panel (Continuous Animation)'),
+          const FloatingPanel(
+            child: Text('Floating Panel (Continuous Animation)'),
           ),
         ],
       ),
@@ -286,7 +288,7 @@ class ButtonStylesExampleScreen extends StatelessWidget {
 class SectionHeader extends StatelessWidget {
   final String title;
 
-  const SectionHeader(this.title);
+  const SectionHeader(this.title, {super.key});
 
   @override
   Widget build(BuildContext context) {

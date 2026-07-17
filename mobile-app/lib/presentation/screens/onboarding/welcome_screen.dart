@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import '../../../config/theme.dart';
 import '../../widgets/animated_button.dart';
 import '../../widgets/modern_components.dart';
-import '../../widgets/motion_system.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});

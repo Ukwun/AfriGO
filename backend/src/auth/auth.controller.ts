@@ -1,44 +1,52 @@
-import { Controller, Post, Body, BadRequestException } from '@nestjs/common';
-import { AuthService } from './auth.service';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Patch,
+  Post,
+  UnauthorizedException,
+} from "@nestjs/common";
+import { AuthService } from "./auth.service";
 
-@Controller('api/auth')
+@Controller("api/auth")
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('register')
-  async register(@Body() body: any): Promise<any> {
-    const { email, password, firstName, lastName, role } = body;
-
-    // Validation
-    if (!email || !password || !firstName || !lastName) {
-      throw new BadRequestException('Missing required fields: email, password, firstName, lastName');
-    }
-
-    if (password.length < 6) {
-      throw new BadRequestException('Password must be at least 6 characters');
-    }
-
-    if (!String(email).includes('@')) {
-      throw new BadRequestException('Invalid email format');
-    }
-
-    return await this.authService.register(
-      String(email),
-      String(password),
-      String(firstName),
-      String(lastName),
-      role ? String(role) : undefined,
+  @Post("session")
+  createSession(@Body() body: any) {
+    if (!body.idToken)
+      throw new UnauthorizedException("Firebase ID token required");
+    return this.authService.createSession(
+      String(body.idToken),
+      body.profile || {},
     );
   }
 
-  @Post('login')
-  async login(@Body() body: any): Promise<any> {
-    const { email, password } = body;
+  @Get("me")
+  async me(@Headers("authorization") authorization?: string) {
+    const identity = await this.identity(authorization);
+    return {
+      success: true,
+      user: await this.authService.getUserById(identity.uid),
+    };
+  }
 
-    if (!email || !password) {
-      throw new BadRequestException('Email and password are required');
-    }
+  @Patch("me")
+  async updateMe(
+    @Headers("authorization") authorization: string | undefined,
+    @Body() body: any,
+  ) {
+    const identity = await this.identity(authorization);
+    return {
+      success: true,
+      user: await this.authService.updateProfile(identity.uid, body),
+    };
+  }
 
-    return await this.authService.login(email, password);
+  private async identity(authorization?: string) {
+    if (!authorization?.startsWith("Bearer "))
+      throw new UnauthorizedException("Authentication required");
+    return this.authService.verifyToken(authorization.slice(7));
   }
 }

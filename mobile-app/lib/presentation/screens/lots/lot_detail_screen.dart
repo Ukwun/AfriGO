@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import '../../models/lots_model.dart';
-import '../providers/lots_provider.dart';
+import '../../../models/lots_model.dart';
+import '../../providers/lots_provider.dart';
 
 class LotDetailScreen extends ConsumerWidget {
   final String lotId;
 
-  const LotDetailScreen({Key? key, required this.lotId}) : super(key: key);
+  const LotDetailScreen({super.key, required this.lotId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -292,7 +292,7 @@ class LotDetailScreen extends ConsumerWidget {
           Container(
             width: 12,
             height: 12,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.blue,
               shape: BoxShape.circle,
             ),

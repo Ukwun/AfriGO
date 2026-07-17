@@ -2,11 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../models/rfq_model.dart';
-import 'auth_provider.dart';
 
 final rfqServiceProvider = Provider((ref) {
-  final authService = ref.watch(authServiceProvider);
-  return RFQService(authToken: authService.token);
+  return RFQService(authToken: null);
 });
 
 final rfqListProvider =

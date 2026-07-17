@@ -20,7 +20,6 @@ class AdaptiveHomeScreen extends ConsumerWidget {
           UserRole.supplier => const SupplierHomeScreen(),
           UserRole.buyer => const BuyerHomeScreen(),
           UserRole.exporter => const ExporterHomeScreen(),
-          UserRole.admin => const SupplierHomeScreen(), // Admin gets supplier view for now
         };
       },
       loading: () => const Scaffold(

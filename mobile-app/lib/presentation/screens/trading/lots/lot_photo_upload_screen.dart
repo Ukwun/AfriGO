@@ -21,9 +21,9 @@ class LotPhotoUploadScreen extends ConsumerStatefulWidget {
   final String lotId;
 
   const LotPhotoUploadScreen({
-    Key? key,
+    super.key,
     required this.lotId,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<LotPhotoUploadScreen> createState() =>
@@ -108,11 +108,7 @@ class _LotPhotoUploadScreenState extends ConsumerState<LotPhotoUploadScreen> {
           ),
         );
 
-        // Navigate to QR display
-        await Future.delayed(const Duration(seconds: 1));
-        if (mounted) {
-          context.go('/trading/lot-qr-display/${widget.lotId}');
-        }
+        context.go('/trading/lot-qr-display/${widget.lotId}');
       }
     } catch (e) {
       print('❌ Photo Upload Failed: $e');

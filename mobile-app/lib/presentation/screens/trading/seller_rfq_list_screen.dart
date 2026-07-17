@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class SellerRFQListScreen extends StatelessWidget {
-  const SellerRFQListScreen({Key? key}) : super(key: key);
+  const SellerRFQListScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

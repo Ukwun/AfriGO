@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../config/role_navigation_config.dart';
+import 'auth_provider.dart';
 
 /// Provider for current user's role
 /// This watches auth state and determines user role based on their profile
@@ -7,32 +9,17 @@ final userRoleProvider = FutureProvider<UserRole>((ref) async {
   // Get current user from auth provider
   final authState = ref.watch(authProvider);
 
-  return authState.when(
-    data: (user) {
-      if (user == null) {
-        // Not authenticated - default to buyer for now
-        return UserRole.buyer;
-      }
-
-      // Determine role from user data
-      return _getUserRole(user);
-    },
-    loading: () => UserRole.buyer, // Default while loading
-    error: (_, __) => UserRole.buyer, // Default on error
-  );
+  if (authState is AuthAuthenticated) return _getUserRole(authState.user);
+  return UserRole.buyer;
 });
 
 /// Determine user role from user data
 UserRole _getUserRole(dynamic user) {
-  // Assuming user object has a 'role' field
-  // This would come from your auth/user model
-
-  if (user.role == 'supplier' || user.role == 'seller') {
+  final roles = (user.roles as List<String>).map((role) => role.toLowerCase());
+  if (roles.contains('supplier')) {
     return UserRole.supplier;
-  } else if (user.role == 'exporter' || user.role == 'export') {
+  } else if (roles.contains('exporter')) {
     return UserRole.exporter;
-  } else if (user.role == 'admin') {
-    return UserRole.admin;
   }
 
   // Default to buyer
@@ -43,13 +30,8 @@ UserRole _getUserRole(dynamic user) {
 final userRoleSyncProvider = Provider<UserRole?>((ref) {
   final authState = ref.watch(authProvider);
 
-  return authState
-      .whenData((user) {
-        if (user == null) return null;
-        return _getUserRole(user);
-      })
-      .asData
-      ?.value;
+  if (authState is AuthAuthenticated) return _getUserRole(authState.user);
+  return null;
 });
 
 /// Get role-specific button height
@@ -122,8 +104,3 @@ final roleNavigationProvider = Provider<List<NavigationItem>>((ref) {
   }
   return RoleNavigationConfig.getNavItems(userRole);
 });
-
-// Note: You'll need to add imports for:
-// - import 'package:flutter/material.dart';
-// - import '../providers/auth_provider.dart' (your auth provider)
-// - Final import statement will depend on your auth setup

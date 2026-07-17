@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../data/services/lot_service.dart';
-import '../../../../providers/trading_providers.dart';
 
 /// Create Lot Screen
 /// Allows sellers to create and list new lots for trading
@@ -20,9 +19,9 @@ class CreateLotScreen extends ConsumerStatefulWidget {
   final String? tradeId;
 
   const CreateLotScreen({
-    Key? key,
+    super.key,
     this.tradeId,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<CreateLotScreen> createState() => _CreateLotScreenState();
@@ -445,7 +444,7 @@ class _CreateLotScreenState extends ConsumerState<CreateLotScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Total Value:'),
+              const Text('Total Value:'),
               Text(
                 '\$${total.toStringAsFixed(2)}',
                 style: const TextStyle(fontWeight: FontWeight.bold),
@@ -456,7 +455,7 @@ class _CreateLotScreenState extends ConsumerState<CreateLotScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Quantity:'),
+              const Text('Quantity:'),
               Text('${quantity > 0 ? quantity : 0} kg'),
             ],
           ),
@@ -464,7 +463,7 @@ class _CreateLotScreenState extends ConsumerState<CreateLotScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Grade:'),
+              const Text('Grade:'),
               Text(_selectedGrade),
             ],
           ),

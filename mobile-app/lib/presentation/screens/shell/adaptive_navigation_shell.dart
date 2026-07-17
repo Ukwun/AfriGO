@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../config/role_navigation_config.dart';
-import '../../config/theme.dart';
-import '../providers/role_provider.dart';
+import '../../../config/role_navigation_config.dart';
+import '../../../config/theme.dart';
+import '../../providers/role_provider.dart';
 
 /// Adaptive shell that renders role-specific navigation
 /// This widget wraps the main content and shows appropriate bottom nav based on user role
@@ -81,10 +81,8 @@ class _AdaptiveNavigationShellState
         return _buildSupplierNav(items, context);
       case UserRole.buyer:
         return _buildBuyerNav(items, context);
-      case UserRole.logistics:
+      case UserRole.exporter:
         return _buildLogisticsNav(items, context);
-      case UserRole.admin:
-        return _buildAdminNav(items, context);
     }
   }
 
@@ -119,16 +117,14 @@ class _AdaptiveNavigationShellState
       selectedItemColor: AppTheme.primaryGreen,
       unselectedItemColor: Colors.grey.shade400,
       items: [
-        ...mainItems
-            .map(
-              (item) => BottomNavigationBarItem(
-                icon: Icon(item.icon, size: 28),
-                label: item.label,
-              ),
-            )
-            .toList(),
+        ...mainItems.map(
+          (item) => BottomNavigationBarItem(
+            icon: Icon(item.icon, size: 28),
+            label: item.label,
+          ),
+        ),
         if (hasMore)
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.more_horiz, size: 28),
             label: 'More',
           ),
@@ -160,40 +156,6 @@ class _AdaptiveNavigationShellState
           .toList(),
       onTap: (index) {
         context.go(items[index].routePath);
-      },
-    );
-  }
-
-  /// ADMIN Navigation - 5 tabs with overflow
-  Widget _buildAdminNav(List<NavigationItem> items, BuildContext context) {
-    final mainItems = items.take(4).toList();
-    final hasMore = items.length > 4;
-
-    return BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      selectedItemColor: const Color(0xFF6C63FF),
-      unselectedItemColor: Colors.grey.shade400,
-      items: [
-        ...mainItems
-            .map(
-              (item) => BottomNavigationBarItem(
-                icon: Icon(item.icon, size: 28),
-                label: item.label,
-              ),
-            )
-            .toList(),
-        if (hasMore)
-          BottomNavigationBarItem(
-            icon: Icon(Icons.more_horiz, size: 28),
-            label: 'More',
-          ),
-      ],
-      onTap: (index) {
-        if (hasMore && index == 4) {
-          _showMoreMenu(context, items.skip(4).toList());
-        } else {
-          context.go(mainItems[index].routePath);
-        }
       },
     );
   }

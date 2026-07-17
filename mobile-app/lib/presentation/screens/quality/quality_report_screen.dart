@@ -8,9 +8,9 @@ class QualityReportScreen extends ConsumerWidget {
   final String inspectionId;
 
   const QualityReportScreen({
-    Key? key,
+    super.key,
     required this.inspectionId,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -231,10 +231,10 @@ class QualityReportScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.green, width: 1),
                 ),
-                child: Column(
+                child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       '✓ Certified Product',
                       style: TextStyle(
                         fontSize: 16,
@@ -242,8 +242,8 @@ class QualityReportScreen extends ConsumerWidget {
                         color: Colors.green,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
+                    SizedBox(height: 8),
+                    Text(
                       'This product has been quality certified and is approved for marketplace listing.',
                       style: TextStyle(color: Colors.grey),
                     ),

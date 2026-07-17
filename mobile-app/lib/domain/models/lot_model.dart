@@ -38,27 +38,37 @@ class LotModel {
   });
 
   factory LotModel.fromJson(Map<String, dynamic> json) {
+    DateTime? parseDate(dynamic value) {
+      if (value is String) return DateTime.tryParse(value);
+      if (value is Map) {
+        final seconds = value['_seconds'] ?? value['seconds'];
+        if (seconds is num) {
+          return DateTime.fromMillisecondsSinceEpoch(seconds.toInt() * 1000);
+        }
+      }
+      return null;
+    }
     return LotModel(
       id: json['id'] ?? '',
       productName: json['productName'] ?? '',
-      productType: json['productType'] ?? '',
+      productType: json['productType'] ?? json['category'] ?? '',
       quantity: (json['quantity'] ?? 0).toDouble(),
-      unit: json['unit'] ?? 'kg',
+      unit: json['unit'] ?? json['quantityUnit'] ?? 'kg',
       pricePerUnit: (json['pricePerUnit'] ?? 0).toDouble(),
       currency: json['currency'] ?? 'USD',
-      location: json['location'] ?? '',
+      location: json['location'] ?? json['originLocation'] ?? '',
       description: json['description'] ?? '',
-      imageUrl: json['imageUrl'],
+      imageUrl: json['imageUrl'] ??
+          ((json['photoUrls'] is List && json['photoUrls'].isNotEmpty)
+              ? json['photoUrls'].first
+              : null),
       status: json['status'] ?? 'active',
-      sellerId: json['sellerId'] ?? '',
-      sellerName: json['sellerName'] ?? '',
+      sellerId: json['sellerId'] ?? json['supplierId'] ?? json['ownerId'] ?? '',
+      sellerName: json['sellerName'] ?? json['supplierName'] ?? '',
       sellerRating: (json['sellerRating'] ?? 0).toDouble(),
       sellerCompletedTrades: json['sellerCompletedTrades'] ?? 0,
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
-          : DateTime.now(),
-      updatedAt:
-          json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
+      createdAt: parseDate(json['createdAt']) ?? DateTime.now(),
+      updatedAt: parseDate(json['updatedAt']),
     );
   }
 

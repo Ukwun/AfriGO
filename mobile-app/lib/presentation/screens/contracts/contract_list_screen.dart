@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../models/contract_model.dart';
-import '../providers/contract_provider.dart';
+import '../../../models/contract_model.dart';
+import '../../providers/contract_provider.dart';
 
 class ContractListScreen extends ConsumerStatefulWidget {
-  const ContractListScreen({Key? key}) : super(key: key);
+  const ContractListScreen({super.key});
 
   @override
   ConsumerState<ContractListScreen> createState() => _ContractListScreenState();
@@ -37,7 +37,7 @@ class _ContractListScreenState extends ConsumerState<ContractListScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 16),
               Text('Error: $error'),
             ],

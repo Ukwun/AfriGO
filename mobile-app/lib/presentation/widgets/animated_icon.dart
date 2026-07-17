@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../config/colors.dart';
+import '../../config/colors.dart';
 
 /// Animated Icon with Label using Fade and Slide transitions
 class AnimatedIconWithLabel extends StatefulWidget {
@@ -17,8 +17,8 @@ class AnimatedIconWithLabel extends StatefulWidget {
     this.onTap,
     this.iconSize = 24,
     this.labelStyle,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<AnimatedIconWithLabel> createState() => _AnimatedIconWithLabelState();
@@ -109,8 +109,8 @@ class AnimatedIconButton extends StatefulWidget {
     this.hoverColor,
     this.size = 24,
     this.tooltip,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<AnimatedIconButton> createState() => _AnimatedIconButtonState();
@@ -193,8 +193,8 @@ class StatusBadge extends StatelessWidget {
     required this.status,
     this.padding = const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
     this.borderRadius = 20,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   Color get _backgroundColor {
     switch (status) {
@@ -251,8 +251,8 @@ class AnimatedLoader extends StatefulWidget {
   const AnimatedLoader({
     this.size = 40,
     this.color,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<AnimatedLoader> createState() => _AnimatedLoaderState();

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class TradingScreen extends StatelessWidget {
-  const TradingScreen({Key? key}) : super(key: key);
+  const TradingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

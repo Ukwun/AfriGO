@@ -148,7 +148,7 @@ class _CheckoutScreenState extends State<CheckoutScreen>
                         '\$150.00',
                       ),
                       const SizedBox(height: AfrigoSpacing.md),
-                      Divider(
+                      const Divider(
                         color: AfrigoColors.borderLight,
                         height: AfrigoSpacing.lg,
                       ),

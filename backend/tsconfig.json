@@ -25,10 +25,7 @@
     "src/app.module.ts",
     "src/app.controller.ts",
     "src/app.service.ts",
-    "src/auth/**/*.ts",
-    "src/firebase/**/*.ts",
-    "src/config/**/*.ts",
-    "src/common/**/*.ts"
+    "src/**/*.ts"
   ],
   "exclude": [
     "node_modules",

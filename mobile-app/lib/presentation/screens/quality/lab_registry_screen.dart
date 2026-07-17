@@ -5,7 +5,7 @@ import '../../models/quality_model.dart';
 import '../providers/quality_provider.dart';
 
 class LabRegistryScreen extends ConsumerStatefulWidget {
-  const LabRegistryScreen({Key? key}) : super(key: key);
+  const LabRegistryScreen({super.key});
 
   @override
   ConsumerState<LabRegistryScreen> createState() => _LabRegistryScreenState();
@@ -20,7 +20,7 @@ class _LabRegistryScreenState extends ConsumerState<LabRegistryScreen>
   late TextEditingController _contactController;
   late TextEditingController _emailController;
 
-  List<String> _selectedCapabilities = [];
+  final List<String> _selectedCapabilities = [];
   final List<String> _availableCapabilities = [
     'Moisture Analysis',
     'Aflatoxin Testing',

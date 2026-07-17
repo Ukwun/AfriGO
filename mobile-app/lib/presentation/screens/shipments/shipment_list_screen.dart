@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../models/shipment_model.dart';
+import 'package:afrigo_app/models/shipment_model.dart';
 import '../providers/shipment_provider.dart';
 
 class ShipmentListScreen extends ConsumerStatefulWidget {
-  const ShipmentListScreen({Key? key}) : super(key: key);
+  const ShipmentListScreen({super.key});
 
   @override
   ConsumerState<ShipmentListScreen> createState() => _ShipmentListScreenState();
@@ -166,7 +166,7 @@ class _ShipmentListScreenState extends ConsumerState<ShipmentListScreen> {
                       color: Colors.red.shade400,
                     ),
                     const SizedBox(height: 16),
-                    Text('Error loading shipments'),
+                    const Text('Error loading shipments'),
                     const SizedBox(height: 8),
                     Text(error.toString()),
                   ],
@@ -187,10 +187,10 @@ class ShipmentCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const ShipmentCard({
-    Key? key,
+    super.key,
     required this.shipment,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   Color _statusColor(String status) {
     switch (status) {
@@ -389,7 +389,7 @@ class ShipmentCard extends StatelessWidget {
                       shipment.deliveryProofCount! > 0)
                     Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.check_circle,
                           size: 16,
                           color: Colors.green,

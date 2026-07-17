@@ -4,8 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../models/payment_model.dart';
 import '../../../models/order_model.dart';
-import '../../../services/api_service.dart';
 import '../../providers/orders_provider.dart';
+import '../../../data/services/api_client.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // Payment screen state provider
 final paymentScreenStateProvider =
@@ -114,8 +115,8 @@ class PaymentScreen extends ConsumerStatefulWidget {
 
   const PaymentScreen({
     required this.orderId,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<PaymentScreen> createState() => _PaymentScreenState();
@@ -223,70 +224,28 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   }
 
   Future<void> _processPayment() async {
-    final state = ref.read(paymentScreenStateProvider);
-
-    // Validate inputs
-    if (_cardNumberController.text.isEmpty) {
-      _showError('Card number is required');
-      return;
-    }
-
-    if (_expiryController.text.isEmpty) {
-      _showError('Expiry date is required');
-      return;
-    }
-
-    if (_cvcController.text.isEmpty) {
-      _showError('CVC is required');
-      return;
-    }
-
-    if (_cardholderController.text.isEmpty) {
-      _showError('Cardholder name is required');
-      return;
-    }
-
     final notifier = ref.read(paymentScreenStateProvider.notifier);
     notifier.setProcessing(true);
 
     try {
-      // In real app, this would:
-      // 1. Call Stripe Elements to tokenize card
-      // 2. Get payment method ID from Stripe
-      // 3. Call backend to create payment
-
-      // Mock implementation
-      await Future.delayed(Duration(seconds: 2));
-
-      // Show success
-      notifier.setPayment(
-        PaymentModel(
-          id: 'payment-${DateTime.now().millisecondsSinceEpoch}',
-          orderId: widget.orderId,
-          userId: 'user-123',
-          amount: state.amount ?? 0,
-          currency: 'USD',
-          status: 'succeeded',
-          escrowStatus: 'held',
-          paymentMethod: 'card',
-          cardInfo: CardInfoModel(
-            brand: state.selectedCardBrand ?? 'unknown',
-            last4: _cardNumberController.text
-                .replaceAll(RegExp(r'\D'), '')
-                .substring(12),
-            expMonth: int.tryParse(_expiryController.text.split('/')[0]),
-            expYear: int.tryParse('20' + _expiryController.text.split('/')[1]),
-          ),
-          stripePaymentIntentId: 'pi_${DateTime.now().millisecondsSinceEpoch}',
-          stripeChargeId: 'ch_${DateTime.now().millisecondsSinceEpoch}',
-          receiptUrl: 'https://example.com/receipt',
-          createdAt: DateTime.now(),
-          paidAt: DateTime.now(),
-        ),
+      final response = await ApiClient().post(
+        '/payments',
+        body: {'orderId': widget.orderId},
+        headers: {
+          'Idempotency-Key':
+              'order-${widget.orderId}-${DateTime.now().microsecondsSinceEpoch}'
+        },
       );
-
+      final checkout = response['flutterwavePaymentUrl']?.toString();
+      if (checkout == null || checkout.isEmpty) {
+        throw Exception('The payment provider did not return a checkout URL');
+      }
+      final opened = await launchUrl(Uri.parse(checkout),
+          mode: LaunchMode.externalApplication);
+      if (!opened) throw Exception('Could not open Flutterwave checkout');
       notifier.setProcessing(false);
-      _showSuccess('Payment successful!');
+      _showSuccess(
+          'Checkout opened. Payment status updates only after Flutterwave verification.');
     } catch (e) {
       notifier.setError(e.toString());
       notifier.setProcessing(false);
@@ -299,7 +258,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.red,
-        duration: Duration(seconds: 3),
+        duration: const Duration(seconds: 3),
       ),
     );
   }
@@ -309,7 +268,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.green,
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -320,8 +279,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
     if (state.isLoading) {
       return Scaffold(
-        appBar: AppBar(title: Text('Payment')),
-        body: Center(child: CircularProgressIndicator()),
+        appBar: AppBar(title: const Text('Payment')),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -335,23 +294,23 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Payment'),
+        title: const Text('Payment'),
         elevation: 0,
       ),
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Order Summary
                 _buildOrderSummary(state),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
                 // Payment Form
                 _buildPaymentForm(state),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
                 // Pay Button
                 SizedBox(
@@ -366,7 +325,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                       ),
                     ),
                     child: state.isProcessing
-                        ? SizedBox(
+                        ? const SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
@@ -377,7 +336,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                           )
                         : Text(
                             'Pay ${state.amount != null ? '\$${state.amount!.toStringAsFixed(2)}' : ''}',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
@@ -386,10 +345,10 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                   ),
                 ),
 
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
 
                 // Security Badge
-                Center(
+                const Center(
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -416,7 +375,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
   Widget _buildOrderSummary(PaymentScreenState state) {
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.grey[100],
         borderRadius: BorderRadius.circular(8),
@@ -429,11 +388,11 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
               Text('Order Subtotal', style: TextStyle(color: Colors.grey[600])),
               Text(
                 '\$${state.amount?.toStringAsFixed(2) ?? '0.00'}',
-                style: TextStyle(fontWeight: FontWeight.w500),
+                style: const TextStyle(fontWeight: FontWeight.w500),
               ),
             ],
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -443,20 +402,21 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 state.amount != null
                     ? '\$${(state.amount! * 0.02).toStringAsFixed(2)}'
                     : '\$0.00',
-                style: TextStyle(fontWeight: FontWeight.w500),
+                style: const TextStyle(fontWeight: FontWeight.w500),
               ),
             ],
           ),
-          Divider(height: 16),
+          const Divider(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Total', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Total',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               Text(
                 state.amount != null
                     ? '\$${(state.amount! * 1.02).toStringAsFixed(2)}'
                     : '\$0.00',
-                style: TextStyle(
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -469,58 +429,27 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   }
 
   Widget _buildPaymentForm(PaymentScreenState state) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Payment Details', style: Theme.of(context).textTheme.titleMedium),
-        SizedBox(height: 16),
-
-        // Card Number
-        _buildTextField(
-          controller: _cardNumberController,
-          label: 'Card Number',
-          hint: '1234 5678 9012 3456',
-          onChanged: _formatCardNumber,
-          suffixIcon: state.selectedCardBrand != null
-              ? Padding(
-                  padding: EdgeInsets.all(12),
-                  child: _buildCardBrandIcon(state.selectedCardBrand!),
-                )
-              : null,
-        ),
-        SizedBox(height: 12),
-
-        // Expiry and CVC
-        Row(
-          children: [
-            Expanded(
-              child: _buildTextField(
-                controller: _expiryController,
-                label: 'Expiry',
-                hint: 'MM/YY',
-                onChanged: _formatExpiry,
-              ),
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(children: [
+          const Icon(Icons.verified_user_outlined, size: 32),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Secure Flutterwave checkout',
+                    style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 4),
+                const Text(
+                  'Card, bank transfer, USSD, and supported mobile-money details are entered only on Flutterwave. Afrigo never stores your card number or CVC.',
+                ),
+              ],
             ),
-            SizedBox(width: 12),
-            Expanded(
-              child: _buildTextField(
-                controller: _cvcController,
-                label: 'CVC',
-                hint: '123',
-                obscureText: true,
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 12),
-
-        // Cardholder Name
-        _buildTextField(
-          controller: _cardholderController,
-          label: 'Cardholder Name',
-          hint: 'John Doe',
-        ),
-      ],
+          ),
+        ]),
+      ),
     );
   }
 
@@ -542,7 +471,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
         ),
-        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         suffixIcon: suffixIcon,
       ),
     );
@@ -565,16 +495,16 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       left: 0,
       right: 0,
       child: Container(
-        padding: EdgeInsets.all(12),
+        padding: const EdgeInsets.all(12),
         color: Colors.red[100],
         child: Row(
           children: [
-            Icon(Icons.error_outline, color: Colors.red),
-            SizedBox(width: 8),
+            const Icon(Icons.error_outline, color: Colors.red),
+            const SizedBox(width: 8),
             Expanded(
               child: Text(
                 error,
-                style: TextStyle(color: Colors.red),
+                style: const TextStyle(color: Colors.red),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -596,31 +526,31 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
+              const Icon(
                 Icons.check_circle_outline,
                 size: 80,
                 color: Colors.green,
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Text(
                 'Payment Successful!',
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 'Order #${payment.orderId}',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () {
                   final notifier =
                       ref.read(paymentScreenStateProvider.notifier);
                   notifier.toggleReceipt();
                 },
-                child: Text('View Receipt'),
+                child: const Text('View Receipt'),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               ElevatedButton(
                 onPressed: () {
                   ref.read(paymentScreenStateProvider.notifier).reset();
@@ -629,7 +559,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey,
                 ),
-                child: Text('Back to Order'),
+                child: const Text('Back to Order'),
               ),
             ],
           ),
@@ -643,10 +573,10 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Payment Receipt'),
+        title: const Text('Payment Receipt'),
         actions: [
           IconButton(
-            icon: Icon(Icons.close),
+            icon: const Icon(Icons.close),
             onPressed: () {
               ref.read(paymentScreenStateProvider.notifier).toggleReceipt();
             },
@@ -654,11 +584,11 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             Container(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.grey[100],
                 borderRadius: BorderRadius.circular(8),
@@ -669,13 +599,13 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     'Payment Receipt',
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
-                  SizedBox(height: 16),
-                  _buildReceiptRow('Order ID', payment.orderId),
+                  const SizedBox(height: 16),
+                  _buildReceiptRow('Order ID', payment.orderId ?? '—'),
                   _buildReceiptRow('Payment ID', payment.id),
                   _buildReceiptRow('Date', formatter.format(payment.createdAt)),
                   _buildReceiptRow('Status', payment.statusText,
                       valueColor: Colors.green),
-                  Divider(height: 24),
+                  const Divider(height: 24),
                   _buildReceiptRow('Amount', payment.formattedAmount,
                       valueSize: 18, valueBold: true),
                   _buildReceiptRow(
@@ -683,7 +613,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     payment.escrowStatusText,
                   ),
                   if (payment.cardInfo != null) ...[
-                    Divider(height: 24),
+                    const Divider(height: 24),
                     _buildReceiptRow(
                       'Card',
                       payment.cardInfo!.displayCard,
@@ -710,7 +640,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     bool valueBold = false,
   }) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

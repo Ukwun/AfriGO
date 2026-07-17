@@ -468,8 +468,9 @@ class ApiService {
       if (status != null) data['status'] = status;
       if (paymentStatus != null) data['paymentStatus'] = paymentStatus;
       if (trackingNumber != null) data['trackingNumber'] = trackingNumber;
-      if (deliveryDate != null)
+      if (deliveryDate != null) {
         data['deliveryDate'] = deliveryDate.toIso8601String();
+      }
       if (notes != null) data['notes'] = notes;
 
       final response = await _dio.put('/api/orders/$orderId', data: data);
@@ -576,6 +577,50 @@ class ApiService {
     }
   }
 
+  Future<List<QuoteModel>> getReceivedQuotes(
+    Map<String, dynamic> filters,
+  ) async {
+    try {
+      final response = await _dio.get(
+        '/api/quotes/buyer/me',
+        queryParameters: filters,
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> quotesList = response.data['data'] ?? [];
+        return quotesList
+            .map((quote) => QuoteModel.fromJson(quote as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw Exception('Failed to load received quotes');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error loading received quotes: ${e.message}');
+    }
+  }
+
+  Future<List<QuoteModel>> getSentQuotes(
+    Map<String, dynamic> filters,
+  ) async {
+    try {
+      final response = await _dio.get(
+        '/api/quotes/seller/me',
+        queryParameters: filters,
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> quotesList = response.data['data'] ?? [];
+        return quotesList
+            .map((quote) => QuoteModel.fromJson(quote as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw Exception('Failed to load sent quotes');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error loading sent quotes: ${e.message}');
+    }
+  }
+
   /// GET /api/quotes/buyer/me
   /// Get current user's quotes as buyer
   Future<List<QuoteModel>> getMyQuotes({
@@ -614,8 +659,9 @@ class ApiService {
   }) async {
     try {
       final data = <String, dynamic>{};
-      if (suggestedPricePerUnit != null)
+      if (suggestedPricePerUnit != null) {
         data['suggestedPricePerUnit'] = suggestedPricePerUnit;
+      }
       if (status != null) data['status'] = status;
       if (notes != null) data['notes'] = notes;
 

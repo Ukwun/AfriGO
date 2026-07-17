@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/api_service.dart';
+import '../services/api_client.dart';
 
 /// FRAUD SCORE PROVIDER
 /// Real-time fraud detection provider
@@ -90,7 +91,8 @@ final buyerBalanceProvider = FutureProvider<double>((ref) async {
 
 /// API SERVICE PROVIDER
 final apiServiceProvider = Provider<ApiService>((ref) {
-  return ApiService();
+  final apiClient = ApiClient();
+  return ApiService(apiClient: apiClient);
 });
 
 /// SUBMIT OFFER PROVIDER

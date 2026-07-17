@@ -19,8 +19,8 @@ class ShipmentTrackingScreen extends ConsumerStatefulWidget {
 
   const ShipmentTrackingScreen({
     required this.shipmentId,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<ShipmentTrackingScreen> createState() =>
@@ -38,12 +38,12 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
   void initState() {
     super.initState();
     _pulseController = AnimationController(
-      duration: Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1500),
       vsync: this,
     )..repeat();
 
     _progressController = AnimationController(
-      duration: Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
 
@@ -114,11 +114,11 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(
+          const CircularProgressIndicator(
             strokeWidth: 3,
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             'Loading shipment details...',
             style: AppTheme.bodyMedium.copyWith(
@@ -135,15 +135,15 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 48, color: AppColors.error),
-          SizedBox(height: 16),
+          const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+          const SizedBox(height: 16),
           Text(
             'Failed to load shipment',
             style: AppTheme.headlineSmall.copyWith(
               color: AppColors.textPrimary,
             ),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () {
               ref.refresh(shipmentDetailProvider(widget.shipmentId));
@@ -183,8 +183,8 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
 
           // Temperature chart
           temperatureAsync.when(
-            loading: () => SizedBox.shrink(),
-            error: (_, __) => SizedBox.shrink(),
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
             data: (readings) => FadeInTransition(
               delay: 250,
               child: _buildTemperatureChart(readings),
@@ -197,7 +197,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
             child: _buildCheckpointHistory(shipment),
           ),
 
-          SizedBox(height: 32),
+          const SizedBox(height: 32),
         ],
       ),
     );
@@ -209,7 +209,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
 
     return Container(
       height: 300,
-      margin: EdgeInsets.all(12),
+      margin: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.borderLight),
@@ -217,7 +217,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -228,7 +228,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
             // Google Map
             GoogleMap(
               onMapCreated: _onMapCreated,
-              initialCameraPosition: CameraPosition(
+              initialCameraPosition: const CameraPosition(
                 target: initialPosition,
                 zoom: 11,
               ),
@@ -236,7 +236,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
               myLocationEnabled: true,
               zoomControlsEnabled: true,
               polylines: {
-                Polyline(
+                const Polyline(
                   polylineId: PolylineId('route'),
                   color: AppColors.primary,
                   width: 4,
@@ -251,9 +251,9 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
               markers: {
                 // Start location
                 Marker(
-                  markerId: MarkerId('start'),
+                  markerId: const MarkerId('start'),
                   position: initialPosition,
-                  infoWindow: InfoWindow(title: 'Pickup Location'),
+                  infoWindow: const InfoWindow(title: 'Pickup Location'),
                   icon: BitmapDescriptor.defaultMarkerWithHue(
                     BitmapDescriptor.hueGreen,
                   ),
@@ -261,7 +261,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
                 // Current location with animation
                 if (locationAsync.hasValue)
                   Marker(
-                    markerId: MarkerId('current'),
+                    markerId: const MarkerId('current'),
                     position: LatLng(
                       locationAsync.value?.latitude ?? initialPosition.latitude,
                       locationAsync.value?.longitude ??
@@ -284,7 +284,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
             if (!_mapCreated)
               Container(
                 color: Colors.black.withOpacity(0.3),
-                child: Center(
+                child: const Center(
                   child: CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
@@ -296,8 +296,8 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
               top: 12,
               left: 12,
               child: locationAsync.when(
-                loading: () => SizedBox.shrink(),
-                error: (_, __) => SizedBox.shrink(),
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
                 data: (location) => _buildPulsingIndicator(location),
               ),
             ),
@@ -314,7 +314,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
                       // Toggle between map types
                     },
                     backgroundColor: Colors.white,
-                    child: Icon(Icons.map, color: AppColors.primary),
+                    child: const Icon(Icons.map, color: AppColors.primary),
                   ),
                 ],
               ),
@@ -331,7 +331,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
         CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
       ),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
@@ -339,7 +339,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
             BoxShadow(
               color: Colors.black.withOpacity(0.2),
               blurRadius: 4,
-              offset: Offset(0, 2),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -349,12 +349,12 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
             Container(
               width: 8,
               height: 8,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.success,
                 shape: BoxShape.circle,
               ),
             ),
-            SizedBox(width: 6),
+            const SizedBox(width: 6),
             Text(
               'Live Tracking',
               style: AppTheme.labelSmall.copyWith(
@@ -372,9 +372,9 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
     AsyncValue<LocationData> locationAsync,
   ) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Container(
-        padding: EdgeInsets.all(12),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(12),
@@ -394,7 +394,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
                         color: AppColors.textSecondary,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     locationAsync.when(
                       loading: () => Text(
                         'Locating...',
@@ -409,9 +409,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
                         ),
                       ),
                       data: (location) => Text(
-                        location != null
-                            ? '${location.latitude.toStringAsFixed(4)}, ${location.longitude.toStringAsFixed(4)}'
-                            : 'N/A',
+                        '${location.latitude.toStringAsFixed(4)}, ${location.longitude.toStringAsFixed(4)}',
                         style: AppTheme.titleSmall.copyWith(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
@@ -429,7 +427,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
                         color: AppColors.textSecondary,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       '${shipment.currentSpeed ?? 0} km/h',
                       style: AppTheme.titleSmall.copyWith(
@@ -442,7 +440,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
               ],
             ),
             Divider(color: AppColors.borderLight),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -455,7 +453,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
                         color: AppColors.textSecondary,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       shipment.eta ?? 'N/A',
                       style: AppTheme.titleSmall.copyWith(
@@ -474,7 +472,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
                         color: AppColors.textSecondary,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       '${shipment.distanceRemaining ?? 0} km',
                       style: AppTheme.titleSmall.copyWith(
@@ -494,7 +492,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
 
   Widget _buildTemperatureChart(List<TemperatureReading> readings) {
     if (readings.isEmpty) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
 
     final maxTemp =
@@ -503,9 +501,9 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
         readings.map((r) => r.temperature).reduce((a, b) => a < b ? a : b);
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       child: Container(
-        padding: EdgeInsets.all(12),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(12),
@@ -524,7 +522,8 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppColors.success.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
@@ -538,7 +537,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
                 ),
               ],
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             SizedBox(
               height: 200,
               child: LineChart(
@@ -596,7 +595,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
                 ),
               ),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -620,7 +619,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
             color: AppColors.textSecondary,
           ),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
           '${temp.toStringAsFixed(1)}°C',
           style: AppTheme.titleSmall.copyWith(
@@ -644,7 +643,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
 
   Widget _buildCheckpointHistory(ShipmentModel shipment) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -654,7 +653,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
               color: AppColors.textPrimary,
             ),
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           ...List.generate(
             shipment.checkpoints.length,
             (index) {
@@ -684,7 +683,7 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
     required int index,
   }) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -707,17 +706,17 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
                 ),
                 child: Center(
                   child: isCompleted
-                      ? Icon(Icons.check, color: Colors.white, size: 20)
+                      ? const Icon(Icons.check, color: Colors.white, size: 20)
                       : isCurrent
                           ? Container(
                               width: 10,
                               height: 10,
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: Colors.white,
                               ),
                             )
-                          : SizedBox.shrink(),
+                          : const SizedBox.shrink(),
                 ),
               ),
               if (!isLast)
@@ -731,12 +730,12 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
             ],
           ),
 
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
 
           // Checkpoint details
           Expanded(
             child: Padding(
-              padding: EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.only(top: 4),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -747,14 +746,14 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
                     checkpoint.location,
                     style: AppTheme.bodySmall.copyWith(
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   if (checkpoint.completedAt != null)
                     Text(
                       '✓ Completed at ${checkpoint.completedAt}',
@@ -794,29 +793,30 @@ class _ShipmentTrackingScreenState extends ConsumerState<ShipmentTrackingScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: Icon(Icons.download, color: AppColors.primary),
-              title: Text('Download Route'),
+              leading: const Icon(Icons.download, color: AppColors.primary),
+              title: const Text('Download Route'),
               onTap: () {
                 Navigator.pop(context);
               },
             ),
             ListTile(
-              leading: Icon(Icons.share, color: AppColors.primary),
-              title: Text('Share Tracking Link'),
+              leading: const Icon(Icons.share, color: AppColors.primary),
+              title: const Text('Share Tracking Link'),
               onTap: () {
                 Navigator.pop(context);
               },
             ),
             ListTile(
-              leading: Icon(Icons.notifications, color: AppColors.primary),
-              title: Text('Delivery Alerts'),
+              leading:
+                  const Icon(Icons.notifications, color: AppColors.primary),
+              title: const Text('Delivery Alerts'),
               onTap: () {
                 Navigator.pop(context);
               },
             ),
             ListTile(
-              leading: Icon(Icons.help, color: AppColors.primary),
-              title: Text('Help & Support'),
+              leading: const Icon(Icons.help, color: AppColors.primary),
+              title: const Text('Help & Support'),
               onTap: () {
                 Navigator.pop(context);
               },

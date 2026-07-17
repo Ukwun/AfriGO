@@ -232,13 +232,13 @@ class _ComponentIntegrationDemoScreenState
             const SizedBox(height: 12),
 
             // Layered Card
-            LayeredCard(
+            const LayeredCard(
               layers: 2,
               layerOffset: 4,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Layered Card - Visual Depth',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
@@ -246,8 +246,8 @@ class _ComponentIntegrationDemoScreenState
                       fontFamily: 'Sora',
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  SizedBox(height: 8),
+                  Text(
                     'Multiple background layers create a premium, elevated appearance. Perfect for featured content.',
                     style: TextStyle(color: Colors.grey, fontSize: 12),
                   ),
@@ -257,11 +257,11 @@ class _ComponentIntegrationDemoScreenState
             const SizedBox(height: 12),
 
             // Floating Panel
-            FloatingPanel(
+            const FloatingPanel(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Floating Panel - Continuous Animation',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
@@ -269,8 +269,8 @@ class _ComponentIntegrationDemoScreenState
                       fontFamily: 'Sora',
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  SizedBox(height: 8),
+                  Text(
                     'Gently floats in place with continuous animation. Great for emphasis and attention-drawing.',
                     style: TextStyle(color: Colors.grey, fontSize: 12),
                   ),
@@ -394,10 +394,10 @@ class _ComponentIntegrationDemoScreenState
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.blue[200]!),
               ),
-              child: Column(
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     '⚡ Animation Specifications',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
@@ -405,8 +405,8 @@ class _ComponentIntegrationDemoScreenState
                       color: Color(0xFF1E88E5),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  SizedBox(height: 8),
+                  Text(
                     '• Buttons: 200ms smooth scale animation\n'
                     '• Primary: 1.0 → 0.96 scale on press\n'
                     '• Cards: 300ms float effect on hover\n'
@@ -430,7 +430,7 @@ class _ComponentIntegrationDemoScreenState
 class SectionTitle extends StatelessWidget {
   final String title;
 
-  const SectionTitle(this.title);
+  const SectionTitle(this.title, {super.key});
 
   @override
   Widget build(BuildContext context) {

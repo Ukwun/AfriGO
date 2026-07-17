@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Shimmer LOT Card loading placeholder
 class ShimmerLotCard extends StatelessWidget {
-  const ShimmerLotCard({Key? key}) : super(key: key);
+  const ShimmerLotCard({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -61,10 +61,10 @@ class ErrorRetryWidget extends StatelessWidget {
   final VoidCallback onRetry;
 
   const ErrorRetryWidget({
-    Key? key,
+    super.key,
     required this.errorMessage,
     required this.onRetry,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -103,13 +103,13 @@ class EmptyStateWidget extends StatelessWidget {
   final String? actionLabel;
 
   const EmptyStateWidget({
-    Key? key,
+    super.key,
     required this.title,
     this.subtitle,
     this.icon = Icons.inbox_outlined,
     this.onAction,
     this.actionLabel,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

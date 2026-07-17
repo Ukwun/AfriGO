@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../models/lot_model.dart';
-import '../../../services/api_service.dart';
 import '../../../config/theme.dart';
 
 final createLotFormProvider = StateProvider<Map<String, dynamic>>((ref) => {
@@ -184,7 +182,7 @@ class CreateLotScreen extends ConsumerWidget {
                   ),
                   Text(
                     '\$${_calculateTotal(formData).toStringAsFixed(2)}',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: AppTheme.primaryGreen,

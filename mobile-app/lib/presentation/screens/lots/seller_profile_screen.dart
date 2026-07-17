@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../models/lots_model.dart';
-import '../providers/lots_provider.dart';
+import '../../../models/lots_model.dart';
+import '../../providers/lots_provider.dart';
 
 class SellerProfileScreen extends ConsumerStatefulWidget {
   final String? supplierId;
 
   const SellerProfileScreen({
-    Key? key,
+    super.key,
     this.supplierId,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<SellerProfileScreen> createState() =>
@@ -45,24 +45,24 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen> {
             Container(
               color: Colors.blue.shade50,
               padding: const EdgeInsets.all(24),
-              child: Column(
+              child: const Column(
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 50,
                     backgroundColor: Colors.blue,
                     child: Icon(Icons.person, size: 50, color: Colors.white),
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
+                  SizedBox(height: 16),
+                  Text(
                     'John Osei',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  SizedBox(height: 8),
+                  Text(
                     'Cocoa & Coffee Supplier',
                     style: TextStyle(color: Colors.grey, fontSize: 14),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -116,16 +116,16 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen> {
             ),
 
             // Business Info
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Business Information',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   _InfoCard(
                     icon: Icons.location_on,
                     title: 'Location',
@@ -181,22 +181,22 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  _ActiveListingsList(),
+                  const _ActiveListingsList(),
                 ],
               ),
             ),
 
             // Certifications
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Certifications',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -295,7 +295,7 @@ class _ActiveListingsList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // In real implementation: fetch lots for current seller
-    return Column(
+    return const Column(
       children: [
         _LotPreviewCard(
           name: 'Grade A Cocoa Beans',

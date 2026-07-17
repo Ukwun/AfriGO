@@ -1,0 +1,23 @@
+{
+  "project_info": {
+    "project_number": "238875658843",
+    "project_id": "afrigo-62e9b",
+    "storage_bucket": "afrigo-62e9b.firebasestorage.app"
+  },
+  "client": [{
+    "client_info": {
+      "mobilesdk_app_id": "1:238875658843:android:b8b171a4d65db42a838d7e",
+      "android_client_info": { "package_name": "com.example.afrigo_app" }
+    },
+    "oauth_client": [{
+      "client_id": "238875658843-277jn4r1prbq3cqebfqcgj9oamqa8iqq.apps.googleusercontent.com",
+      "client_type": 3
+    }],
+    "api_key": [{ "current_key": "AIzaSyDy9SvL78XvIeGyDmqvz3QWhyFtP7v7RN0" }],
+    "services": { "appinvite_service": { "other_platform_oauth_client": [{
+      "client_id": "238875658843-277jn4r1prbq3cqebfqcgj9oamqa8iqq.apps.googleusercontent.com",
+      "client_type": 3
+    }] } }
+  }],
+  "configuration_version": "1"
+}

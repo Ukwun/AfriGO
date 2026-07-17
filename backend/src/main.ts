@@ -3,14 +3,23 @@ import { Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const isProduction = process.env.NODE_ENV === 'production';
+  const allowedOrigins = (process.env.CORS_ORIGINS || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  if (isProduction && allowedOrigins.length === 0) {
+    throw new Error('CORS_ORIGINS must be configured in production');
+  }
   
   // CRITICAL: Enable CORS for mobile device access
   app.enableCors({
-    origin: '*',
-    credentials: true,
+    origin: isProduction ? allowedOrigins : true,
+    credentials: isProduction,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key'],
   });
   
   const port = process.env.API_PORT || 3000;

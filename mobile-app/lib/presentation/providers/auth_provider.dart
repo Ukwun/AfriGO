@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../data/services/api_client.dart';
+import '../../data/services/auth_service.dart';
 
 /// Auth State Management with Riverpod
 /// Manages user authentication state using Backend API
@@ -43,8 +45,12 @@ class AuthUser {
       kycStatus: json['kycStatus'] ?? 'pending',
       emailVerified: json['emailVerified'] ?? false,
       phoneVerified: json['phoneVerified'] ?? false,
-      trustScore: json['trustScore'] ?? 0,
-      completedTrades: json['completedTrades'] ?? 0,
+      trustScore: (json['trustScore'] is int)
+          ? json['trustScore'] as int
+          : (json['trustScore'] as num?)?.toInt() ?? 0,
+      completedTrades: (json['completedTrades'] is int)
+          ? json['completedTrades'] as int
+          : (json['completedTrades'] as num?)?.toInt() ?? 0,
     );
   }
 }
@@ -85,8 +91,113 @@ class AuthUnauthenticated extends AuthState {
 /// Auth Notifier - handles auth logic using Backend API
 class AuthNotifier extends StateNotifier<AuthState> {
   final apiClient = ApiClient();
+  final authService = AuthService();
 
-  AuthNotifier() : super(const AuthIdle());
+  AuthNotifier() : super(const AuthLoading()) {
+    restoreSession();
+  }
+
+  Future<void> restoreSession() async {
+    final firebaseUser = authService.currentUser;
+    if (firebaseUser == null) {
+      state = const AuthUnauthenticated();
+      return;
+    }
+    try {
+      await _establishBackendSession(firebaseUser, forceRefresh: true);
+    } catch (_) {
+      state = const AuthUnauthenticated();
+    }
+  }
+
+  Future<void> _establishBackendSession(
+    dynamic firebaseUser, {
+    Map<String, dynamic>? profile,
+    bool forceRefresh = false,
+  }) async {
+    final idToken = await firebaseUser.getIdToken(forceRefresh);
+    if (idToken == null) throw Exception('Could not create secure session');
+    await apiClient.setToken(idToken);
+    try {
+      final response = await apiClient.post('/auth/session', body: {
+        'idToken': idToken,
+        if (profile != null) 'profile': profile,
+      });
+      final userData = response['user'] as Map<String, dynamic>?;
+      if (userData == null) throw Exception('Invalid session response');
+      state =
+          AuthAuthenticated(user: AuthUser.fromJson(userData), token: idToken);
+    } catch (_) {
+      final userData = await _firebaseProfile(firebaseUser, profile: profile);
+      state =
+          AuthAuthenticated(user: AuthUser.fromJson(userData), token: idToken);
+    }
+  }
+
+  Future<Map<String, dynamic>> _firebaseProfile(
+    dynamic firebaseUser, {
+    Map<String, dynamic>? profile,
+  }) async {
+    final reference = FirebaseFirestore.instance
+        .collection('users')
+        .doc(firebaseUser.uid as String);
+    if (profile != null) {
+      final role = _canonicalRole(profile['role']?.toString());
+      await reference.set({
+        'id': firebaseUser.uid,
+        'email': firebaseUser.email ?? profile['email'] ?? '',
+        'firstName': profile['firstName'] ?? '',
+        'lastName': profile['lastName'] ?? '',
+        'fullName':
+            '${profile['firstName'] ?? ''} ${profile['lastName'] ?? ''}'.trim(),
+        'roles': [role],
+        'role': role,
+        'accountStatus': 'active',
+        'kycStatus': 'pending',
+        'emailVerified': firebaseUser.emailVerified == true,
+        'phoneVerified': firebaseUser.phoneNumber != null,
+        'trustScore': 0,
+        'completedTrades': 0,
+        'participantIds': [firebaseUser.uid],
+        'updatedAt': FieldValue.serverTimestamp(),
+        'createdAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    }
+    var snapshot = await reference.get();
+    if (!snapshot.exists) {
+      final names = (firebaseUser.displayName?.toString() ?? '')
+          .trim()
+          .split(RegExp(r'\s+'));
+      final firstName = names.isEmpty ? '' : names.first;
+      final lastName = names.length < 2 ? '' : names.skip(1).join(' ');
+      await reference.set({
+        'id': firebaseUser.uid,
+        'email': firebaseUser.email ?? '',
+        'firstName': firstName,
+        'lastName': lastName,
+        'fullName': firebaseUser.displayName ?? '',
+        'roles': ['buyer'],
+        'role': 'buyer',
+        'accountStatus': 'active',
+        'kycStatus': 'pending',
+        'emailVerified': firebaseUser.emailVerified == true,
+        'phoneVerified': firebaseUser.phoneNumber != null,
+        'trustScore': 0,
+        'completedTrades': 0,
+        'participantIds': [firebaseUser.uid],
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      snapshot = await reference.get();
+    }
+    return {'id': snapshot.id, ...snapshot.data()!};
+  }
+
+  String _canonicalRole(String? role) => switch (role?.toLowerCase()) {
+        'supplier' || 'seller' || 'farmer' => 'supplier',
+        'exporter' => 'exporter',
+        _ => 'buyer',
+      };
 
   /// REGISTER with Email & Password
   Future<void> register({
@@ -105,11 +216,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final normalizedEmail = email.trim().toLowerCase();
       print('[AuthNotifier] Registering: $normalizedEmail');
 
-      final response = await apiClient.post(
-        '/auth/register',
-        body: {
+      final firebaseUser = await authService.registerWithEmail(
+        email: normalizedEmail,
+        password: password,
+        firstName: firstName,
+        lastName: lastName,
+        phone: phone,
+        organization: organizationName,
+        countryCode: countryCode,
+      );
+      await _establishBackendSession(
+        firebaseUser,
+        profile: {
           'email': normalizedEmail,
-          'password': password,
           'firstName': firstName,
           'lastName': lastName,
           'role': role,
@@ -118,25 +237,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
           if (countryCode != null) 'countryCode': countryCode,
         },
       );
-
-      // Handle both success response and error response
-      if (response['success'] == false) {
-        throw Exception(response['message'] ?? 'Registration failed');
-      }
-
-      final token = response['token'] as String?;
-      final userData = response['user'] as Map<String, dynamic>?;
-
-      if (token == null || userData == null) {
-        throw Exception('Invalid response from server');
-      }
-
-      apiClient.setToken(token);
-
-      final authUser = AuthUser.fromJson(userData);
-      state = AuthAuthenticated(user: authUser, token: token);
-
-      print('[AuthNotifier] Registration successful: ${authUser.id}');
     } catch (e) {
       final errorMsg = e.toString().replaceAll('Exception: ', '');
       state = AuthError(errorMsg);
@@ -155,32 +255,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final normalizedEmail = email.trim().toLowerCase();
       print('[AuthNotifier] Logging in: $normalizedEmail');
 
-      final response = await apiClient.post(
-        '/auth/login',
-        body: {
-          'email': normalizedEmail,
-          'password': password,
-        },
+      final firebaseUser = await authService.loginWithEmail(
+        email: normalizedEmail,
+        password: password,
       );
-
-      // Handle both success response and error response
-      if (response['success'] == false) {
-        throw Exception(response['message'] ?? 'Login failed');
-      }
-
-      final token = response['token'] as String?;
-      final userData = response['user'] as Map<String, dynamic>?;
-
-      if (token == null || userData == null) {
-        throw Exception('Invalid response from server');
-      }
-
-      apiClient.setToken(token);
-
-      final authUser = AuthUser.fromJson(userData);
-      state = AuthAuthenticated(user: authUser, token: token);
-
-      print('[AuthNotifier] Login successful: ${authUser.id}');
+      await _establishBackendSession(firebaseUser);
     } catch (e) {
       final errorMsg = e.toString().replaceAll('Exception: ', '');
       state = AuthError(errorMsg);
@@ -188,39 +267,36 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// LOGIN with Google (stub for now)
-  Future<void> loginWithGoogle() async {
+  Future<void> loginWithGoogle({String? role}) async {
     state = const AuthLoading();
     try {
-      state = const AuthError(
-        'Google login is not fully configured yet. Use email/password login for now.',
-      );
+      final user = await authService.loginWithGoogle();
+      await _establishBackendSession(user,
+          profile: role == null ? null : {'role': role});
     } catch (e) {
       state = AuthError(e.toString());
       print('[AuthNotifier] Google login error: $e');
     }
   }
 
-  /// LOGIN with Facebook (stub for now)
-  Future<void> loginWithFacebook() async {
+  Future<void> loginWithFacebook({String? role}) async {
     state = const AuthLoading();
     try {
-      state = const AuthError(
-        'Facebook login is not fully configured yet. Use email/password login for now.',
-      );
+      final user = await authService.loginWithFacebook();
+      await _establishBackendSession(user,
+          profile: role == null ? null : {'role': role});
     } catch (e) {
       state = AuthError(e.toString());
       print('[AuthNotifier] Facebook login error: $e');
     }
   }
 
-  /// LOGIN with Apple (stub for now)
-  Future<void> loginWithApple() async {
+  Future<void> loginWithApple({String? role}) async {
     state = const AuthLoading();
     try {
-      state = const AuthError(
-        'Apple login is not available on this platform/configuration yet.',
-      );
+      final user = await authService.loginWithApple();
+      await _establishBackendSession(user,
+          profile: role == null ? null : {'role': role});
     } catch (e) {
       state = AuthError(e.toString());
       print('[AuthNotifier] Apple login error: $e');
@@ -230,6 +306,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// LOGOUT
   Future<void> logout() async {
     try {
+      await authService.logout();
       await apiClient.logout();
       state = const AuthUnauthenticated();
       print('[AuthNotifier] Logged out');

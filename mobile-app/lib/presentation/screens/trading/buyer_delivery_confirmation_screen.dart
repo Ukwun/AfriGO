@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 class BuyerDeliveryConfirmationScreen extends StatelessWidget {
   final String tradeId;
-  const BuyerDeliveryConfirmationScreen({Key? key, required this.tradeId})
-      : super(key: key);
+  const BuyerDeliveryConfirmationScreen({super.key, required this.tradeId});
 
   @override
   Widget build(BuildContext context) {

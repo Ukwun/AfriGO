@@ -24,8 +24,8 @@ class ModernCard extends StatefulWidget {
     this.isFloating = false,
     this.onTap,
     this.animationDuration = const Duration(milliseconds: 200),
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<ModernCard> createState() => _ModernCardState();
@@ -139,8 +139,8 @@ class LayeredCard extends StatelessWidget {
     this.layerOffset = 4,
     this.padding,
     this.borderRadius = 16,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -210,8 +210,8 @@ class FloatingPanel extends StatefulWidget {
     this.borderRadius = 20,
     this.width,
     this.height,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<FloatingPanel> createState() => _FloatingPanelState();

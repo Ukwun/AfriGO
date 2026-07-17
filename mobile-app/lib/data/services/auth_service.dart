@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 /// Exception class for authentication errors
 class AuthException implements Exception {
@@ -15,7 +14,7 @@ class AuthException implements Exception {
 }
 
 /// Firebase Authentication Service
-/// Handles email/password, Google, Facebook, and Apple authentication
+/// Handles email/password, Google, and Facebook authentication
 class AuthService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
@@ -211,66 +210,22 @@ class AuthService {
     }
   }
 
-  /// LOGIN with Apple
+  /// LOGIN with Apple through Firebase's OAuth provider.
   Future<User> loginWithApple() async {
     try {
-      print('[AuthService] Starting Apple sign-in flow...');
-
-      // Check if Apple sign-in is available
-      final isAvailable = await SignInWithApple.isAvailable();
-      if (!isAvailable) {
-        throw AuthException('Apple sign-in is not available on this device');
-      }
-
-      // Request Apple authentication
-      final appleCredential = await SignInWithApple.getAppleIDCredential(
-        scopes: [
-          AppleIDAuthorizationScopes.email,
-          AppleIDAuthorizationScopes.fullName,
-        ],
-      );
-
-      print(
-          '[AuthService] Apple user authenticated: ${appleCredential.userIdentifier}');
-
-      // Create Firebase credential
-      final OAuthProvider oauthProvider = OAuthProvider('apple.com');
-      final credential = oauthProvider.credential(
-        idToken: appleCredential.identityToken,
-        accessToken: appleCredential.authorizationCode,
-      );
-
-      // Sign in with Firebase
-      final userCredential =
-          await _firebaseAuth.signInWithCredential(credential);
-      final user = userCredential.user;
-
+      final provider = AppleAuthProvider()
+        ..addScope('email')
+        ..addScope('name');
+      final credential = await _firebaseAuth.signInWithProvider(provider);
+      final user = credential.user;
       if (user == null) {
         throw AuthException('Apple sign-in failed - no user returned');
       }
-
-      // Update user profile if available
-      if (appleCredential.givenName != null ||
-          appleCredential.familyName != null) {
-        final displayName =
-            '${appleCredential.givenName ?? ''} ${appleCredential.familyName ?? ''}'
-                .trim();
-        if (displayName.isNotEmpty) {
-          try {
-            await user.updateDisplayName(displayName);
-          } catch (e) {
-            print('[AuthService] Error updating Apple user profile: $e');
-          }
-        }
-      }
-
-      print('[AuthService] Apple authentication successful: ${user.uid}');
       return user;
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_parseFirebaseAuthError(e), code: e.code);
     } catch (e) {
-      print('[AuthService] Apple sign-in error: $e');
-      if (e is AuthException) {
-        rethrow;
-      }
+      if (e is AuthException) rethrow;
       throw AuthException('Apple sign-in failed: ${e.toString()}');
     }
   }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class SubmitBidScreen extends StatelessWidget {
   final String rfqId;
-  const SubmitBidScreen({Key? key, required this.rfqId}) : super(key: key);
+  const SubmitBidScreen({super.key, required this.rfqId});
 
   @override
   Widget build(BuildContext context) {

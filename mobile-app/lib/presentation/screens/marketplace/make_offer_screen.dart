@@ -25,8 +25,8 @@ class MakeOfferScreen extends ConsumerStatefulWidget {
     required this.sellerId,
     required this.productName,
     this.productData,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<MakeOfferScreen> createState() => _MakeOfferScreenState();
@@ -54,7 +54,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
     _priceFocus = FocusNode();
     _quantityFocus = FocusNode();
     _submitController =
-        AnimationController(duration: Duration(milliseconds: 600));
+        AnimationController(duration: const Duration(milliseconds: 600));
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _submitController.forward();
@@ -120,7 +120,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
   Future<void> _submitOffer() async {
     if (_priceValidationError != null || _quantityValidationError != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Please fix validation errors'),
           backgroundColor: AppColors.error,
         ),
@@ -146,7 +146,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
       if (mounted) {
         // Show success
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Row(
               children: [
                 Icon(Icons.check_circle, color: Colors.white),
@@ -160,7 +160,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
         );
 
         // Navigate back after delay
-        await Future.delayed(Duration(milliseconds: 1500));
+        await Future.delayed(const Duration(milliseconds: 1500));
         if (mounted) {
           context.pop();
         }
@@ -222,11 +222,11 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(
+          const CircularProgressIndicator(
             strokeWidth: 3,
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             'Loading offer form...',
             style: AppTheme.bodyMedium.copyWith(
@@ -243,15 +243,15 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 48, color: AppColors.error),
-          SizedBox(height: 16),
+          const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+          const SizedBox(height: 16),
           Text(
             'Failed to load form',
             style: AppTheme.headlineSmall.copyWith(
               color: AppColors.textPrimary,
             ),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () => context.pop(),
             style: ElevatedButton.styleFrom(
@@ -277,7 +277,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
   ) {
     return SingleChildScrollView(
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -286,64 +286,64 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
               delay: 100,
               child: _buildProductSummary(product),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // Market rate info
             marketRateAsync.when(
               loading: () => _buildSkeletonCard(),
-              error: (_, __) => SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
               data: (marketRate) => FadeInTransition(
                 delay: 150,
                 child: _buildMarketRateCard(marketRate),
               ),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // Price input
             FadeInTransition(
               delay: 200,
               child: _buildPriceInput(product, marketRateAsync),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             // Quantity input
             FadeInTransition(
               delay: 250,
               child: _buildQuantityInput(product),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             // Total calculation
             FadeInTransition(
               delay: 300,
               child: _buildTotalCalculation(),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // Balance check
             balanceAsync.when(
               loading: () => _buildSkeletonCard(),
-              error: (_, __) => SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
               data: (balance) => FadeInTransition(
                 delay: 350,
                 child: _buildBalanceCheck(balance),
               ),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // Message input
             FadeInTransition(
               delay: 400,
               child: _buildMessageInput(),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // Fraud risk assessment
             FadeInTransition(
               delay: 450,
               child: _buildFraudRiskCard(),
             ),
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
 
             // Submit button
             ScaleInTransition(
@@ -351,7 +351,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
               child: _buildSubmitButton(),
             ),
 
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
           ],
         ),
       ),
@@ -360,7 +360,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
 
   Widget _buildProductSummary(ProductModel product) {
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
@@ -379,7 +379,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
               ),
             ),
           ),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -392,14 +392,14 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
                     color: AppColors.textPrimary,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   product.sellerName,
                   style: AppTheme.bodySmall.copyWith(
                     color: AppColors.textSecondary,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   '\$${product.price.toStringAsFixed(2)}/kg',
                   style: AppTheme.titleSmall.copyWith(
@@ -417,7 +417,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
 
   Widget _buildMarketRateCard(double marketRate) {
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(12),
@@ -435,7 +435,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
                   color: AppColors.textSecondary,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
                 '\$${marketRate.toStringAsFixed(2)}/kg',
                 style: AppTheme.titleMedium.copyWith(
@@ -446,7 +446,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
             ],
           ),
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: AppColors.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(6),
@@ -474,11 +474,11 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
             color: AppColors.textPrimary,
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         TextField(
           controller: _priceController,
           focusNode: _priceFocus,
-          keyboardType: TextInputType.numberWithOptions(decimal: true),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
           onChanged: (value) {
             marketRateAsync.whenData((rate) {
               _validatePrice(value, rate);
@@ -523,7 +523,8 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
                 width: 2,
               ),
             ),
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
           style: AppTheme.bodyMedium.copyWith(
             color: AppColors.textPrimary,
@@ -531,11 +532,12 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
         ),
         if (_priceValidationError != null)
           Padding(
-            padding: EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.only(top: 8),
             child: Row(
               children: [
-                Icon(Icons.error_outline, size: 14, color: AppColors.error),
-                SizedBox(width: 4),
+                const Icon(Icons.error_outline,
+                    size: 14, color: AppColors.error),
+                const SizedBox(width: 4),
                 Expanded(
                   child: Text(
                     _priceValidationError!,
@@ -561,11 +563,11 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
             color: AppColors.textPrimary,
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         TextField(
           controller: _quantityController,
           focusNode: _quantityFocus,
-          keyboardType: TextInputType.numberWithOptions(decimal: true),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
           onChanged: (value) {
             _validateQuantity(value, product.quantityAvailable);
           },
@@ -607,7 +609,8 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
                 width: 2,
               ),
             ),
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
           style: AppTheme.bodyMedium.copyWith(
             color: AppColors.textPrimary,
@@ -615,11 +618,12 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
         ),
         if (_quantityValidationError != null)
           Padding(
-            padding: EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.only(top: 8),
             child: Row(
               children: [
-                Icon(Icons.error_outline, size: 14, color: AppColors.error),
-                SizedBox(width: 4),
+                const Icon(Icons.error_outline,
+                    size: 14, color: AppColors.error),
+                const SizedBox(width: 4),
                 Expanded(
                   child: Text(
                     _quantityValidationError!,
@@ -641,7 +645,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
     final total = price * quantity;
 
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
@@ -659,7 +663,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
                   color: AppColors.textSecondary,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
                 '\$${total.toStringAsFixed(2)}',
                 style: AppTheme.headlineSmall.copyWith(
@@ -670,7 +674,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
             ],
           ),
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: total > 0
                   ? AppColors.success.withOpacity(0.1)
@@ -696,7 +700,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
     final hasEnoughBalance = balance >= total;
 
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: hasEnoughBalance
             ? AppColors.success.withOpacity(0.1)
@@ -718,7 +722,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
                   color: AppColors.textSecondary,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
                 '\$${balance.toStringAsFixed(2)}',
                 style: AppTheme.titleMedium.copyWith(
@@ -729,7 +733,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
             ],
           ),
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: hasEnoughBalance ? AppColors.success : AppColors.error,
               borderRadius: BorderRadius.circular(6),
@@ -741,7 +745,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
                   size: 14,
                   color: Colors.white,
                 ),
-                SizedBox(width: 4),
+                const SizedBox(width: 4),
                 Text(
                   hasEnoughBalance ? 'Sufficient Funds' : 'Insufficient Funds',
                   style: AppTheme.labelSmall.copyWith(
@@ -766,7 +770,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
             color: AppColors.textPrimary,
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         TextField(
           controller: _messageController,
           maxLines: 4,
@@ -789,9 +793,10 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.primary, width: 2),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
             ),
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
           style: AppTheme.bodyMedium.copyWith(
             color: AppColors.textPrimary,
@@ -803,7 +808,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
 
   Widget _buildFraudRiskCard() {
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(12),
@@ -822,7 +827,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
                 ),
               ),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppColors.success.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
@@ -836,11 +841,12 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
               ),
             ],
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Row(
             children: [
-              Icon(Icons.check_circle, size: 16, color: AppColors.success),
-              SizedBox(width: 8),
+              const Icon(Icons.check_circle,
+                  size: 16, color: AppColors.success),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Seller has 4.8★ rating (trusted)',
@@ -851,11 +857,12 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
               ),
             ],
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Row(
             children: [
-              Icon(Icons.check_circle, size: 16, color: AppColors.success),
-              SizedBox(width: 8),
+              const Icon(Icons.check_circle,
+                  size: 16, color: AppColors.success),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Payment protected by escrow',
@@ -866,11 +873,12 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
               ),
             ],
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Row(
             children: [
-              Icon(Icons.check_circle, size: 16, color: AppColors.success),
-              SizedBox(width: 8),
+              const Icon(Icons.check_circle,
+                  size: 16, color: AppColors.success),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Quality verified by AI inspection',
@@ -908,7 +916,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
       child: ElevatedButton.icon(
         onPressed: isFormValid && !_isSubmitting ? _submitOffer : null,
         icon: _isSubmitting
-            ? SizedBox(
+            ? const SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
@@ -916,7 +924,7 @@ class _MakeOfferScreenState extends ConsumerState<MakeOfferScreen>
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
-            : Icon(Icons.send),
+            : const Icon(Icons.send),
         label: Text(
           _isSubmitting ? 'Sending Offer...' : 'Send Offer',
         ),

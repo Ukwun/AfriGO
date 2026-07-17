@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/shipment_model.dart';
+import 'package:afrigo_app/models/shipment_model.dart';
 
 // ======================== HTTP SERVICE ========================
 
@@ -29,7 +29,7 @@ class ShipmentService {
     final headers = await _getHeaders();
     final response = await httpClient.post(
       '$baseUrl/api/shipments',
-      data: request,
+      data: request.toJson(),
       options: Options(headers: headers),
     );
     return ShipmentModel.fromJson(response.data);
@@ -80,7 +80,7 @@ class ShipmentService {
     final headers = await _getHeaders();
     final response = await httpClient.patch(
       '$baseUrl/api/shipments/$shipmentId/status',
-      data: request,
+      data: request.toJson(),
       options: Options(headers: headers),
     );
     return ShipmentModel.fromJson(response.data);
@@ -94,7 +94,7 @@ class ShipmentService {
     final headers = await _getHeaders();
     final response = await httpClient.post(
       '$baseUrl/api/shipments/$shipmentId/tracking-event',
-      data: request,
+      data: request.toJson(),
       options: Options(headers: headers),
     );
     return response.data;
@@ -120,7 +120,7 @@ class ShipmentService {
     final headers = await _getHeaders();
     final response = await httpClient.post(
       '$baseUrl/api/shipments/$shipmentId/delivery-proof',
-      data: request,
+      data: request.toJson(),
       options: Options(headers: headers),
     );
     return response.data;
@@ -146,7 +146,7 @@ class ShipmentService {
     final headers = await _getHeaders();
     final response = await httpClient.patch(
       '$baseUrl/api/shipments/$shipmentId/reschedule',
-      data: request,
+      data: request.toJson(),
       options: Options(headers: headers),
     );
     return ShipmentModel.fromJson(response.data);
@@ -271,7 +271,7 @@ class ShipmentFilters {
   final int limit;
   final int offset;
 
-  ShipmentFilters({
+  const ShipmentFilters({
     this.status,
     this.transportMode,
     this.driverId,

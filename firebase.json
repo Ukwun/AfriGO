@@ -1,0 +1,11 @@
+{
+  "functions": {
+    "source": "backend",
+    "codebase": "default",
+    "runtime": "nodejs20",
+    "predeploy": ["npm --prefix backend run build"],
+    "ignore": ["node_modules", ".git", "*.log", "*.sqlite", "local-users.json", ".env*"]
+  },
+  "firestore": { "rules": "firestore.rules" },
+  "storage": { "rules": "storage.rules" }
+}

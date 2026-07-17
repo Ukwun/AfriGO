@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../models/lot_model.dart';
 import '../../../services/api_service.dart';
 import '../../../config/theme.dart';
@@ -108,7 +107,7 @@ class LotDetailsScreen extends ConsumerWidget {
                               const Text('Price per Unit'),
                               Text(
                                 '\$${lot.pricePerUnit.toStringAsFixed(2)}',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                   color: AppTheme.primaryGreen,
@@ -137,7 +136,7 @@ class LotDetailsScreen extends ConsumerWidget {
                               const Text('Total Value (approx)'),
                               Text(
                                 '\$${(lot.pricePerUnit * lot.quantity).toStringAsFixed(2)}',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   color: AppTheme.primaryGreen,
@@ -187,7 +186,7 @@ class LotDetailsScreen extends ConsumerWidget {
                             .map((cert) => Chip(
                                   label: Text(cert),
                                   backgroundColor: Colors.green[100],
-                                  labelStyle: TextStyle(
+                                  labelStyle: const TextStyle(
                                     color: AppTheme.primaryGreen,
                                     fontWeight: FontWeight.bold,
                                   ),

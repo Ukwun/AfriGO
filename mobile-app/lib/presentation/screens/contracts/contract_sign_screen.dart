@@ -1,15 +1,17 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/contract_model.dart';
-import '../providers/contract_provider.dart';
+import '../../../models/contract_model.dart';
+import '../../providers/contract_provider.dart';
 
 class ContractSignScreen extends ConsumerStatefulWidget {
   final String contractId;
 
   const ContractSignScreen({
-    Key? key,
+    super.key,
     required this.contractId,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<ContractSignScreen> createState() => _ContractSignScreenState();
@@ -258,50 +260,56 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
   }
 
   void _showSignaturePad() {
+    final strokes = <Offset?>[];
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Draw Your Signature'),
-        content: Container(
-          width: double.maxFinite,
-          height: 250,
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(8),
-            color: Colors.white,
-          ),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.draw, size: 48, color: Colors.grey),
-                const SizedBox(height: 16),
-                const Text('Signature pad would appear here'),
-                const Text('(Requires signature_pad package)',
-                    style: TextStyle(color: Colors.grey, fontSize: 12)),
-              ],
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Draw Your Signature'),
+          content: Container(
+            width: double.maxFinite,
+            height: 250,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(8),
+              color: Colors.white,
+            ),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onPanStart: (details) =>
+                  setDialogState(() => strokes.add(details.localPosition)),
+              onPanUpdate: (details) =>
+                  setDialogState(() => strokes.add(details.localPosition)),
+              onPanEnd: (_) => setDialogState(() => strokes.add(null)),
+              child: CustomPaint(painter: _SignaturePainter(strokes)),
             ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => setDialogState(strokes.clear),
+              child: const Text('Clear'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: strokes.whereType<Offset>().length < 3
+                  ? null
+                  : () {
+                      final vector = strokes
+                          .map((point) => point == null
+                              ? null
+                              : {'x': point.dx, 'y': point.dy})
+                          .toList(growable: false);
+                      setState(() => _signatureBase64 =
+                          base64Encode(utf8.encode(jsonEncode(vector))));
+                      Navigator.pop(dialogContext);
+                    },
+              child: const Text('Save Signature'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // In real app, would capture canvas as image
-              setState(() {
-                _signatureBase64 = 'mock-signature-data-v1';
-              });
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Signature captured')),
-              );
-            },
-            child: const Text('Save Signature'),
-          ),
-        ],
       ),
     );
   }
@@ -321,7 +329,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
       contractId: widget.contractId,
       signature: _signatureBase64!,
       agreeToTerms: true,
-      ipAddress: '192.168.1.1', // TODO: Get actual IP
+      ipAddress: 'server-resolved',
       deviceInfo: 'Flutter Mobile App',
     );
 
@@ -342,6 +350,27 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
       setState(() => _isSubmitting = false);
     });
   }
+}
+
+class _SignaturePainter extends CustomPainter {
+  const _SignaturePainter(this.points);
+  final List<Offset?> points;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.black87
+      ..strokeWidth = 2.4
+      ..strokeCap = StrokeCap.round;
+    for (var index = 0; index < points.length - 1; index++) {
+      final start = points[index];
+      final end = points[index + 1];
+      if (start != null && end != null) canvas.drawLine(start, end, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SignaturePainter oldDelegate) => true;
 }
 
 class _SummaryRow extends StatelessWidget {

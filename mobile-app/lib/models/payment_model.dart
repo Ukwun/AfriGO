@@ -6,18 +6,33 @@ part 'payment_model.g.dart';
 @JsonSerializable()
 class PaymentModel {
   final String id;
-  final String contractId;
+  final String? orderId;
+  final String? contractId;
   final String? buyerId;
   final String? sellerId;
   final double amount;
   final String currency; // KES, USD, EUR, ZAR, UGX, TZS
-  final String paymentMethod; // FULL_UPFRONT, PARTIAL_DEPOSIT, ON_DELIVERY, INSTALLMENT, ESCROW
-  final String status; // PENDING, INITIATED, PROCESSING, COMPLETED, FAILED, REFUNDED, DISPUTED
-  final String invoiceReference; // INV-YYYY-XXXXXX
+  final String
+      paymentMethod; // FULL_UPFRONT, PARTIAL_DEPOSIT, ON_DELIVERY, INSTALLMENT, ESCROW
+  final String? paymentStatus;
+  final String?
+      status; // PENDING, INITIATED, PROCESSING, COMPLETED, FAILED, REFUNDED, DISPUTED, SUCCEEDED
+  final String? invoiceNumber;
+  final String? invoiceReference; // INV-YYYY-XXXXXX
+  final String? description;
+  final String? relatedProduct;
+  final String? reference;
   final String? flutterwaveReference;
   final String? flutterwavePaymentUrl;
-  final DateTime dueDate;
+  final String? escrowStatus;
+  final CardInfoModel? cardInfo;
+  final String? stripePaymentIntentId;
+  final String? stripeChargeId;
+  final String? receiptUrl;
+  final DateTime? paymentDate;
+  final DateTime? dueDate;
   final DateTime createdAt;
+  final DateTime? updatedAt;
   final DateTime? completedAt;
   final double? lateFeeAmount;
   final DateTime? lateFeeTriggeredAt;
@@ -25,18 +40,31 @@ class PaymentModel {
 
   PaymentModel({
     required this.id,
-    required this.contractId,
+    this.orderId,
+    this.contractId,
     this.buyerId,
     this.sellerId,
     required this.amount,
     required this.currency,
     required this.paymentMethod,
-    required this.status,
-    required this.invoiceReference,
+    this.paymentStatus,
+    this.status,
+    this.invoiceNumber,
+    this.invoiceReference,
+    this.description,
+    this.relatedProduct,
+    this.reference,
     this.flutterwaveReference,
     this.flutterwavePaymentUrl,
-    required this.dueDate,
+    this.escrowStatus,
+    this.cardInfo,
+    this.stripePaymentIntentId,
+    this.stripeChargeId,
+    this.receiptUrl,
+    this.paymentDate,
+    this.dueDate,
     required this.createdAt,
+    this.updatedAt,
     this.completedAt,
     this.lateFeeAmount,
     this.lateFeeTriggeredAt,
@@ -44,27 +72,47 @@ class PaymentModel {
   });
 
   /// Check if payment is successful
-  bool get isCompleted => status == 'COMPLETED';
+  bool get isCompleted {
+    final current = (status ?? paymentStatus)?.toUpperCase();
+    return current == 'COMPLETED' || current == 'SUCCEEDED';
+  }
 
   /// Check if payment failed
-  bool get isFailed => status == 'FAILED';
+  bool get isFailed {
+    final current = (status ?? paymentStatus)?.toUpperCase();
+    return current == 'FAILED';
+  }
 
   /// Check if payment is pending
-  bool get isPending => status == 'PENDING' || status == 'INITIATED' || status == 'PROCESSING';
+  bool get isPending {
+    final current = (status ?? paymentStatus)?.toUpperCase();
+    return current == 'PENDING' ||
+        current == 'INITIATED' ||
+        current == 'PROCESSING';
+  }
 
   /// Check if payment is refunded
-  bool get isRefunded => status == 'REFUNDED';
+  bool get isRefunded {
+    final current = (status ?? paymentStatus)?.toUpperCase();
+    return current == 'REFUNDED';
+  }
 
   /// Check if payment is disputed
-  bool get isDisputed => status == 'DISPUTED';
+  bool get isDisputed {
+    final current = (status ?? paymentStatus)?.toUpperCase();
+    return current == 'DISPUTED';
+  }
 
   /// Check if payment is overdue
-  bool get isOverdue => isPending && DateTime.now().isAfter(dueDate);
+  bool get isOverdue =>
+      dueDate != null && isPending && DateTime.now().isAfter(dueDate!);
 
   /// Display status text
   String get statusText {
-    switch (status) {
+    final current = (status ?? paymentStatus)?.toUpperCase();
+    switch (current) {
       case 'COMPLETED':
+      case 'SUCCEEDED':
         return 'Payment Successful';
       case 'PROCESSING':
         return 'Processing...';
@@ -107,6 +155,24 @@ class PaymentModel {
     return '$symbol${amount.toStringAsFixed(2)}';
   }
 
+  /// Format amount status text
+  String get escrowStatusText {
+    switch (escrowStatus?.toUpperCase()) {
+      case 'HELD':
+        return 'Held in Escrow';
+      case 'RELEASED':
+        return 'Released';
+      case 'REFUNDED':
+        return 'Refunded';
+      case 'DISPUTED':
+        return 'Disputed';
+      case 'CREATED':
+        return 'Created';
+      default:
+        return 'No Escrow';
+    }
+  }
+
   /// Get currency symbol
   String _getCurrencySymbol(String cur) {
     switch (cur.toUpperCase()) {
@@ -129,8 +195,9 @@ class PaymentModel {
 
   /// Days until payment is due
   int get daysUntilDue {
+    if (dueDate == null) return 0;
     final now = DateTime.now();
-    return dueDate.difference(now).inDays;
+    return dueDate!.difference(now).inDays;
   }
 
   factory PaymentModel.fromJson(Map<String, dynamic> json) =>
@@ -146,10 +213,12 @@ class EscrowModel {
   final String paymentId;
   final double amount;
   final String currency;
-  final String status; // CREATED, FUNDED, HELD, RELEASED, REFUNDED, DISPUTED, RESOLVED
+  final String
+      status; // CREATED, FUNDED, HELD, RELEASED, REFUNDED, DISPUTED, RESOLVED
   final int holdingPeriodDays;
   final double holdingFeePercentage;
-  final Map<String, dynamic> conditionsMet; // {DELIVERY_PROOF, QUALITY_APPROVAL, BUYER_SIGNOFF}
+  final Map<String, dynamic>
+      conditionsMet; // {DELIVERY_PROOF, QUALITY_APPROVAL, BUYER_SIGNOFF}
   final DateTime? autoReleaseDate;
   final DateTime? releasedAt;
   final DateTime? refundedAt;
@@ -240,13 +309,13 @@ class CreatePaymentRequest {
   });
 
   Map<String, dynamic> toJson() => {
-    'contractId': contractId,
-    'paymentMethod': paymentMethod,
-    'amount': amount,
-    'currency': currency,
-    'dueDate': dueDate.toIso8601String(),
-    if (metadata != null) 'metadata': metadata,
-  };
+        'contractId': contractId,
+        'paymentMethod': paymentMethod,
+        'amount': amount,
+        'currency': currency,
+        'dueDate': dueDate.toIso8601String(),
+        if (metadata != null) 'metadata': metadata,
+      };
 }
 
 /// Response model for payment operations
@@ -269,14 +338,40 @@ class PaymentResponseDto {
 
   Map<String, dynamic> toJson() => _$PaymentResponseDtoToJson(this);
 }
+
+/// Card payment details
+@JsonSerializable()
+class CardInfoModel {
+  final String brand;
+  final String last4;
+  final int? expMonth;
+  final int? expYear;
+
+  CardInfoModel({
+    required this.brand,
+    required this.last4,
+    this.expMonth,
+    this.expYear,
+  });
+
+  bool get isExpired {
+    if (expMonth == null || expYear == null) return false;
+    final now = DateTime.now();
+    final expiry = DateTime(expYear!, expMonth! + 1);
     return now.isAfter(expiry);
   }
 
   /// Format expiration date
   String get formattedExpiry {
     if (expMonth == null || expYear == null) return 'N/A';
-    return '${expMonth!.toString().padLeft(2, '0')}/${expYear!.toString().substring(2)}';
+    final yearString = expYear!.toString().padLeft(4, '0');
+    final shortYear = yearString.length > 2
+        ? yearString.substring(yearString.length - 2)
+        : yearString;
+    return '${expMonth!.toString().padLeft(2, '0')}/$shortYear';
   }
+
+  String get displayCard => '$brand •••• $last4';
 
   factory CardInfoModel.fromJson(Map<String, dynamic> json) =>
       _$CardInfoModelFromJson(json);

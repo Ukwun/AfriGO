@@ -99,7 +99,7 @@ void main() {
 
       try {
         // Note: In real scenario, would verify actual stored signature
-        final testHash =
+        const testHash =
             'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6';
 
         final verification = await contractService.verifySignature(
@@ -340,7 +340,7 @@ void main() {
     test('PERF-2: Signature verification completes in <500ms', () async {
       print('\n⚡ [PERF-2] Testing Signature Verification Speed...');
 
-      final testHash =
+      const testHash =
           'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6';
 
       final stopwatch = Stopwatch()..start();

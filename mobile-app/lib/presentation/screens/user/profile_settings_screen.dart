@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../config/colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../../data/services/api_client.dart';
 
 class ProfileSettingsScreen extends ConsumerStatefulWidget {
   const ProfileSettingsScreen({super.key});
@@ -23,30 +23,47 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
   @override
   void initState() {
     super.initState();
-    _loadLocalProfile();
+    _loadProfile();
   }
 
-  Future<void> _loadLocalProfile() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() {
-      _phoneController.text = prefs.getString('profile_phone') ?? '';
-      _companyController.text = prefs.getString('profile_company') ?? '';
-      _countryController.text = prefs.getString('profile_country') ?? '';
-    });
+  Future<void> _loadProfile() async {
+    try {
+      final response = await ApiClient().get('/auth/me');
+      final user = response['user'] as Map<String, dynamic>? ?? const {};
+      if (!mounted) return;
+      setState(() {
+        _phoneController.text = user['phone']?.toString() ?? '';
+        _companyController.text = user['organization']?.toString() ?? '';
+        _countryController.text = user['countryCode']?.toString() ?? '';
+      });
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not load profile: $error')),
+      );
+    }
   }
 
   Future<void> _saveProfile() async {
     setState(() => _saving = true);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('profile_phone', _phoneController.text.trim());
-    await prefs.setString('profile_company', _companyController.text.trim());
-    await prefs.setString('profile_country', _countryController.text.trim());
-    if (!mounted) return;
-    setState(() => _saving = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Profile updated successfully.')),
-    );
+    try {
+      await ApiClient().patch('/auth/me', body: {
+        'phone': _phoneController.text.trim(),
+        'organization': _companyController.text.trim(),
+        'countryCode': _countryController.text.trim(),
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile updated successfully.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not save profile: $error')),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override
@@ -95,11 +112,10 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
               ),
               child: Row(
                 children: [
-                  CircleAvatar(
+                  const CircleAvatar(
                     radius: 28,
                     backgroundColor: AppColors.primaryGreenLighter,
-                    child:
-                        const Icon(Icons.person, color: AppColors.primaryGreen),
+                    child: Icon(Icons.person, color: AppColors.primaryGreen),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -191,6 +207,38 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                     )
                   : const Icon(Icons.save_outlined),
               label: Text(_saving ? 'Saving...' : 'Save Profile'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          InkWell(
+            onTap: () => context.push('/settings'),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceCard,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.borderDefault),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.settings_outlined, color: AppColors.accentBlue),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Settings',
+                      style: TextStyle(
+                        color: AppColors.textDark,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    color: AppColors.textSecondary,
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 24),

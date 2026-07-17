@@ -15,14 +15,15 @@ import '../../../data/providers/analytics_provider.dart';
 /// Status: Production-ready with Module 10 analytics engine integration
 
 class AnalyticsDashboardScreen extends ConsumerStatefulWidget {
-  const AnalyticsDashboardScreen({Key? key}) : super(key: key);
+  const AnalyticsDashboardScreen({super.key});
 
   @override
   ConsumerState<AnalyticsDashboardScreen> createState() =>
       _AnalyticsDashboardScreenState();
 }
 
-class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScreen>
+class _AnalyticsDashboardScreenState
+    extends ConsumerState<AnalyticsDashboardScreen>
     with TickerProviderStateMixin {
   String _selectedPeriod = '30d'; // 30 days
   late List<AnimationController> _animationControllers;
@@ -33,7 +34,7 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
     _animationControllers = List.generate(
       6,
       (index) => AnimationController(
-        duration: Duration(milliseconds: 600),
+        duration: const Duration(milliseconds: 600),
         vsync: this,
       ),
     );
@@ -99,11 +100,11 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(
+          const CircularProgressIndicator(
             strokeWidth: 3,
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             'Loading analytics...',
             style: AppTheme.bodyMedium.copyWith(
@@ -120,15 +121,15 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 48, color: AppColors.error),
-          SizedBox(height: 16),
+          const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+          const SizedBox(height: 16),
           Text(
             'Failed to load analytics',
             style: AppTheme.headlineSmall.copyWith(
               color: AppColors.textPrimary,
             ),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () {
               ref.refresh(analyticsDataProvider(_selectedPeriod));
@@ -158,28 +159,28 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
             delay: 0,
             child: _buildPeriodSelector(),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
 
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Column(
               children: [
                 // KPI Cards
                 _buildKPICards(data, role),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
                 // Charts section
                 _buildChartsSection(data),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
                 // Recommendations
                 _buildRecommendationsSection(data),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
                 // Insights
                 _buildInsightsSection(data),
 
-                SizedBox(height: 32),
+                const SizedBox(height: 32),
               ],
             ),
           ),
@@ -193,7 +194,7 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
     final periodLabels = ['7 Days', '30 Days', '90 Days', 'Year to Date'];
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       child: SizedBox(
         height: 40,
         child: ListView.builder(
@@ -204,7 +205,7 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
             final isSelected = _selectedPeriod == period;
 
             return Padding(
-              padding: EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.only(right: 8),
               child: FilterChip(
                 label: Text(periodLabels[index]),
                 selected: isSelected,
@@ -285,7 +286,7 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
                 ),
                 KPICard(
                   label: 'Active Suppliers',
-                  value: '${data.activeSupplie rs}',
+                  value: '${data.activeSuppliers}',
                   trend: '+3',
                   trendUp: true,
                   icon: '🤝',
@@ -308,7 +309,8 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
                 ),
                 KPICard(
                   label: 'On-time Delivery',
-                  value: '${(data.onTimeDeliveryRate * 100).toStringAsFixed(1)}%',
+                  value:
+                      '${(data.onTimeDeliveryRate * 100).toStringAsFixed(1)}%',
                   trend: '+1.2%',
                   trendUp: true,
                   icon: '📅',
@@ -327,7 +329,7 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
       shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       childAspectRatio: 1.4,
       children: List.generate(
         kpis.length,
@@ -341,7 +343,7 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
 
   Widget _buildKPITile(KPICard kpi) {
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
@@ -355,10 +357,10 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
             children: [
               Text(
                 kpi.icon,
-                style: TextStyle(fontSize: 20),
+                style: const TextStyle(fontSize: 20),
               ),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: kpi.trendUp
                       ? AppColors.success.withOpacity(0.1)
@@ -374,14 +376,14 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
               ),
             ],
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             kpi.label,
             style: AppTheme.labelSmall.copyWith(
               color: AppColors.textSecondary,
             ),
           ),
-          SizedBox(height: 4),
+          const SizedBox(height: 4),
           Text(
             kpi.value,
             style: AppTheme.titleMedium.copyWith(
@@ -406,12 +408,12 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
             color: AppColors.textPrimary,
           ),
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         FadeInTransition(
           delay: 200,
           child: _buildRevenueChart(data),
         ),
-        SizedBox(height: 24),
+        const SizedBox(height: 24),
         FadeInTransition(
           delay: 250,
           child: _buildCategoryChart(data),
@@ -422,7 +424,7 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
 
   Widget _buildRevenueChart(AnalyticsData data) {
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
@@ -437,7 +439,7 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
               color: AppColors.textPrimary,
             ),
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           SizedBox(
             height: 200,
             child: LineChart(
@@ -468,7 +470,7 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
 
   Widget _buildCategoryChart(AnalyticsData data) {
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
@@ -483,7 +485,7 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
               color: AppColors.textPrimary,
             ),
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           SizedBox(
             height: 200,
             child: PieChart(
@@ -508,7 +510,7 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
               ),
             ),
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Wrap(
             spacing: 12,
             runSpacing: 8,
@@ -527,7 +529,7 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
                         shape: BoxShape.circle,
                       ),
                     ),
-                    SizedBox(width: 6),
+                    const SizedBox(width: 6),
                     Text(
                       item.label,
                       style: AppTheme.bodySmall.copyWith(
@@ -554,7 +556,7 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
             color: AppColors.textPrimary,
           ),
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         ...List.generate(
           data.recommendations.length,
           (index) => FadeInTransition(
@@ -568,27 +570,29 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
 
   Widget _buildRecommendationCard(Recommendation rec) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Container(
-        padding: EdgeInsets.all(12),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: rec.type == 'positive'
               ? AppColors.success.withOpacity(0.1)
               : AppColors.warning.withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: rec.type == 'positive' ? AppColors.success : AppColors.warning,
+            color:
+                rec.type == 'positive' ? AppColors.success : AppColors.warning,
           ),
         ),
         child: Row(
           children: [
             Icon(
               rec.type == 'positive' ? Icons.lightbulb : Icons.warning_amber,
-              color:
-                  rec.type == 'positive' ? AppColors.success : AppColors.warning,
+              color: rec.type == 'positive'
+                  ? AppColors.success
+                  : AppColors.warning,
               size: 20,
             ),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 rec.text,
@@ -597,7 +601,8 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
                 ),
               ),
             ),
-            Icon(Icons.arrow_right, color: AppColors.textSecondary, size: 16),
+            const Icon(Icons.arrow_right,
+                color: AppColors.textSecondary, size: 16),
           ],
         ),
       ),
@@ -614,7 +619,7 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
             color: AppColors.textPrimary,
           ),
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         ...List.generate(
           data.insights.length,
           (index) => FadeInTransition(
@@ -628,9 +633,9 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
 
   Widget _buildInsightCard(Insight insight) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Container(
-        padding: EdgeInsets.all(12),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(12),
@@ -639,8 +644,8 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(insight.icon, style: TextStyle(fontSize: 20)),
-            SizedBox(width: 12),
+            Text(insight.icon, style: const TextStyle(fontSize: 20)),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -651,7 +656,7 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
                     insight.description,
                     style: AppTheme.bodySmall.copyWith(
@@ -673,8 +678,8 @@ class _AnalyticsDashboardScreenState extends ConsumerState<AnalyticsDashboardScr
       AppColors.success,
       AppColors.warning,
       AppColors.error,
-      Color(0xFF9C27B0),
-      Color(0xFF00BCD4),
+      const Color(0xFF9C27B0),
+      const Color(0xFF00BCD4),
     ];
     return colors[index % colors.length];
   }
@@ -735,7 +740,7 @@ class AnalyticsData {
   });
 
   // Getters for compatibility with different roles
-  int get activeSupplie rs => activeSuppliersCount;
+  int get activeSuppliers => activeSuppliersCount;
 }
 
 class CategoryData {

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../config/theme.dart';
 import '../../widgets/modern_components.dart';
-import '../../widgets/animated_button.dart';
-import '../../widgets/modern_card.dart';
+import '../../../data/services/api_client.dart';
 
 class QualityInspectionScreen extends StatefulWidget {
   const QualityInspectionScreen({super.key});
@@ -49,7 +48,16 @@ class _QualityInspectionScreenState extends State<QualityInspectionScreen>
     });
 
     try {
-      await Future.delayed(const Duration(seconds: 1));
+      if (_inspectionItems.any((item) => item['status'] == 'pending')) {
+        throw Exception('Complete every inspection item before submitting');
+      }
+      await ApiClient().post('/quality_inspections', body: {
+        'items': _inspectionItems,
+        'status': _inspectionItems.any((item) => item['status'] == 'fail')
+            ? 'failed'
+            : 'passed',
+        'inspectedAt': DateTime.now().toUtc().toIso8601String(),
+      });
       if (!mounted) return;
 
       showDialog(
@@ -77,9 +85,11 @@ class _QualityInspectionScreenState extends State<QualityInspectionScreen>
         ),
       );
     } catch (e) {
-      setState(() => _errorMessage = 'Failed to submit inspection');
+      if (mounted) {
+        setState(() => _errorMessage = 'Failed to submit inspection: $e');
+      }
     } finally {
-      setState(() => _isSubmitting = false);
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 

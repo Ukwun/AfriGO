@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../config/theme.dart';
 import '../../widgets/modern_components.dart';
+import '../../../data/services/api_client.dart';
 
 class CreateRFQScreen extends StatefulWidget {
   const CreateRFQScreen({super.key});
@@ -59,7 +60,16 @@ class _CreateRFQScreenState extends State<CreateRFQScreen>
     });
 
     try {
-      await Future.delayed(const Duration(seconds: 1));
+      await ApiClient().post('/rfqs', body: {
+        'title': _productController.text.trim(),
+        'commodity': _productController.text.trim(),
+        'quantity': _quantityController.text.trim(),
+        'quality': _selectedQuality,
+        'description': _descriptionController.text.trim(),
+        'budget': double.tryParse(_budgetController.text.trim()),
+        'deliveryDate': _deliveryDate!.toUtc().toIso8601String(),
+        'status': 'open',
+      });
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -70,9 +80,9 @@ class _CreateRFQScreenState extends State<CreateRFQScreen>
       );
       Navigator.pop(context);
     } catch (e) {
-      setState(() => _errorMessage = 'Failed to submit RFQ');
+      if (mounted) setState(() => _errorMessage = 'Failed to submit RFQ: $e');
     } finally {
-      setState(() => _isSubmitting = false);
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
@@ -138,10 +148,10 @@ class _CreateRFQScreenState extends State<CreateRFQScreen>
                       ),
                     ),
                     const SizedBox(width: AfrigoSpacing.md),
-                    SizedBox(
+                    const SizedBox(
                       width: 80,
                       child: TextField(
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Unit',
                           hintText: 'kg',
                         ),

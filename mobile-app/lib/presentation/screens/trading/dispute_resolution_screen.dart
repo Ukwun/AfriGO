@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 class DisputeResolutionScreen extends StatelessWidget {
   final String tradeId;
-  const DisputeResolutionScreen({Key? key, required this.tradeId})
-      : super(key: key);
+  const DisputeResolutionScreen({super.key, required this.tradeId});
 
   @override
   Widget build(BuildContext context) {

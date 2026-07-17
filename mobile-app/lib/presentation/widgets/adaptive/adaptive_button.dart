@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../config/role_navigation_config.dart';
 import '../../providers/role_provider.dart';
 
 /// Adaptive button that adjusts size based on user role

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/lots_provider.dart';
-import '../../models/lots_model.dart';
+import '../../../models/lots_model.dart';
 
 class MarketplaceSearchScreen extends ConsumerStatefulWidget {
-  const MarketplaceSearchScreen({Key? key}) : super(key: key);
+  const MarketplaceSearchScreen({super.key});
 
   @override
   ConsumerState<MarketplaceSearchScreen> createState() =>

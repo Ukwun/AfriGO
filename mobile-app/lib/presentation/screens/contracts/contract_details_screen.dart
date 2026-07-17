@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../models/contract_model.dart';
-import '../providers/contract_provider.dart';
+import '../../../models/contract_model.dart';
+import '../../providers/contract_provider.dart';
 
 class ContractDetailsScreen extends ConsumerWidget {
   final String contractId;
 
   const ContractDetailsScreen({
-    Key? key,
+    super.key,
     required this.contractId,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,7 +28,7 @@ class ContractDetailsScreen extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 16),
               Text('Error: $error'),
             ],
@@ -168,7 +168,7 @@ class ContractDetailsScreen extends ConsumerWidget {
                     DateFormat('MMM d, yyyy').format(contract.deliveryEndDate)),
                 _DetailRow('Terms', contract.deliveryTerms ?? 'Not specified'),
                 if (contract.phytosanitaryCertificateRequired)
-                  _DetailRow(
+                  const _DetailRow(
                     'Phytosanitary Certificate',
                     'REQUIRED',
                   ),
@@ -205,7 +205,7 @@ class ContractDetailsScreen extends ConsumerWidget {
                 title: 'Insurance & Compliance',
                 children: [
                   if (contract.insuranceRequired) ...[
-                    _DetailRow('Insurance Required', 'YES'),
+                    const _DetailRow('Insurance Required', 'YES'),
                     if (contract.insuranceProvider != null)
                       _DetailRow('Provider', contract.insuranceProvider!),
                     if (contract.insurancePolicyNumber != null)
@@ -213,7 +213,7 @@ class ContractDetailsScreen extends ConsumerWidget {
                     const SizedBox(height: 12),
                   ],
                   if (contract.phytosanitaryCertificateRequired)
-                    _DetailRow('Phytosanitary Cert', 'REQUIRED'),
+                    const _DetailRow('Phytosanitary Cert', 'REQUIRED'),
                 ],
               ),
 

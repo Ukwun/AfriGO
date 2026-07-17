@@ -94,7 +94,7 @@ class AppColors {
   static const LinearGradient eventTimelineGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFF0F5B46), Color(0xFF0F5B4622)],
+    colors: [Color(0xFF0F5B46), Color(0xff0f5b4622)],
   );
 
   // ============================================================================

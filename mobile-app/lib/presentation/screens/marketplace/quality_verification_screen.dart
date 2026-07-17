@@ -20,8 +20,8 @@ class QualityVerificationScreen extends ConsumerStatefulWidget {
   const QualityVerificationScreen({
     required this.contractId,
     required this.shipmentId,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ConsumerState<QualityVerificationScreen> createState() =>
@@ -42,7 +42,7 @@ class _QualityVerificationScreenState
     super.initState();
     _photoPageController = PageController();
     _successController = AnimationController(
-      duration: Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
   }
@@ -95,7 +95,7 @@ class _QualityVerificationScreenState
 
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Row(
             children: [
               Icon(Icons.check_circle, color: Colors.white),
@@ -156,11 +156,11 @@ class _QualityVerificationScreenState
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(
+          const CircularProgressIndicator(
             strokeWidth: 3,
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             'Analyzing delivery photos...',
             style: AppTheme.bodyMedium.copyWith(
@@ -177,15 +177,15 @@ class _QualityVerificationScreenState
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 48, color: AppColors.error),
-          SizedBox(height: 16),
+          const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+          const SizedBox(height: 16),
           Text(
             'Failed to load verification',
             style: AppTheme.headlineSmall.copyWith(
               color: AppColors.textPrimary,
             ),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () {
               ref.refresh(deliveryVerificationProvider(widget.shipmentId));
@@ -213,7 +213,7 @@ class _QualityVerificationScreenState
 
     return SingleChildScrollView(
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -222,28 +222,28 @@ class _QualityVerificationScreenState
               delay: 100,
               child: _buildPhotoCarousel(verification),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // AI Quality Analysis
             FadeInTransition(
               delay: 150,
               child: _buildAIAnalysisCard(verification),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // Lab Report Comparison
             FadeInTransition(
               delay: 200,
               child: _buildLabReportCard(verification),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // Payment Details
             FadeInTransition(
               delay: 250,
               child: _buildPaymentDetailsCard(verification),
             ),
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
 
             // Action Buttons
             ScaleInTransition(
@@ -251,7 +251,7 @@ class _QualityVerificationScreenState
               child: _buildActionButtons(verification),
             ),
 
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
           ],
         ),
       ),
@@ -268,7 +268,7 @@ class _QualityVerificationScreenState
             color: AppColors.textPrimary,
           ),
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         Container(
           height: 250,
           decoration: BoxDecoration(
@@ -305,7 +305,8 @@ class _QualityVerificationScreenState
                 bottom: 12,
                 right: 12,
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.6),
                     borderRadius: BorderRadius.circular(6),
@@ -321,9 +322,9 @@ class _QualityVerificationScreenState
             ],
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Text(
-          '${verification.photoDescriptions[_currentPhotoIndex]}',
+          verification.photoDescriptions[_currentPhotoIndex],
           style: AppTheme.bodySmall.copyWith(
             color: AppColors.textSecondary,
           ),
@@ -334,7 +335,7 @@ class _QualityVerificationScreenState
 
   Widget _buildAIAnalysisCard(DeliveryVerification verification) {
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
@@ -353,15 +354,16 @@ class _QualityVerificationScreenState
                 ),
               ),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppColors.success.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.verified, size: 14, color: AppColors.success),
-                    SizedBox(width: 4),
+                    const Icon(Icons.verified,
+                        size: 14, color: AppColors.success),
+                    const SizedBox(width: 4),
                     Text(
                       'VERIFIED',
                       style: AppTheme.labelSmall.copyWith(
@@ -374,7 +376,7 @@ class _QualityVerificationScreenState
               ),
             ],
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           _buildQualityMetric(
             'Color Grade',
             verification.aiAnalysis.colorGrade,
@@ -402,17 +404,17 @@ class _QualityVerificationScreenState
             'Within limits',
             true,
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Container(
-            padding: EdgeInsets.all(8),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: AppColors.success.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
-                Icon(Icons.info, size: 16, color: AppColors.success),
-                SizedBox(width: 8),
+                const Icon(Icons.info, size: 16, color: AppColors.success),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Product matches all lab specifications perfectly',
@@ -436,7 +438,7 @@ class _QualityVerificationScreenState
     bool passed,
   ) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -449,7 +451,7 @@ class _QualityVerificationScreenState
                   color: AppColors.textSecondary,
                 ),
               ),
-              SizedBox(height: 2),
+              const SizedBox(height: 2),
               Text(
                 note,
                 style: AppTheme.labelSmall.copyWith(
@@ -467,7 +469,7 @@ class _QualityVerificationScreenState
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Icon(
                 passed ? Icons.check_circle : Icons.cancel,
                 size: 18,
@@ -482,7 +484,7 @@ class _QualityVerificationScreenState
 
   Widget _buildLabReportCard(DeliveryVerification verification) {
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
@@ -497,7 +499,7 @@ class _QualityVerificationScreenState
               color: AppColors.textPrimary,
             ),
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -510,7 +512,7 @@ class _QualityVerificationScreenState
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     verification.labReport.moisture,
                     style: AppTheme.bodyMedium.copyWith(
@@ -519,7 +521,7 @@ class _QualityVerificationScreenState
                   ),
                 ],
               ),
-              Icon(Icons.arrow_right_alt, color: AppColors.textSecondary),
+              const Icon(Icons.arrow_right_alt, color: AppColors.textSecondary),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -529,7 +531,7 @@ class _QualityVerificationScreenState
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     verification.aiAnalysis.moisture,
                     style: AppTheme.bodyMedium.copyWith(
@@ -540,17 +542,18 @@ class _QualityVerificationScreenState
               ),
             ],
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Container(
-            padding: EdgeInsets.all(8),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: AppColors.success.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
-                Icon(Icons.check_circle, size: 16, color: AppColors.success),
-                SizedBox(width: 8),
+                const Icon(Icons.check_circle,
+                    size: 16, color: AppColors.success),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     '99.9% match - Quality verified',
@@ -570,7 +573,7 @@ class _QualityVerificationScreenState
 
   Widget _buildPaymentDetailsCard(DeliveryVerification verification) {
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
@@ -585,7 +588,7 @@ class _QualityVerificationScreenState
               color: AppColors.textPrimary,
             ),
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           _buildPaymentRow(
             'Product Value',
             '\$${verification.payment.productValue.toStringAsFixed(2)}',
@@ -603,17 +606,17 @@ class _QualityVerificationScreenState
             '\$${verification.payment.totalEscrowed.toStringAsFixed(2)}',
             true,
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Container(
-            padding: EdgeInsets.all(8),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: AppColors.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
-                Icon(Icons.info, size: 16, color: AppColors.primary),
-                SizedBox(width: 8),
+                const Icon(Icons.info, size: 16, color: AppColors.primary),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Seller will receive \$${verification.payment.productValue.toStringAsFixed(2)} within 60 seconds',
@@ -632,7 +635,7 @@ class _QualityVerificationScreenState
 
   Widget _buildPaymentRow(String label, String amount, bool isBold) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -665,7 +668,7 @@ class _QualityVerificationScreenState
           child: ElevatedButton.icon(
             onPressed: _isProcessingPayment ? null : _releasePayment,
             icon: _isProcessingPayment
-                ? SizedBox(
+                ? const SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
@@ -673,7 +676,7 @@ class _QualityVerificationScreenState
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   )
-                : Icon(Icons.check_circle),
+                : const Icon(Icons.check_circle),
             label: Text(
               _isProcessingPayment
                   ? 'Processing...'
@@ -688,7 +691,7 @@ class _QualityVerificationScreenState
             ),
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         SizedBox(
           width: double.infinity,
           height: 48,
@@ -696,11 +699,11 @@ class _QualityVerificationScreenState
             onPressed: () {
               // Dispute quality
             },
-            icon: Icon(Icons.flag),
-            label: Text('Report Quality Issue'),
+            icon: const Icon(Icons.flag),
+            label: const Text('Report Quality Issue'),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.error,
-              side: BorderSide(color: AppColors.error),
+              side: const BorderSide(color: AppColors.error),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -714,11 +717,11 @@ class _QualityVerificationScreenState
   Widget _buildSuccessView(DeliveryVerification verification) {
     return SingleChildScrollView(
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
             ScaleTransition(
               scale: Tween<double>(begin: 0, end: 1).animate(
                 CurvedAnimation(
@@ -731,14 +734,14 @@ class _QualityVerificationScreenState
                   shape: BoxShape.circle,
                   color: AppColors.success.withOpacity(0.1),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.check_circle,
                   size: 60,
                   color: AppColors.success,
                 ),
               ),
             ),
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
             Text(
               'Transaction Complete!',
               style: AppTheme.headlineSmall.copyWith(
@@ -746,7 +749,7 @@ class _QualityVerificationScreenState
               ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Text(
               'Payment has been successfully released and settled',
               style: AppTheme.bodyMedium.copyWith(
@@ -754,9 +757,9 @@ class _QualityVerificationScreenState
               ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
             Container(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(12),
@@ -787,7 +790,7 @@ class _QualityVerificationScreenState
                 ],
               ),
             ),
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
               height: 56,
@@ -795,8 +798,8 @@ class _QualityVerificationScreenState
                 onPressed: () {
                   context.go('/home');
                 },
-                icon: Icon(Icons.home),
-                label: Text('Back to Home'),
+                icon: const Icon(Icons.home),
+                label: const Text('Back to Home'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
@@ -806,7 +809,7 @@ class _QualityVerificationScreenState
                 ),
               ),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               height: 48,
@@ -814,8 +817,8 @@ class _QualityVerificationScreenState
                 onPressed: () {
                   // Leave review
                 },
-                icon: Icon(Icons.star),
-                label: Text('Rate Transaction'),
+                icon: const Icon(Icons.star),
+                label: const Text('Rate Transaction'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primary,
                   shape: RoundedRectangleBorder(
@@ -836,7 +839,7 @@ class _QualityVerificationScreenState
     Color? valueColor,
   }) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

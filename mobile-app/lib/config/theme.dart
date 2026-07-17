@@ -426,7 +426,7 @@ class AfrigoTheme {
       ),
 
       // Color Scheme - Official AfriGo Colors
-      colorScheme: ColorScheme.light(
+      colorScheme: const ColorScheme.light(
         primary: AppColors.primaryGreen,
         secondary: AppColors.secondaryGold,
         tertiary: AppColors.accentBlue,
@@ -464,7 +464,7 @@ class AfrigoTheme {
       brightness: Brightness.dark,
       primaryColor: AppColors.primaryGreenLight,
       scaffoldBackgroundColor: AfrigoColors.bgDark,
-      colorScheme: ColorScheme.dark(
+      colorScheme: const ColorScheme.dark(
         primary: AppColors.primaryGreenLight,
         secondary: AppColors.secondaryGold,
         tertiary: AppColors.accentBlue,

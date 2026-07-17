@@ -1,4 +1,7 @@
 /// Color System Utility Functions and Extensions
+library;
+
+import 'dart:math' show pow;
 import 'package:flutter/material.dart';
 import 'colors.dart';
 
@@ -151,15 +154,13 @@ class ColorPalette {
 class ContrastHelper {
   /// Calculate relative luminance of a color
   static double _relativeLuminance(Color color) {
-    final rgb = [color.red, color.green, color.blue]
-        .map((component) {
-          final c = component / 255.0;
-          if (c <= 0.03928) {
-            return c / 12.92;
-          }
-          return pow((c + 0.055) / 1.055, 2.0).toDouble();
-        })
-        .toList();
+    final rgb = [color.red, color.green, color.blue].map((component) {
+      final c = component / 255.0;
+      if (c <= 0.03928) {
+        return c / 12.92;
+      }
+      return pow((c + 0.055) / 1.055, 2.0).toDouble();
+    }).toList();
 
     return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
   }
@@ -188,14 +189,16 @@ class ContrastHelper {
   /// Verify all official color combinations
   static Map<String, bool> verifyAllContrasts() {
     return {
-      'White on Primary Green': meetsAAStandard(Colors.white, AppColors.primaryGreen),
-      'White on Secondary Gold': meetsAAStandard(Colors.white, AppColors.secondaryGold),
-      'White on Accent Blue': meetsAAStandard(Colors.white, AppColors.accentBlue),
-      'Dark Text on Background': meetsAAAStandard(AppColors.textDark, AppColors.backgroundLight),
-      'Secondary Text on Background': meetsAAStandard(AppColors.textSecondary, AppColors.backgroundLight),
+      'White on Primary Green':
+          meetsAAStandard(Colors.white, AppColors.primaryGreen),
+      'White on Secondary Gold':
+          meetsAAStandard(Colors.white, AppColors.secondaryGold),
+      'White on Accent Blue':
+          meetsAAStandard(Colors.white, AppColors.accentBlue),
+      'Dark Text on Background':
+          meetsAAAStandard(AppColors.textDark, AppColors.backgroundLight),
+      'Secondary Text on Background':
+          meetsAAStandard(AppColors.textSecondary, AppColors.backgroundLight),
     };
   }
 }
-
-/// Import dart:math for pow function
-import 'dart:math' show pow;

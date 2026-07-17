@@ -1,11 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../models/lots_model.dart';
-import '../providers/lots_provider.dart';
+import '../../../models/lots_model.dart';
+import '../../providers/lots_provider.dart';
 
 class CreateLotScreen extends ConsumerStatefulWidget {
-  const CreateLotScreen({Key? key}) : super(key: key);
+  const CreateLotScreen({super.key});
 
   @override
   ConsumerState<CreateLotScreen> createState() => _CreateLotScreenState();
@@ -93,14 +94,22 @@ class _CreateLotScreenState extends ConsumerState<CreateLotScreen> {
         description: descriptionController.text,
         images: selectedImages,
         originCountry: originCountryController.text,
-        originRegion: originRegionController.text.isNotEmpty ? originRegionController.text : null,
-        originLocation: originLocationController.text.isNotEmpty ? originLocationController.text : null,
+        originRegion: originRegionController.text.isNotEmpty
+            ? originRegionController.text
+            : null,
+        originLocation: originLocationController.text.isNotEmpty
+            ? originLocationController.text
+            : null,
         pickupLocation: pickupLocationController.text,
         latitude: 0.0, // Get from GPS
         longitude: 0.0, // Get from GPS
         gradeLevel: gradeLevelController.text,
-        harvestDate: harvestDateController.text.isNotEmpty ? DateTime.parse(harvestDateController.text) : null,
-        moistureContent: moistureContentController.text.isNotEmpty ? double.parse(moistureContentController.text) : null,
+        harvestDate: harvestDateController.text.isNotEmpty
+            ? DateTime.parse(harvestDateController.text)
+            : null,
+        moistureContent: moistureContentController.text.isNotEmpty
+            ? double.parse(moistureContentController.text)
+            : null,
         afflatoxinLevel: null,
         foreignMatterPercentage: null,
         certifications: null,
@@ -113,12 +122,15 @@ class _CreateLotScreenState extends ConsumerState<CreateLotScreen> {
       try {
         final service = ref.read(lotsServiceProvider);
         final createdLot = await service.createLot(request);
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Lot created successfully! Now publish it to marketplace.')),
+          const SnackBar(
+              content: Text(
+                  'Lot created successfully! Now publish it to marketplace.')),
         );
 
-        Navigator.of(context).pushReplacementNamed('/lot-detail', arguments: createdLot.id);
+        Navigator.of(context)
+            .pushReplacementNamed('/lot-detail', arguments: createdLot.id);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
@@ -160,17 +172,22 @@ class _CreateLotScreenState extends ConsumerState<CreateLotScreen> {
                     label: Text('Product Name'),
                     hintText: 'e.g., Cocoa Beans',
                   ),
-                  validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+                  validator: (value) =>
+                      value?.isEmpty ?? true ? 'Required' : null,
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: categoryController.text.isEmpty ? null : categoryController.text,
+                  initialValue: categoryController.text.isEmpty
+                      ? null
+                      : categoryController.text,
                   decoration: const InputDecoration(label: Text('Category')),
                   items: ['Cocoa', 'Coffee', 'Cashew', 'Grains', 'Vegetables']
-                      .map((cat) => DropdownMenuItem(value: cat, child: Text(cat)))
+                      .map((cat) =>
+                          DropdownMenuItem(value: cat, child: Text(cat)))
                       .toList(),
                   onChanged: (value) => categoryController.text = value ?? '',
-                  validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+                  validator: (value) =>
+                      value?.isEmpty ?? true ? 'Required' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -180,7 +197,9 @@ class _CreateLotScreenState extends ConsumerState<CreateLotScreen> {
                     hintText: 'Describe your product...',
                   ),
                   maxLines: 5,
-                  validator: (value) => value?.length ?? 0 < 10 ? '10+ characters required' : null,
+                  validator: (value) => value?.length ?? 0 < 10
+                      ? '10+ characters required'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton.icon(
@@ -213,20 +232,24 @@ class _CreateLotScreenState extends ConsumerState<CreateLotScreen> {
                   controller: quantityController,
                   decoration: const InputDecoration(label: Text('Quantity')),
                   keyboardType: TextInputType.number,
-                  validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+                  validator: (value) =>
+                      value?.isEmpty ?? true ? 'Required' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: quantityUnitController,
                   decoration: const InputDecoration(label: Text('Unit')),
-                  validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+                  validator: (value) =>
+                      value?.isEmpty ?? true ? 'Required' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: pricePerUnitController,
-                  decoration: const InputDecoration(label: Text('Price per Unit')),
+                  decoration:
+                      const InputDecoration(label: Text('Price per Unit')),
                   keyboardType: TextInputType.number,
-                  validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+                  validator: (value) =>
+                      value?.isEmpty ?? true ? 'Required' : null,
                 ),
               ],
             ),
@@ -239,28 +262,35 @@ class _CreateLotScreenState extends ConsumerState<CreateLotScreen> {
               children: [
                 TextFormField(
                   controller: originCountryController,
-                  decoration: const InputDecoration(label: Text('Origin Country')),
-                  validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+                  decoration:
+                      const InputDecoration(label: Text('Origin Country')),
+                  validator: (value) =>
+                      value?.isEmpty ?? true ? 'Required' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: originRegionController,
-                  decoration: const InputDecoration(label: Text('Region (Optional)')),
+                  decoration:
+                      const InputDecoration(label: Text('Region (Optional)')),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: pickupLocationController,
-                  decoration: const InputDecoration(label: Text('Pickup Location')),
-                  validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+                  decoration:
+                      const InputDecoration(label: Text('Pickup Location')),
+                  validator: (value) =>
+                      value?.isEmpty ?? true ? 'Required' : null,
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: gradeLevelController.text,
+                  initialValue: gradeLevelController.text,
                   decoration: const InputDecoration(label: Text('Grade Level')),
                   items: ['A', 'B', 'C']
-                      .map((grade) => DropdownMenuItem(value: grade, child: Text('Grade $grade')))
+                      .map((grade) => DropdownMenuItem(
+                          value: grade, child: Text('Grade $grade')))
                       .toList(),
-                  onChanged: (value) => gradeLevelController.text = value ?? 'B',
+                  onChanged: (value) =>
+                      gradeLevelController.text = value ?? 'B',
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -286,5 +316,3 @@ class _CreateLotScreenState extends ConsumerState<CreateLotScreen> {
     );
   }
 }
-
-import 'dart:io';

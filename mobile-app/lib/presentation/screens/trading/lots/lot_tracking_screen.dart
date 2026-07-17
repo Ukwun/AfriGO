@@ -21,9 +21,9 @@ class LotTrackingScreen extends ConsumerStatefulWidget {
   final String lotId;
 
   const LotTrackingScreen({
-    Key? key,
+    super.key,
     required this.lotId,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<LotTrackingScreen> createState() => _LotTrackingScreenState();
@@ -283,11 +283,11 @@ class _LotTrackingScreenState extends ConsumerState<LotTrackingScreen> {
           const SizedBox(height: 12),
           _buildDetailRow(
             'Latitude:',
-            '${_currentLocation.latitude.toStringAsFixed(4)}',
+            _currentLocation.latitude.toStringAsFixed(4),
           ),
           _buildDetailRow(
             'Longitude:',
-            '${_currentLocation.longitude.toStringAsFixed(4)}',
+            _currentLocation.longitude.toStringAsFixed(4),
           ),
           _buildDetailRow(
             'Accuracy:',

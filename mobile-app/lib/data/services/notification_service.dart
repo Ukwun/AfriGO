@@ -1,19 +1,16 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'dart:async';
 
 /// FIREBASE CLOUD MESSAGING SERVICE
-/// Handles: Push notifications, local notifications, notification routing
-/// Features: Real-time notifications, background message handling
+/// Handles: Push notifications, background message handling
+/// Features: Real-time notifications, notification routing
 /// Status: Production-ready with Android/iOS support
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
 
   late FirebaseMessaging firebaseMessaging;
-  late FlutterLocalNotificationsPlugin localNotifications;
   final StreamController<Map<String, dynamic>> _notificationStream =
       StreamController<Map<String, dynamic>>.broadcast();
 
@@ -23,7 +20,7 @@ class NotificationService {
 
   NotificationService._internal();
 
-  /// Initialize Firebase Messaging & Local Notifications
+  /// Initialize Firebase Messaging
   Future<void> initialize() async {
     firebaseMessaging = FirebaseMessaging.instance;
 
@@ -40,27 +37,6 @@ class NotificationService {
     } else {
       print('❌ Notifications Disabled by User');
     }
-
-    // Initialize local notifications
-    const AndroidInitializationSettings androidInitSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    const DarwinInitializationSettings iosInitSettings =
-        DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
-
-    const InitializationSettings initSettings = InitializationSettings(
-      android: androidInitSettings,
-      iOS: iosInitSettings,
-    );
-
-    localNotifications = FlutterLocalNotificationsPlugin();
-    await localNotifications.initialize(
-      initSettings,
-      onDidReceiveNotificationResponse: _onNotificationTapped,
-    );
 
     // Handle foreground messages
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
@@ -91,18 +67,7 @@ class NotificationService {
   /// Handle foreground push notifications (app open)
   void _handleForegroundMessage(RemoteMessage message) {
     print('📲 Foreground Message: ${message.notification?.title}');
-
-    final notification = message.notification;
     final data = message.data;
-
-    // Show local notification
-    _showLocalNotification(
-      title: notification?.title ?? 'Notification',
-      body: notification?.body ?? '',
-      payload: data,
-    );
-
-    // Stream notification to UI
     _notificationStream.add(data);
   }
 
@@ -118,90 +83,31 @@ class NotificationService {
     _routeToNotificationScreen(message.data);
   }
 
-  /// Show local notification
-  Future<void> _showLocalNotification({
-    required String title,
-    required String body,
-    Map<String, dynamic>? payload,
-  }) async {
-    const AndroidNotificationDetails androidDetails =
-        AndroidNotificationDetails(
-      'afrigo_channel',
-      'AfriGo Notifications',
-      channelDescription: 'Real-time trading notifications',
-      importance: Importance.high,
-      priority: Priority.high,
-      sound: RawResourceAndroidNotificationSound('notification'),
-      enableLights: true,
-      enableVibration: true,
-    );
-
-    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-      sound: 'default',
-    );
-
-    const NotificationDetails details = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
-
-    await localNotifications.show(
-      DateTime.now().millisecond,
-      title,
-      body,
-      details,
-      payload: payload != null ? Uri(queryParameters: payload).query : null,
-    );
-  }
-
-  /// Notification tapped (from local notifications)
-  void _onNotificationTapped(
-    NotificationResponse response,
-  ) {
-    print('🎯 Notification Tapped: ${response.payload}');
-    if (response.payload != null) {
-      final data = Uri.splitQueryString(response.payload!);
-      _routeToNotificationScreen(data);
-    }
-  }
-
   /// Route to appropriate screen based on notification type
   void _routeToNotificationScreen(Map<String, dynamic> data) {
     final type = data['type'];
 
     switch (type) {
       case 'TRADE_OFFER':
-        // Navigate to offers screen
-        break;
       case 'COUNTER_OFFER':
-        // Navigate to counter offer
-        break;
       case 'PAYMENT_CONFIRMED':
-        // Navigate to contracts
-        break;
       case 'SHIPMENT_UPDATE':
-        // Navigate to tracking
-        break;
       case 'TEMPERATURE_ALERT':
-        // Show alert popup
-        break;
       case 'FRAUD_ALERT':
-        // Show fraud warning
+        // Navigation handled by app router
         break;
       default:
         break;
     }
   }
 
-  /// Send notification to backend
+  /// Subscribe to notification topic
   Future<void> subscribeToTopic(String topic) async {
     await firebaseMessaging.subscribeToTopic(topic);
     print('📧 Subscribed to topic: $topic');
   }
 
+  /// Unsubscribe from notification topic
   Future<void> unsubscribeFromTopic(String topic) async {
     await firebaseMessaging.unsubscribeFromTopic(topic);
     print('📧 Unsubscribed from topic: $topic');
@@ -211,6 +117,7 @@ class NotificationService {
   Stream<Map<String, dynamic>> get notificationStream =>
       _notificationStream.stream;
 
+  /// Cleanup resources
   void dispose() {
     _notificationStream.close();
   }

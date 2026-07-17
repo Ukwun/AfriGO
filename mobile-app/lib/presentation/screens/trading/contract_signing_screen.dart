@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'dart:ui' as ui;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 // import 'package:hand_signature/hand_signature.dart';  // TODO: Package installation issue
 import '../../../../data/services/contract_service.dart';
 import '../../../../data/services/trade_service.dart';
@@ -25,9 +22,9 @@ class ContractSigningScreen extends ConsumerStatefulWidget {
   final String tradeId;
 
   const ContractSigningScreen({
-    Key? key,
+    super.key,
     required this.tradeId,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<ContractSigningScreen> createState() =>
@@ -36,8 +33,8 @@ class ContractSigningScreen extends ConsumerStatefulWidget {
 
 class _ContractSigningScreenState extends ConsumerState<ContractSigningScreen> {
   // late HandSignatureControl _signatureControl;  // TODO: hand_signature package issue
-  bool _isSignatureCapturing = false;
-  bool _isSigning = false;
+  final bool _isSignatureCapturing = false;
+  final bool _isSigning = false;
   String? _signatureHash;
   DateTime? _signatureTimestamp;
 

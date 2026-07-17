@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../config/colors.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/live_market_activity_provider.dart';
+import '../../providers/notification_read_provider.dart';
+import '../../widgets/dashboard_role.dart';
 
 class NotificationCenterScreen extends ConsumerStatefulWidget {
   const NotificationCenterScreen({super.key});
@@ -15,12 +18,19 @@ class NotificationCenterScreen extends ConsumerStatefulWidget {
 
 class _NotificationCenterScreenState
     extends ConsumerState<NotificationCenterScreen> {
-  final Set<String> _readIds = <String>{};
-
   @override
   Widget build(BuildContext context) {
+    final currentUser = ref.watch(currentUserProvider);
+    final role = dashboardRoleFromRaw(
+      (currentUser?.roles.isNotEmpty ?? false)
+          ? currentUser!.roles.first
+          : null,
+    );
     final live = ref.watch(liveMarketActivityProvider);
     final events = live.events;
+    final readState = ref.watch(notificationReadProvider);
+    final readIds = readState.readIdsFor(role);
+    final notifier = ref.read(notificationReadProvider.notifier);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
@@ -36,11 +46,7 @@ class _NotificationCenterScreenState
           TextButton(
             onPressed: events.isEmpty
                 ? null
-                : () {
-                    setState(() {
-                      _readIds.addAll(events.map((e) => e.id));
-                    });
-                  },
+                : () => notifier.markAllRead(role, events),
             child: const Text('Mark all read'),
           ),
         ],
@@ -56,12 +62,12 @@ class _NotificationCenterScreenState
                 itemCount: events.length,
                 itemBuilder: (context, index) {
                   final event = events[index];
-                  final isRead = _readIds.contains(event.id);
+                  final isRead = readIds.contains(event.id);
                   return Dismissible(
                     key: ValueKey(event.id),
                     direction: DismissDirection.endToStart,
                     onDismissed: (_) {
-                      setState(() => _readIds.add(event.id));
+                      notifier.markRead(role, event.id);
                     },
                     background: Container(
                       alignment: Alignment.centerRight,
@@ -87,7 +93,7 @@ class _NotificationCenterScreenState
                         timestamp: event.timestamp,
                         isRead: isRead,
                         onTap: () {
-                          setState(() => _readIds.add(event.id));
+                          notifier.markRead(role, event.id);
                           if (event.type == LiveEventType.rfqPosted) {
                             context.push('/rfqs');
                             return;
@@ -210,10 +216,10 @@ class _EmptyNotifications extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
+        children: [
           Icon(Icons.notifications_none,
               size: 46, color: AppColors.textSecondary),
           SizedBox(height: 10),

@@ -23,10 +23,10 @@ dependencies:
   dio: ^5.3.0
   
   # Firebase
-  firebase_core: ^2.24.0
-  firebase_auth: ^4.16.0
-  firebase_database: ^10.4.0
-  firebase_messaging: ^14.6.0
+  firebase_core: ^3.15.2
+  firebase_auth: ^5.7.0
+  firebase_database: ^11.3.10
+  firebase_messaging: ^15.2.10
   
   # Social Authentication
   google_sign_in: ^6.1.0
@@ -45,6 +45,9 @@ dependencies:
   intl: ^0.18.0
   uuid: ^4.0.0
   logger: ^2.0.0
+  json_annotation: ^4.9.0
+  freezed_annotation: ^2.4.4
+  crypto: ^3.0.6
   
   # UI helpers
   shimmer: ^3.0.0
@@ -54,8 +57,14 @@ dependencies:
   
   # Lot Management & Photo Upload
   image_picker: ^1.0.0
+  firebase_storage: ^12.4.10
+  cloud_firestore: ^5.6.12
+  url_launcher: ^6.3.2
   qr_flutter: ^4.1.0
   google_maps_flutter: ^2.5.0
+  fl_chart: ^0.55.0
+  carousel_slider: ^5.1.1
+  socket_io_client: ^3.1.2
   
   # Contract Signing
   hand_signature: ^3.1.0+2
@@ -63,6 +72,10 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
+  mockito: ^5.4.6
+  freezed: ^2.5.8
   flutter_lints: ^3.0.0
   build_runner: ^2.4.0
   riverpod_generator: ^2.3.0

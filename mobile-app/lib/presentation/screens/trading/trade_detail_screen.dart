@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class TradeDetailScreen extends StatelessWidget {
   final String tradeId;
-  const TradeDetailScreen({Key? key, required this.tradeId}) : super(key: key);
+  const TradeDetailScreen({super.key, required this.tradeId});
 
   @override
   Widget build(BuildContext context) {

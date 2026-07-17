@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 class OrderTrackingScreen extends StatelessWidget {
   final String tradeId;
-  const OrderTrackingScreen({Key? key, required this.tradeId})
-      : super(key: key);
+  const OrderTrackingScreen({super.key, required this.tradeId});
 
   @override
   Widget build(BuildContext context) {

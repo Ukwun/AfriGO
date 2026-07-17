@@ -5,7 +5,7 @@ import '../../models/quality_model.dart';
 import '../providers/quality_provider.dart';
 
 class QualityStatsScreen extends ConsumerWidget {
-  const QualityStatsScreen({Key? key}) : super(key: key);
+  const QualityStatsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

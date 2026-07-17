@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/lots_model.dart';
-import '../providers/lots_provider.dart';
+import '../../../models/lots_model.dart';
+import '../../providers/lots_provider.dart';
 
 class LotsListScreen extends ConsumerStatefulWidget {
-  const LotsListScreen({Key? key}) : super(key: key);
+  const LotsListScreen({super.key});
 
   @override
   ConsumerState<LotsListScreen> createState() => _LotsListScreenState();
@@ -151,7 +151,7 @@ class _LotsListScreenState extends ConsumerState<LotsListScreen> {
 class LotCard extends StatelessWidget {
   final LotModel lot;
 
-  const LotCard({Key? key, required this.lot}) : super(key: key);
+  const LotCard({super.key, required this.lot});
 
   @override
   Widget build(BuildContext context) {

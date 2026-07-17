@@ -12,10 +12,10 @@ class ContractDisplayWidget extends ConsumerWidget {
   final String contractContent;
 
   const ContractDisplayWidget({
-    Key? key,
+    super.key,
     required this.tradeId,
     required this.contractContent,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -156,10 +156,10 @@ class SignatureVerificationWidget extends ConsumerWidget {
   final DateTime timestamp;
 
   const SignatureVerificationWidget({
-    Key? key,
+    super.key,
     required this.signatureHash,
     required this.timestamp,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -400,10 +400,10 @@ class SignaturePreviewWidget extends StatelessWidget {
   final bool isCapturing;
 
   const SignaturePreviewWidget({
-    Key? key,
+    super.key,
     this.signatureImage,
     this.isCapturing = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

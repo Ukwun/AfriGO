@@ -1,151 +1,144 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
-import { FirebaseService } from '../firebase/firebase.service';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from "@nestjs/common";
+import { FirebaseService } from "../firebase/firebase.service";
+
+export type CanonicalRole = "supplier" | "exporter" | "buyer";
 
 @Injectable()
 export class AuthService {
-  private jwtSecret = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+  constructor(private readonly firebase: FirebaseService) {}
 
-  constructor(private firebaseService: FirebaseService) {}
-
-  private generateId(): string {
-    return `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  normalizeRole(role?: string): CanonicalRole {
+    switch ((role || "").trim().toLowerCase()) {
+      case "seller":
+      case "supplier":
+      case "farmer":
+        return "supplier";
+      case "buyer":
+      case "wholesale_buyer":
+      case "wholesale buyer":
+        return "buyer";
+      case "exporter":
+      case "member":
+        return "exporter";
+      default:
+        return "buyer";
+    }
   }
 
-  private normalizeEmail(email: string): string {
-    return email.trim().toLowerCase();
-  }
-
-  private normalizeRole(role?: string): string {
-    const value = (role || 'buyer').trim().toLowerCase();
-    if (value === 'supplier') return 'supplier';
-    if (value === 'seller') return 'seller';
-    if (value === 'exporter') return 'exporter';
-    return 'buyer';
-  }
-
-  async register(
-    email: string,
-    password: string,
-    firstName: string,
-    lastName: string,
-    role?: string,
-  ): Promise<any> {
-    const normalizedEmail = this.normalizeEmail(email);
-    const normalizedRole = this.normalizeRole(role);
-
-    // Check if user exists in Firestore
-    const existingUserSnapshot = await this.firebaseService
-      .users()
-      .where('email', '==', normalizedEmail)
-      .limit(1)
-      .get();
-
-    if (!existingUserSnapshot.empty) {
-      throw new BadRequestException('User with this email already exists');
+  async createSession(idToken: string, profile: Record<string, unknown> = {}) {
+    let identity;
+    try {
+      identity = await this.firebase.verifyIdToken(idToken);
+    } catch (_) {
+      throw new UnauthorizedException("Invalid or expired Firebase session");
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user object
-    const newUser = {
-      id: this.generateId(),
-      email: normalizedEmail,
-      passwordHash: hashedPassword,
-      firstName,
-      lastName,
-      fullName: `${firstName} ${lastName}`,
-      emailVerified: false,
-      phoneVerified: false,
-      kycStatus: 'pending',
-      accountStatus: 'active',
-      trustScore: 0,
-      completedTrades: 0,
-      roles: [normalizedRole],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    // Save to Firestore
-    await this.firebaseService.users().doc(newUser.id).set(newUser);
-
-    // Generate JWT token
-    const token = jwt.sign(
-      { sub: newUser.id, id: newUser.id, email: newUser.email },
-      this.jwtSecret,
-      { expiresIn: '24h' }
+    const ref = this.firebase.users().doc(identity.uid);
+    const existing = await ref.get();
+    const current = existing.data() || {};
+    const requestedRole = this.normalizeRole(
+      String(profile.role || current.role || ""),
     );
-
-    return {
-      success: true,
-      message: 'User registered successfully',
-      user: {
-        id: newUser.id,
-        email: newUser.email,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
-        fullName: newUser.fullName,
-        roles: newUser.roles,
-        kycStatus: newUser.kycStatus,
-        emailVerified: newUser.emailVerified,
-      },
-      token,
+    const role = existing.exists
+      ? this.normalizeRole(String(current.role))
+      : requestedRole;
+    const displayParts = (identity.name || "")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+    const user = {
+      id: identity.uid,
+      email: identity.email || "",
+      firstName: String(
+        profile.firstName || current.firstName || displayParts[0] || "",
+      ),
+      lastName: String(
+        profile.lastName ||
+          current.lastName ||
+          displayParts.slice(1).join(" ") ||
+          "",
+      ),
+      fullName: String(
+        profile.fullName || current.fullName || identity.name || "",
+      ).trim(),
+      role,
+      roles: [role],
+      phone: String(
+        profile.phone || current.phone || identity.phone_number || "",
+      ),
+      organization: String(profile.organization || current.organization || ""),
+      countryCode: String(
+        profile.countryCode || current.countryCode || "",
+      ).toUpperCase(),
+      emailVerified: Boolean(identity.email_verified),
+      phoneVerified: Boolean(identity.phone_number),
+      kycStatus: current.kycStatus || "pending",
+      accountStatus: current.accountStatus || "active",
+      trustScore: Number(current.trustScore || 0),
+      completedTrades: Number(current.completedTrades || 0),
+      updatedAt: this.firebase.serverTimestamp(),
+      ...(existing.exists
+        ? {}
+        : { createdAt: this.firebase.serverTimestamp() }),
     };
+    await ref.set(user, { merge: true });
+    await this.firebase.collection("audit_events").add({
+      actorId: identity.uid,
+      action: existing.exists ? "session.created" : "user.created",
+      entityType: "user",
+      entityId: identity.uid,
+      createdAt: this.firebase.serverTimestamp(),
+    });
+    return { success: true, user: this.publicUser(user), token: idToken };
   }
 
-  async login(email: string, password: string): Promise<any> {
-    const normalizedEmail = this.normalizeEmail(email);
+  async getUserById(userId: string) {
+    const snapshot = await this.firebase.users().doc(userId).get();
+    if (!snapshot.exists)
+      throw new BadRequestException("User profile not found");
+    return this.publicUser({ id: snapshot.id, ...snapshot.data() });
+  }
 
-    // Find user in Firestore
-    const userSnapshot = await this.firebaseService
+  async updateProfile(userId: string, updates: Record<string, unknown>) {
+    const allowed: Record<string, string> = {};
+    for (const key of ["phone", "organization", "countryCode"]) {
+      if (updates[key] != null)
+        allowed[key] = String(updates[key]).trim().slice(0, 160);
+    }
+    if (allowed.countryCode)
+      allowed.countryCode = allowed.countryCode.toUpperCase();
+    await this.firebase
       .users()
-      .where('email', '==', normalizedEmail)
-      .limit(1)
-      .get();
+      .doc(userId)
+      .set(
+        { ...allowed, updatedAt: this.firebase.serverTimestamp() },
+        { merge: true },
+      );
+    await this.firebase.collection("audit_events").add({
+      actorId: userId,
+      action: "user.profile_updated",
+      entityType: "user",
+      entityId: userId,
+      changedFields: Object.keys(allowed),
+      createdAt: this.firebase.serverTimestamp(),
+    });
+    return this.getUserById(userId);
+  }
 
-    if (userSnapshot.empty) {
-      throw new BadRequestException('Invalid email or password');
+  async verifyToken(token: string) {
+    try {
+      return await this.firebase.verifyIdToken(token);
+    } catch (_) {
+      throw new UnauthorizedException("Invalid or expired session");
     }
+  }
 
-    const userDoc = userSnapshot.docs[0];
-    const user = userDoc.data() as any;
-
-    if (!user.passwordHash) {
-      throw new BadRequestException('This account cannot use password login. Please sign in with its original provider.');
-    }
-
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-    if (!isPasswordValid) {
-      throw new BadRequestException('Invalid email or password');
-    }
-
-    // Generate JWT token
-    const token = jwt.sign(
-      { sub: user.id, id: user.id, email: user.email },
-      this.jwtSecret,
-      { expiresIn: '24h' }
-    );
-
-    return {
-      success: true,
-      message: 'Login successful',
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        fullName: user.fullName ?? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim(),
-        roles: user.roles ?? ['buyer'],
-        kycStatus: user.kycStatus ?? 'pending',
-        emailVerified: !!user.emailVerified,
-        phoneVerified: !!user.phoneVerified,
-        trustScore: user.trustScore ?? 0,
-        completedTrades: user.completedTrades ?? 0,
-      },
-      token,
-    };
+  publicUser(user: any) {
+    const { passwordHash: _passwordHash, ...result } = user;
+    return result;
   }
 }

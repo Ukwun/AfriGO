@@ -9,9 +9,9 @@ class QualityInspectionScreen extends ConsumerStatefulWidget {
   final String lotId;
 
   const QualityInspectionScreen({
-    Key? key,
+    super.key,
     required this.lotId,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<QualityInspectionScreen> createState() =>

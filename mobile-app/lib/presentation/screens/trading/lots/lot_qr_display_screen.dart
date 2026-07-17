@@ -20,9 +20,9 @@ class LotQRDisplayScreen extends ConsumerStatefulWidget {
   final String lotId;
 
   const LotQRDisplayScreen({
-    Key? key,
+    super.key,
     required this.lotId,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<LotQRDisplayScreen> createState() => _LotQRDisplayScreenState();
@@ -122,7 +122,7 @@ class _LotQRDisplayScreenState extends ConsumerState<LotQRDisplayScreen> {
                 children: [
                   Icon(Icons.error, size: 48, color: Colors.red.shade700),
                   const SizedBox(height: 16),
-                  Text('Error loading lot details'),
+                  const Text('Error loading lot details'),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => setState(() {
@@ -251,11 +251,11 @@ class _LotQRDisplayScreenState extends ConsumerState<LotQRDisplayScreen> {
               version: QrVersions.auto,
               size: 280,
               backgroundColor: Colors.white,
-              eyeStyle: QrEyeStyle(
+              eyeStyle: const QrEyeStyle(
                 eyeShape: QrEyeShape.square,
                 color: Colors.black,
               ),
-              dataModuleStyle: QrDataModuleStyle(
+              dataModuleStyle: const QrDataModuleStyle(
                 dataModuleShape: QrDataModuleShape.square,
                 color: Colors.black,
               ),

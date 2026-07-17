@@ -3,7 +3,7 @@ import 'package:html/parser.dart' show parse;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../models/contract_model.dart';
-import '../auth/auth_provider.dart';
+import 'auth_provider.dart';
 
 final contractServiceProvider = Provider((ref) {
   final authToken = ref.watch(authTokenProvider);

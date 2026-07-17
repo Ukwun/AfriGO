@@ -10,10 +10,10 @@ class EscrowStatusScreen extends ConsumerStatefulWidget {
   final String paymentId;
 
   const EscrowStatusScreen({
-    Key? key,
+    super.key,
     required this.escrowId,
     required this.paymentId,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<EscrowStatusScreen> createState() => _EscrowStatusScreenState();
@@ -43,7 +43,7 @@ class _EscrowStatusScreenState extends ConsumerState<EscrowStatusScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 48, color: Colors.red),
+              const Icon(Icons.error_outline, size: 48, color: Colors.red),
               const SizedBox(height: 16),
               Text('Error: $error'),
               const SizedBox(height: 16),
@@ -145,7 +145,7 @@ class _EscrowStatusScreenState extends ConsumerState<EscrowStatusScreen> {
                           const SizedBox(height: 12),
                       ],
                     );
-                  }).toList(),
+                  }),
 
                   const SizedBox(height: 24),
 

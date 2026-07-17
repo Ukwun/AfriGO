@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../config/theme.dart';
 import '../../widgets/modern_components.dart';
+import '../../../data/services/api_client.dart';
 
 class CreateLotScreen extends StatefulWidget {
   const CreateLotScreen({super.key});
@@ -69,8 +70,16 @@ class _CreateLotScreenState extends State<CreateLotScreen>
     });
 
     try {
-      await Future.delayed(const Duration(seconds: 1));
-      // API call would go here
+      await ApiClient().post('/lots', body: {
+        'title': _productNameController.text.trim(),
+        'name': _productNameController.text.trim(),
+        'description': _descriptionController.text.trim(),
+        'category': _selectedCategory,
+        'quantity': _quantityController.text.trim(),
+        'price': double.parse(_priceController.text.trim()),
+        'location': _locationController.text.trim(),
+        'status': 'active',
+      });
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -80,9 +89,9 @@ class _CreateLotScreenState extends State<CreateLotScreen>
       );
       Navigator.pop(context);
     } catch (e) {
-      setState(() => _errorMessage = 'Failed to create lot');
+      if (mounted) setState(() => _errorMessage = 'Failed to create lot: $e');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -207,16 +216,16 @@ class _CreateLotScreenState extends State<CreateLotScreen>
                           decoration: const InputDecoration(
                             labelText: 'Quantity*',
                             hintText: '1000',
-                            prefixIcon: Icon(Icons.weight_outlined),
+                            prefixIcon: Icon(Icons.scale_outlined),
                           ),
                           keyboardType: TextInputType.number,
                         ),
                       ),
                       const SizedBox(width: AfrigoSpacing.md),
-                      SizedBox(
+                      const SizedBox(
                         width: 100,
                         child: TextField(
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'Unit',
                             hintText: 'kg',
                           ),

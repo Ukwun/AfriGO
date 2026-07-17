@@ -1,22 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../models/quote_model.dart';
-import '../services/api_service.dart';
+import '../../../models/quote_model.dart';
+import '../../../services/api_service.dart';
 
 final receivedQuotesProvider = FutureProvider.autoDispose<List<QuoteModel>>(
   (ref) async {
     final apiService = ref.watch(apiServiceProvider);
-    final response = await apiService.getReceivedQuotes({});
-    return response.quotes;
+    return apiService.getReceivedQuotes({});
   },
 );
 
 final sentQuotesProvider = FutureProvider.autoDispose<List<QuoteModel>>(
   (ref) async {
     final apiService = ref.watch(apiServiceProvider);
-    final response = await apiService.getSentQuotes({});
-    return response.quotes;
+    return apiService.getSentQuotes({});
   },
 );
 
@@ -80,7 +78,7 @@ class QuotesScreen extends ConsumerWidget {
 
         return RefreshIndicator(
           onRefresh: () async {
-            ref.refresh(receivedQuotesProvider);
+            final _ = ref.refresh(receivedQuotesProvider);
           },
           child: ListView.builder(
             itemCount: quotes.length,
@@ -135,7 +133,7 @@ class QuotesScreen extends ConsumerWidget {
 
         return RefreshIndicator(
           onRefresh: () async {
-            ref.refresh(sentQuotesProvider);
+            final _ = ref.refresh(sentQuotesProvider);
           },
           child: ListView.builder(
             itemCount: quotes.length,
@@ -196,9 +194,10 @@ class QuoteCard extends ConsumerWidget {
                       children: [
                         Text(
                           isReceived ? 'From: ' : 'To: ',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.grey,
+                                  ),
                         ),
                         Text(
                           isReceived
@@ -218,7 +217,7 @@ class QuoteCard extends ConsumerWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.2),
+                      color: statusColor.withAlpha(51),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -249,10 +248,9 @@ class QuoteCard extends ConsumerWidget {
                       ),
                       Text(
                         '${quote.quotedQuantity.toStringAsFixed(2)} ${quote.quantityUnit}',
-                        style:
-                            Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                     ],
                   ),
@@ -306,12 +304,13 @@ class QuoteCard extends ConsumerWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.deepOrange.withOpacity(0.1),
+                    color: Colors.deepOrange.withAlpha(26),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.timer, size: 16, color: Colors.deepOrange),
+                      const Icon(Icons.timer,
+                          size: 16, color: Colors.deepOrange),
                       const SizedBox(width: 8),
                       Text(
                         'Expires in ${quote.expiresAt.difference(DateTime.now()).inHours} hours',

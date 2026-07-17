@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../providers/lots_provider.dart';
 
 class SellerLotsScreen extends ConsumerStatefulWidget {
-  const SellerLotsScreen({Key? key}) : super(key: key);
+  const SellerLotsScreen({super.key});
 
   @override
   ConsumerState<SellerLotsScreen> createState() => _SellerLotsScreenState();
@@ -271,7 +271,7 @@ class _SellerLotCard extends StatelessWidget {
                   icon: Icons.star,
                   label: reviews,
                 ),
-                _StatItem(
+                const _StatItem(
                   icon: Icons.visibility,
                   label: '${234 + (64 * (6 - (6 % 3)))} views',
                 ),
