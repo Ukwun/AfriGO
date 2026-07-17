@@ -12,7 +12,7 @@ import '../presentation/screens/home/exporter_home_screen.dart';
 import '../presentation/screens/trading/trading_screen.dart';
 import '../presentation/screens/trading/create_rfq_screen_modern.dart';
 import '../presentation/screens/trading/trade_detail_screen.dart';
-import '../presentation/screens/trading/seller_rfq_list_screen.dart';
+import '../presentation/screens/trading/open_rfq_marketplace_screen.dart';
 import '../presentation/screens/trading/submit_bid_screen.dart';
 import '../presentation/screens/trading/seller_bid_detail_screen.dart';
 import '../presentation/screens/trading/payment_screen.dart';
@@ -420,7 +420,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/trading/seller-rfqs',
         name: 'seller_rfqs',
-        builder: (context, state) => const SellerRFQListScreen(),
+        builder: (context, state) => const OpenRfqMarketplaceScreen(),
       ),
 
       /// Submit Bid - Seller submits quote for RFQ
