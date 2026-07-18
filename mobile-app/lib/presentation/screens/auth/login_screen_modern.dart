@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../config/theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../animations/micro_animations.dart';
-import '../../../config/dev_config.dart';
 
 class LoginScreenModern extends ConsumerStatefulWidget {
   const LoginScreenModern({super.key});
@@ -22,13 +21,6 @@ class _LoginScreenModernState extends ConsumerState<LoginScreenModern>
   bool _showPassword = false;
   String? _errorMessage;
   bool _isProcessing = false;
-
-  // Test credentials for quick access
-  final _testCredentials = {
-    'farmer@afrigo.com': 'Test@123',
-    'buyer@afrigo.com': 'Test@123',
-    'exporter@afrigo.com': 'Test@123',
-  };
 
   @override
   void initState() {
@@ -61,12 +53,10 @@ class _LoginScreenModernState extends ConsumerState<LoginScreenModern>
 
   String _getDashboardRoute(AuthUser user) {
     final roles = user.roles.map((r) => r.toLowerCase()).toList();
-    if (roles.contains('seller') ||
-        roles.contains('supplier') ||
-        roles.contains('farmer')) {
+    if (roles.contains('supplier')) {
       return '/dashboard/seller';
     }
-    if (roles.contains('exporter') || roles.contains('member')) {
+    if (roles.contains('exporter')) {
       return '/dashboard/exporter';
     }
     return '/dashboard/buyer';
@@ -393,68 +383,6 @@ class _LoginScreenModernState extends ConsumerState<LoginScreenModern>
                   ),
 
                   const SizedBox(height: 20),
-
-                  // Test Credentials
-                  if (DevConfig.SHOW_TEST_USERS)
-                    SlideInAnimation(
-                      delay: const Duration(milliseconds: 350),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Test Credentials:',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          ..._testCredentials.entries.map((entry) {
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: AnimatedPressButton(
-                                onPressed: () =>
-                                    _handleLogin(entry.key, entry.value),
-                                child: Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    border: Border.all(
-                                      color: const Color(0xFFE0E0E0),
-                                    ),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.account_circle,
-                                        color: AfrigoColors.primary,
-                                        size: 20,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          entry.key,
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            color: Colors.black87,
-                                          ),
-                                        ),
-                                      ),
-                                      const Icon(
-                                        Icons.arrow_forward,
-                                        color: Colors.grey,
-                                        size: 16,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          }),
-                        ],
-                      ),
-                    ),
 
                   const SizedBox(height: 40),
 

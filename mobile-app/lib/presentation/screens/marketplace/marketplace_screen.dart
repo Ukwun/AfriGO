@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -38,7 +40,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              ref.refresh(lotsProvider);
+              ref.invalidate(lotsProvider);
             },
           ),
         ],
@@ -106,7 +108,8 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                   ? const Center(child: Text('No products found'))
                   : RefreshIndicator(
                       onRefresh: () async {
-                        ref.refresh(lotsProvider);
+                        ref.invalidate(lotsProvider);
+                        await ref.read(lotsProvider.future);
                       },
                       child: ListView.builder(
                         padding: const EdgeInsets.all(12),
@@ -155,6 +158,49 @@ class _LotCardState extends State<LotCard> with SingleTickerProviderStateMixin {
     super.dispose();
   }
 
+  Future<void> _contactSupplier() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || widget.lot.sellerId.isEmpty) return;
+    if (user.uid == widget.lot.sellerId) {
+      context.push('/lots/detail/${widget.lot.id}');
+      return;
+    }
+    final ids = [user.uid, widget.lot.sellerId]..sort();
+    final conversationId = '${ids[0]}_${ids[1]}_${widget.lot.id}';
+    try {
+      final userProfile = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      final ownName =
+          (userProfile.data()?['fullName'] ?? user.displayName ?? user.email)
+              .toString();
+      await FirebaseFirestore.instance
+          .collection('conversations')
+          .doc(conversationId)
+          .set({
+        'id': conversationId,
+        'participantIds': ids,
+        'participantNames': {
+          user.uid: ownName,
+          widget.lot.sellerId: widget.lot.sellerName,
+        },
+        'lotId': widget.lot.id,
+        'lotName': widget.lot.productName,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      if (mounted) context.push('/messages/$conversationId');
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Conversation could not be opened. Please retry.'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScaleTransition(
@@ -163,7 +209,7 @@ class _LotCardState extends State<LotCard> with SingleTickerProviderStateMixin {
         onTapDown: (_) => _controller.forward(),
         onTapUp: (_) {
           _controller.reverse();
-          context.push('/lot/${widget.lot.id}');
+          context.push('/lots/detail/${widget.lot.id}');
         },
         onTapCancel: () => _controller.reverse(),
         child: Card(
@@ -278,7 +324,7 @@ class _LotCardState extends State<LotCard> with SingleTickerProviderStateMixin {
                         Expanded(
                           child: OutlinedButton.icon(
                             onPressed: () {
-                              context.push('/lot/${widget.lot.id}');
+                              context.push('/lots/detail/${widget.lot.id}');
                             },
                             icon: const Icon(Icons.info_outline, size: 16),
                             label: const Text('View Details'),
@@ -291,11 +337,9 @@ class _LotCardState extends State<LotCard> with SingleTickerProviderStateMixin {
                         const SizedBox(width: 8),
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: () {
-                              context.push('/bid/${widget.lot.id}');
-                            },
-                            icon: const Icon(Icons.sell, size: 16),
-                            label: const Text('Make Offer'),
+                            onPressed: _contactSupplier,
+                            icon: const Icon(Icons.chat_outlined, size: 16),
+                            label: const Text('Contact'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green,
                               foregroundColor: Colors.white,

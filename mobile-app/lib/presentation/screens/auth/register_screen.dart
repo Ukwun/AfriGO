@@ -40,12 +40,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   String _dashboardRouteForSelectedRole(String role) {
     switch (role.toLowerCase()) {
-      case 'seller':
       case 'supplier':
-      case 'farmer':
         return '/dashboard/seller';
       case 'exporter':
-      case 'member':
         return '/dashboard/exporter';
       default:
         return '/dashboard/buyer';
@@ -54,13 +51,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   String _dashboardRouteForAuthUser(AuthUser user) {
     final normalizedRoles = user.roles.map((r) => r.toLowerCase()).toList();
-    if (normalizedRoles.contains('seller') ||
-        normalizedRoles.contains('supplier') ||
-        normalizedRoles.contains('farmer')) {
+    if (normalizedRoles.contains('supplier')) {
       return '/dashboard/seller';
     }
-    if (normalizedRoles.contains('exporter') ||
-        normalizedRoles.contains('member')) {
+    if (normalizedRoles.contains('exporter')) {
       return '/dashboard/exporter';
     }
     return '/dashboard/buyer';
@@ -305,9 +299,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               Container(
                 padding: const EdgeInsets.all(AfrigoSpacing.md),
                 decoration: BoxDecoration(
-                  color: AfrigoColors.error.withOpacity(0.1),
+                  color: AfrigoColors.error.withValues(alpha: 0.1),
                   border: Border.all(
-                    color: AfrigoColors.error.withOpacity(0.3),
+                    color: AfrigoColors.error.withValues(alpha: 0.3),
                     width: 1,
                   ),
                   borderRadius: BorderRadius.circular(AfriBorderRadius.md),
@@ -469,9 +463,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             Container(
               padding: const EdgeInsets.all(AfrigoSpacing.md),
               decoration: BoxDecoration(
-                color: AfrigoColors.primary.withOpacity(0.05),
+                color: AfrigoColors.primary.withValues(alpha: 0.05),
                 border: Border.all(
-                  color: AfrigoColors.primary.withOpacity(0.2),
+                  color: AfrigoColors.primary.withValues(alpha: 0.2),
                   width: 1,
                 ),
                 borderRadius: BorderRadius.circular(AfriBorderRadius.md),

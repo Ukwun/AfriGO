@@ -26,6 +26,7 @@ import '../presentation/screens/trading/rfq_list_screen.dart';
 import '../presentation/screens/trading/rfq_detail_screen.dart';
 import '../presentation/screens/trading/shipment_list_screen.dart';
 import '../presentation/screens/messaging/messages_screen.dart';
+import '../presentation/screens/messaging/conversation_screen.dart';
 // New real implementation screens
 import '../presentation/screens/trading/shipment_detail_screen.dart';
 import '../presentation/screens/trading/supplier_profile_screen.dart';
@@ -53,8 +54,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       }
 
       final role = authState.user.roles.isEmpty
-          ? 'buyer'
+          ? ''
           : authState.user.roles.first.toLowerCase();
+      if (!const {'buyer', 'supplier', 'exporter'}.contains(role)) {
+        return '/login';
+      }
       final home = switch (role) {
         'supplier' => '/supplier/home',
         'exporter' => '/exporter/home',
@@ -138,8 +142,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           actionLabel: 'Create a lot',
           actionRoute: '/lots/create',
           feeds: [
-            DashboardFeed(resource: 'orders', title: 'Orders', route: '/trading'),
-            DashboardFeed(resource: 'contracts', title: 'Contracts', route: '/contracts'),
+            DashboardFeed(
+                resource: 'orders', title: 'Orders', route: '/trading'),
+            DashboardFeed(
+                resource: 'contracts', title: 'Contracts', route: '/contracts'),
           ],
         ),
       ),
@@ -153,7 +159,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           actionLabel: 'View contracts',
           actionRoute: '/contracts',
           feeds: [
-            DashboardFeed(resource: 'payments', title: 'Payments', route: '/payments'),
+            DashboardFeed(
+                resource: 'payments', title: 'Payments', route: '/payments'),
           ],
         ),
       ),
@@ -191,7 +198,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const LiveResourceScreen(
           resource: 'contracts',
           title: 'Export contracts',
-          emptyMessage: 'Contracts assigned to your export operation will appear here.',
+          emptyMessage:
+              'Contracts assigned to your export operation will appear here.',
           detailRoute: '/contracts/detail',
         ),
       ),
@@ -206,7 +214,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           actionRoute: '/exports/create',
           feeds: [
             DashboardFeed(resource: 'lots', title: 'Lots', route: '/lots'),
-            DashboardFeed(resource: 'shipments', title: 'Shipments', route: '/shipments'),
+            DashboardFeed(
+                resource: 'shipments', title: 'Shipments', route: '/shipments'),
           ],
         ),
       ),
@@ -301,7 +310,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const LiveResourceScreen(
           resource: 'payments',
           title: 'Payments',
-          emptyMessage: 'Verified payment and escrow activity will appear here.',
+          emptyMessage:
+              'Verified payment and escrow activity will appear here.',
         ),
       ),
       GoRoute(
@@ -317,7 +327,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const LiveResourceScreen(
           resource: 'contracts',
           title: 'Contracts',
-          emptyMessage: 'Contracts created from accepted offers will appear here.',
+          emptyMessage:
+              'Contracts created from accepted offers will appear here.',
           detailRoute: '/contracts/detail',
         ),
       ),
@@ -346,6 +357,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/messages',
         builder: (context, state) => const MessagesScreen(),
+      ),
+      GoRoute(
+        path: '/messages/:conversationId',
+        builder: (context, state) => ConversationScreen(
+          conversationId: state.pathParameters['conversationId']!,
+        ),
       ),
       GoRoute(
         path: '/profile',
@@ -406,7 +423,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const LiveResourceScreen(
           resource: 'lots',
           title: 'Warehouse lots',
-          emptyMessage: 'Lots assigned to your export operation will appear here.',
+          emptyMessage:
+              'Lots assigned to your export operation will appear here.',
           detailRoute: '/lots/detail',
         ),
       ),

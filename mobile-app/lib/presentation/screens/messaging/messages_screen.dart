@@ -1,158 +1,112 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../../../config/colors.dart';
-import '../../widgets/motion_system.dart';
+import 'package:go_router/go_router.dart';
 
-class MessagesScreen extends StatefulWidget {
+class MessagesScreen extends StatelessWidget {
   const MessagesScreen({super.key});
 
   @override
-  State<MessagesScreen> createState() => _MessagesScreenState();
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Messages')),
+      body: user == null
+          ? const Center(child: Text('Sign in to view conversations.'))
+          : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: FirebaseFirestore.instance
+                  .collection('conversations')
+                  .where('participantIds', arrayContains: user.uid)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return const _MessageState(
+                    icon: Icons.cloud_off_outlined,
+                    title: 'Messages could not be loaded',
+                    message: 'Check your connection and try again.',
+                  );
+                }
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final documents = snapshot.data!.docs.toList()
+                  ..sort((a, b) => _time(b.data()['updatedAt'])
+                      .compareTo(_time(a.data()['updatedAt'])));
+                if (documents.isEmpty) {
+                  return const _MessageState(
+                    icon: Icons.forum_outlined,
+                    title: 'No conversations yet',
+                    message:
+                        'Open a marketplace lot and contact its supplier to begin a real conversation.',
+                  );
+                }
+                return ListView.separated(
+                  padding: const EdgeInsets.all(12),
+                  itemCount: documents.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    final document = documents[index];
+                    final data = document.data();
+                    final names = Map<String, dynamic>.from(
+                        data['participantNames'] as Map? ?? const {});
+                    final otherName = names.entries
+                        .where((entry) => entry.key != user.uid)
+                        .map((entry) => entry.value.toString())
+                        .firstOrNull;
+                    return Card(
+                      child: ListTile(
+                        leading: const CircleAvatar(
+                          child: Icon(Icons.person_outline),
+                        ),
+                        title: Text(otherName?.trim().isNotEmpty == true
+                            ? otherName!
+                            : 'AfriGO participant'),
+                        subtitle: Text(
+                          (data['lastMessage'] ?? 'Conversation started')
+                              .toString(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.push('/messages/${document.id}'),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+    );
+  }
+
+  static int _time(dynamic value) =>
+      value is Timestamp ? value.millisecondsSinceEpoch : 0;
 }
 
-class _MessagesScreenState extends State<MessagesScreen> {
-  final _messages = [
-    _ConversationPreview(
-      name: 'Global Traders Ltd',
-      lastMessage: 'Can you deliver by May 15th?',
-      timestamp: '2 hours ago',
-      unread: 3,
-      avatar: '🏢',
-    ),
-    _ConversationPreview(
-      name: 'Premium Cocoa Co',
-      lastMessage: 'Shipment is confirmed for departure',
-      timestamp: '5 hours ago',
-      unread: 0,
-      avatar: '🌳',
-    ),
-    _ConversationPreview(
-      name: 'Logistics Partner',
-      lastMessage: 'Tracking updated - package in transit',
-      timestamp: 'Yesterday',
-      unread: 0,
-      avatar: '🚚',
-    ),
-    _ConversationPreview(
-      name: 'Payment Department',
-      lastMessage: 'Invoice INV-2026-001 processed',
-      timestamp: 'Yesterday',
-      unread: 0,
-      avatar: '💳',
-    ),
-  ];
+class _MessageState extends StatelessWidget {
+  const _MessageState({
+    required this.icon,
+    required this.title,
+    required this.message,
+  });
+
+  final IconData icon;
+  final String title;
+  final String message;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Messages'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {},
-          ),
-        ],
-      ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(8.0),
-        itemCount: _messages.length,
-        itemBuilder: (context, index) {
-          final msg = _messages[index];
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0),
-            child: SlideInTransition(
-              child: _buildConversationTile(msg),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildConversationTile(_ConversationPreview conversation) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AppColors.borderDefault),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(12),
-        leading: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: AppColors.primaryGreenLighter,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Center(
-            child: Text(
-              conversation.avatar,
-              style: const TextStyle(fontSize: 24),
-            ),
+  Widget build(BuildContext context) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 52),
+              const SizedBox(height: 14),
+              Text(title, style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 8),
+              Text(message, textAlign: TextAlign.center),
+            ],
           ),
         ),
-        title: Text(
-          conversation.name,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          conversation.lastMessage,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 12, color: Colors.grey),
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              conversation.timestamp,
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-            if (conversation.unread > 0)
-              Container(
-                margin: const EdgeInsets.only(top: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryGreen,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  conversation.unread.toString(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Opening chat with ${conversation.name}')),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _ConversationPreview {
-  final String name;
-  final String lastMessage;
-  final String timestamp;
-  final int unread;
-  final String avatar;
-
-  _ConversationPreview({
-    required this.name,
-    required this.lastMessage,
-    required this.timestamp,
-    required this.unread,
-    required this.avatar,
-  });
+      );
 }

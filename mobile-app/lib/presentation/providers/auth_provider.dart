@@ -123,7 +123,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (idToken == null) throw Exception('Could not create secure session');
     await apiClient.setToken(idToken);
     final userData = await _firebaseProfile(firebaseUser, profile: profile);
-    state = AuthAuthenticated(user: AuthUser.fromJson(userData), token: idToken);
+    state =
+        AuthAuthenticated(user: AuthUser.fromJson(userData), token: idToken);
     unawaited(_syncBackendSession(idToken, profile));
   }
 
@@ -132,12 +133,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     Map<String, dynamic>? profile,
   ) async {
     try {
-      await apiClient
-          .post('/auth/session', body: {
-            'idToken': idToken,
-            if (profile != null) 'profile': profile,
-          })
-          .timeout(const Duration(seconds: 5));
+      await apiClient.post('/auth/session', body: {
+        'idToken': idToken,
+        if (profile != null) 'profile': profile,
+      }).timeout(const Duration(seconds: 5));
     } catch (_) {
       // Firestore is the available identity source while Functions are offline.
       // Backend synchronization is retried on the next authenticated launch.
@@ -175,6 +174,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
     var snapshot = await reference.get();
     if (!snapshot.exists) {
+      if (profile == null) {
+        throw Exception(
+          'Your account setup is incomplete. Use Create account to select buyer, supplier, or exporter.',
+        );
+      }
       final names = (firebaseUser.displayName?.toString() ?? '')
           .trim()
           .split(RegExp(r'\s+'));
@@ -186,8 +190,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         'firstName': firstName,
         'lastName': lastName,
         'fullName': firebaseUser.displayName ?? '',
-        'roles': ['buyer'],
-        'role': 'buyer',
+        'roles': [_canonicalRole(profile['role']?.toString())],
+        'role': _canonicalRole(profile['role']?.toString()),
         'accountStatus': 'active',
         'kycStatus': 'pending',
         'emailVerified': firebaseUser.emailVerified == true,
@@ -200,7 +204,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
       });
       snapshot = await reference.get();
     }
-    return {'id': snapshot.id, ...snapshot.data()!};
+    final data = snapshot.data()!;
+    final storedRole = data['role']?.toString().toLowerCase();
+    if (!const {'buyer', 'supplier', 'exporter'}.contains(storedRole)) {
+      throw Exception(
+          'This account has an invalid role. Contact AfriGO support.');
+    }
+    if ((data['accountStatus'] ?? 'active').toString().toLowerCase() !=
+        'active') {
+      throw Exception('This account is not active. Contact AfriGO support.');
+    }
+    return {
+      'id': snapshot.id,
+      ...data,
+      'role': storedRole,
+      'roles': [storedRole],
+    };
   }
 
   String _canonicalRole(String? role) => switch (role?.toLowerCase()) {

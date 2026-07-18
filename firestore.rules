@@ -24,9 +24,12 @@ service cloud.firestore {
     match /conversations/{conversationId} {
       allow read: if participant(resource.data);
       allow create: if signedIn()
-        && request.auth.uid in request.resource.data.participantIds;
+        && request.auth.uid in request.resource.data.participantIds
+        && request.resource.data.participantIds.size() == 2;
       allow update: if participant(resource.data)
-        && request.resource.data.participantIds == resource.data.participantIds;
+        && request.resource.data.participantIds == resource.data.participantIds
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.lotId == resource.data.lotId;
       allow delete: if false;
 
       match /messages/{messageId} {
@@ -34,6 +37,9 @@ service cloud.firestore {
           get(/databases/$(database)/documents/conversations/$(conversationId)).data);
         allow create: if signedIn()
           && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 4000
           && participant(get(/databases/$(database)/documents/conversations/$(conversationId)).data);
         allow update, delete: if false;
       }
