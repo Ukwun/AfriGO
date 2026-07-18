@@ -59,18 +59,87 @@ class ProductionDashboard extends ConsumerWidget {
               const SizedBox(height: 6),
               Text(description, style: Theme.of(context).textTheme.bodyMedium),
               const SizedBox(height: 20),
-              FilledButton.icon(
+              _MarketplaceGateway(role: role),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
                 onPressed: () => context.push(actionRoute),
                 icon: const Icon(Icons.add_rounded),
                 label: Text(actionLabel),
-                style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(52)),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                ),
               ),
               const SizedBox(height: 28),
               ...feeds.map((feed) => _FeedSection(feed: feed)),
             ]),
           ),
         ]),
+      ),
+    );
+  }
+}
+
+class _MarketplaceGateway extends StatelessWidget {
+  const _MarketplaceGateway({required this.role});
+
+  final DashboardRole role;
+
+  @override
+  Widget build(BuildContext context) {
+    final supportingText = switch (role) {
+      DashboardRole.buyer => 'Browse live inventory and contact suppliers',
+      DashboardRole.supplier => 'See active products and current market supply',
+      DashboardRole.exporter =>
+        'Find export-ready inventory from verified participants',
+    };
+    return Material(
+      color: Theme.of(context).colorScheme.primaryContainer,
+      borderRadius: BorderRadius.circular(18),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        key: ValueKey('marketplace-gateway-${role.name}'),
+        onTap: () => context.push('/marketplace'),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: const Icon(
+                  Icons.storefront_rounded,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Explore marketplace',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      supportingText,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.arrow_forward_rounded),
+            ],
+          ),
+        ),
       ),
     );
   }

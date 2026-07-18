@@ -162,6 +162,12 @@ class RoleDashboardShell extends ConsumerWidget {
         title: Text(_titleForRole(role)),
         actions: [
           IconButton(
+            key: ValueKey('marketplace-action-${role.name}'),
+            tooltip: 'Marketplace',
+            onPressed: () => context.push('/marketplace'),
+            icon: const Icon(Icons.storefront_outlined),
+          ),
+          IconButton(
             tooltip: 'Search',
             onPressed: () {
               showSearch<void>(

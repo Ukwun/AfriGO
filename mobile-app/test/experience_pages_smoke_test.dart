@@ -97,6 +97,11 @@ Widget _buildAppForShortcuts(String roleLabel) {
         builder: (context, state) => const Scaffold(body: Text('Analytics')),
       ),
       GoRoute(
+        path: '/marketplace',
+        builder: (context, state) =>
+            const Scaffold(body: Text('Marketplace products')),
+      ),
+      GoRoute(
         path: '/rfqs',
         builder: (context, state) => const Scaffold(body: Text('RFQs')),
       ),
@@ -132,11 +137,15 @@ void main() {
       expect(find.text('Analytics'), findsOneWidget);
       expect(find.byIcon(Icons.search), findsOneWidget);
       expect(find.byIcon(Icons.notifications_none), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('marketplace-action-buyer')),
+        findsOneWidget,
+      );
 
-      await tester.tap(find.text('RFQs'));
+      await tester.tap(find.byKey(const ValueKey('marketplace-action-buyer')));
       await tester.pumpAndSettle();
 
-      expect(find.text('RFQs'), findsWidgets);
+      expect(find.text('Marketplace products'), findsOneWidget);
     });
 
     testWidgets('Supplier bottom tabs are role-specific', (tester) async {
@@ -147,6 +156,10 @@ void main() {
       expect(find.text('Contracts'), findsOneWidget);
       expect(find.text('Payments'), findsOneWidget);
       expect(find.text('Profile'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('marketplace-action-supplier')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('Exporter bottom tabs are role-specific', (tester) async {
@@ -157,6 +170,10 @@ void main() {
       expect(find.text('Dossiers'), findsOneWidget);
       expect(find.text('Tracking'), findsOneWidget);
       expect(find.text('Profile'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('marketplace-action-exporter')),
+        findsOneWidget,
+      );
     });
   });
 
