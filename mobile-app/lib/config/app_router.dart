@@ -9,45 +9,27 @@ import '../presentation/animations/page_transitions.dart';
 import '../presentation/screens/home/buyer_home_screen.dart';
 import '../presentation/screens/home/supplier_home_screen.dart';
 import '../presentation/screens/home/exporter_home_screen.dart';
-import '../presentation/screens/trading/trading_screen.dart';
 import '../presentation/screens/trading/create_rfq_screen_modern.dart';
-import '../presentation/screens/trading/trade_detail_screen.dart';
 import '../presentation/screens/trading/open_rfq_marketplace_screen.dart';
-import '../presentation/screens/trading/submit_bid_screen.dart';
-import '../presentation/screens/trading/seller_bid_detail_screen.dart';
-import '../presentation/screens/trading/payment_screen.dart';
-import '../presentation/screens/trading/contract_signing_screen.dart';
-import '../presentation/screens/trading/order_tracking_screen.dart';
-import '../presentation/screens/trading/shipping_instructions_screen.dart';
-import '../presentation/screens/trading/buyer_delivery_confirmation_screen.dart';
-import '../presentation/screens/trading/dispute_resolution_screen.dart';
+import '../presentation/screens/trading/submit_offer_screen.dart';
+import '../presentation/screens/payment/payment_backend_required_screen.dart';
 import '../presentation/screens/marketplace/marketplace_screen.dart';
 import '../presentation/screens/trading/lots/create_lot_screen.dart';
 import '../presentation/screens/trading/lots/lot_photo_upload_screen.dart';
-import '../presentation/screens/trading/lots/lot_qr_display_screen.dart';
-import '../presentation/screens/trading/lots/lot_tracking_screen.dart';
-import '../presentation/screens/trading/lots/lot_history_screen.dart';
 import '../presentation/screens/user/profile_settings_screen.dart';
 import '../presentation/screens/user/notification_center_screen.dart';
 import '../presentation/screens/user/app_settings_screen.dart';
 import '../presentation/screens/dashboard/buyer_analytics_screen.dart';
 import '../presentation/screens/dashboard/buyer_more_screen.dart';
-import '../presentation/screens/dashboard/exporter_warehouse_screen.dart';
-import '../presentation/screens/dashboard/exporter_tracking_screen.dart';
 // New real screens
 import '../presentation/screens/trading/rfq_list_screen.dart';
 import '../presentation/screens/trading/rfq_detail_screen.dart';
 import '../presentation/screens/trading/shipment_list_screen.dart';
-import '../presentation/screens/dashboard/export_pipeline_screen.dart';
 import '../presentation/screens/messaging/messages_screen.dart';
 // New real implementation screens
-import '../presentation/screens/trading/rfq_edit_screen.dart';
 import '../presentation/screens/trading/shipment_detail_screen.dart';
-import '../presentation/screens/trading/lot_edit_screen.dart';
-import '../presentation/screens/trading/contract_manage_screen.dart';
 import '../presentation/screens/trading/supplier_profile_screen.dart';
 import '../presentation/screens/trading/create_export_request_screen.dart';
-import '../presentation/screens/dashboard/tracking_detail_screen.dart';
 import '../presentation/widgets/production_dashboard.dart';
 import '../presentation/widgets/dashboard_role.dart';
 import '../presentation/screens/shared/live_resource_screen.dart';
@@ -265,7 +247,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/rfqs/edit/:rfqId',
         builder: (context, state) {
           final rfqId = state.pathParameters['rfqId']!;
-          return RfqEditScreen(rfqId: rfqId);
+          return RfqDetailScreen(rfqId: rfqId);
         },
       ),
       GoRoute(
@@ -307,7 +289,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/lots/edit/:lotId',
         builder: (context, state) {
           final lotId = state.pathParameters['lotId']!;
-          return LotEditScreen(lotId: lotId);
+          return LiveRecordDetailScreen(
+            resource: 'lots',
+            recordId: lotId,
+            title: 'Lot details',
+          );
         },
       ),
       GoRoute(
@@ -350,7 +336,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/contracts/manage/:contractId',
         builder: (context, state) {
           final contractId = state.pathParameters['contractId']!;
-          return ContractManageScreen(contractId: contractId);
+          return LiveRecordDetailScreen(
+            resource: 'contracts',
+            recordId: contractId,
+            title: 'Contract details',
+          );
         },
       ),
       GoRoute(
@@ -413,17 +403,22 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/warehouse',
-        builder: (context, state) => const ExporterWarehouseScreen(),
+        builder: (context, state) => const LiveResourceScreen(
+          resource: 'lots',
+          title: 'Warehouse lots',
+          emptyMessage: 'Lots assigned to your export operation will appear here.',
+          detailRoute: '/lots/detail',
+        ),
       ),
       GoRoute(
         path: '/tracking',
-        builder: (context, state) => const ExporterTrackingScreen(),
+        builder: (context, state) => const ShipmentListScreen(),
       ),
       GoRoute(
         path: '/tracking/detail/:trackingId',
         builder: (context, state) {
           final trackingId = state.pathParameters['trackingId']!;
-          return TrackingDetailScreen(trackingId: trackingId);
+          return ShipmentDetailScreen(shipmentId: trackingId);
         },
       ),
       GoRoute(
@@ -432,7 +427,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/pipeline',
-        builder: (context, state) => const ExportPipelineScreen(),
+        builder: (context, state) => const LiveResourceScreen(
+          resource: 'export_orders',
+          title: 'Export pipeline',
+          emptyMessage: 'KYC-verified export orders will appear here.',
+        ),
       ),
 
       // ==================== TRADING & RFQ ROUTES ====================
@@ -441,7 +440,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/trading',
         name: 'trading',
-        builder: (context, state) => const TradingScreen(),
+        builder: (context, state) => const LiveResourceScreen(
+          resource: 'orders',
+          title: 'Trading orders',
+          emptyMessage: 'Orders created from accepted offers will appear here.',
+        ),
       ),
 
       /// Create RFQ - Buyer creates request for quote
@@ -457,7 +460,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: 'trade_detail',
         builder: (context, state) {
           final tradeId = state.pathParameters['tradeId']!;
-          return TradeDetailScreen(tradeId: tradeId);
+          return LiveRecordDetailScreen(
+            resource: 'orders',
+            recordId: tradeId,
+            title: 'Trade details',
+          );
         },
       ),
 
@@ -474,7 +481,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: 'submit_bid',
         builder: (context, state) {
           final rfqId = state.pathParameters['rfqId']!;
-          return SubmitBidScreen(rfqId: rfqId);
+          return SubmitOfferScreen(rfqId: rfqId);
         },
       ),
 
@@ -484,7 +491,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: 'seller_bid_detail',
         builder: (context, state) {
           final bidId = state.pathParameters['bidId']!;
-          return SellerBidDetailScreen(bidId: bidId);
+          return LiveRecordDetailScreen(
+            resource: 'offers',
+            recordId: bidId,
+            title: 'Offer details',
+          );
         },
       ),
 
@@ -493,8 +504,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/trading/payment/:tradeId',
         name: 'payment',
         builder: (context, state) {
-          final tradeId = state.pathParameters['tradeId']!;
-          return PaymentScreen(tradeId: tradeId);
+          return const PaymentBackendRequiredScreen();
         },
       ),
 
@@ -504,7 +514,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: 'contract_signing',
         builder: (context, state) {
           final tradeId = state.pathParameters['tradeId']!;
-          return ContractSigningScreen(tradeId: tradeId);
+          return LiveRecordDetailScreen(
+            resource: 'contracts',
+            recordId: tradeId,
+            title: 'Contract details',
+          );
         },
       ),
 
@@ -514,7 +528,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: 'order_tracking',
         builder: (context, state) {
           final tradeId = state.pathParameters['tradeId']!;
-          return OrderTrackingScreen(tradeId: tradeId);
+          return LiveRecordDetailScreen(
+            resource: 'orders',
+            recordId: tradeId,
+            title: 'Order fulfilment',
+          );
         },
       ),
 
@@ -524,7 +542,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: 'shipping_instructions',
         builder: (context, state) {
           final bidId = state.pathParameters['bidId']!;
-          return ShippingInstructionsScreen(bidId: bidId);
+          return LiveRecordDetailScreen(
+            resource: 'offers',
+            recordId: bidId,
+            title: 'Accepted offer',
+          );
         },
       ),
 
@@ -534,7 +556,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: 'delivery_confirmation',
         builder: (context, state) {
           final tradeId = state.pathParameters['tradeId']!;
-          return BuyerDeliveryConfirmationScreen(tradeId: tradeId);
+          return LiveRecordDetailScreen(
+            resource: 'orders',
+            recordId: tradeId,
+            title: 'Delivery status',
+          );
         },
       ),
 
@@ -544,7 +570,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: 'dispute_resolution',
         builder: (context, state) {
           final tradeId = state.pathParameters['tradeId']!;
-          return DisputeResolutionScreen(tradeId: tradeId);
+          return LiveRecordDetailScreen(
+            resource: 'orders',
+            recordId: tradeId,
+            title: 'Order status',
+          );
         },
       ),
 
@@ -573,7 +603,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: 'lot_qr_display',
         builder: (context, state) {
           final lotId = state.pathParameters['lotId']!;
-          return LotQRDisplayScreen(lotId: lotId);
+          return LiveRecordDetailScreen(
+            resource: 'lots',
+            recordId: lotId,
+            title: 'Lot identity',
+          );
         },
       ),
 
@@ -583,7 +617,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: 'lot_tracking',
         builder: (context, state) {
           final lotId = state.pathParameters['lotId']!;
-          return LotTrackingScreen(lotId: lotId);
+          return LiveRecordDetailScreen(
+            resource: 'lots',
+            recordId: lotId,
+            title: 'Lot tracking',
+          );
         },
       ),
 
@@ -593,7 +631,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: 'lot_history',
         builder: (context, state) {
           final lotId = state.pathParameters['lotId']!;
-          return LotHistoryScreen(lotId: lotId);
+          return LiveRecordDetailScreen(
+            resource: 'lots',
+            recordId: lotId,
+            title: 'Lot history',
+          );
         },
       ),
 

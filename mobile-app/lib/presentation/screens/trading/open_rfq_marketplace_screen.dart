@@ -76,7 +76,13 @@ class OpenRfqMarketplaceScreen extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  trailing: const Icon(Icons.chevron_right),
+                  trailing: IconButton(
+                    tooltip: 'Submit offer',
+                    onPressed: () => context.push(
+                      '/trading/submit-bid/${document.id}',
+                    ),
+                    icon: const Icon(Icons.send_outlined),
+                  ),
                 ),
               );
             },
