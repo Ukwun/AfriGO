@@ -108,8 +108,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return;
     }
     try {
-      await _establishBackendSession(firebaseUser);
+      await _establishBackendSession(firebaseUser).timeout(
+        const Duration(seconds: 8),
+        onTimeout: () =>
+            throw TimeoutException('Session restoration timed out'),
+      );
     } catch (_) {
+      await apiClient.logout();
       state = const AuthUnauthenticated();
     }
   }
@@ -119,7 +124,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     Map<String, dynamic>? profile,
     bool forceRefresh = false,
   }) async {
-    final idToken = await firebaseUser.getIdToken(forceRefresh);
+    final idToken = await firebaseUser
+        .getIdToken(forceRefresh)
+        .timeout(const Duration(seconds: 5));
     if (idToken == null) throw Exception('Could not create secure session');
     await apiClient.setToken(idToken);
     final userData = await _firebaseProfile(firebaseUser, profile: profile);
@@ -172,7 +179,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
         'createdAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     }
-    var snapshot = await reference.get();
+    var snapshot = await reference
+        .get(const GetOptions(source: Source.serverAndCache))
+        .timeout(const Duration(seconds: 5));
     if (!snapshot.exists) {
       if (profile == null) {
         throw Exception(
@@ -202,7 +211,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      snapshot = await reference.get();
+      snapshot = await reference
+          .get(const GetOptions(source: Source.serverAndCache))
+          .timeout(const Duration(seconds: 5));
     }
     final data = snapshot.data()!;
     final storedRole = data['role']?.toString().toLowerCase();

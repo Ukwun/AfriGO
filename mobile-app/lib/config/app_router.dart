@@ -42,14 +42,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     redirect: (context, state) {
       final location = state.matchedLocation;
-      final isPublic = location == '/' ||
-          location == '/welcome' ||
+      final isPublic = location == '/welcome' ||
           location == '/login' ||
           location == '/register';
       if (authState is AuthLoading || authState is AuthIdle) {
         return location == '/' ? null : '/';
       }
       if (authState is! AuthAuthenticated) {
+        if (location == '/') {
+          return authState is AuthError ? '/login' : '/welcome';
+        }
         return isPublic ? null : '/login';
       }
 
@@ -64,7 +66,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         'exporter' => '/exporter/home',
         _ => '/buyer/home',
       };
-      if (isPublic) return home;
+      if (isPublic || location == '/') return home;
       if (location == '/dashboard/seller') return '/supplier/home';
 
       final requiredRole = location.startsWith('/supplier/')
