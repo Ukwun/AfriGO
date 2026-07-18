@@ -3,11 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/lot_model.dart';
 
 Future<List<LotModel>> _marketplaceLots({String? category}) async {
-  final snapshot = await FirebaseFirestore.instance
+  final query = FirebaseFirestore.instance
       .collection('lots')
       .where('status', isEqualTo: 'active')
-      .limit(100)
-      .get(const GetOptions(source: Source.serverAndCache));
+      .limit(100);
+  QuerySnapshot<Map<String, dynamic>> snapshot;
+  try {
+    snapshot = await query
+        .get(const GetOptions(source: Source.server))
+        .timeout(const Duration(seconds: 5));
+  } catch (_) {
+    snapshot = await query.get(const GetOptions(source: Source.cache));
+  }
   return snapshot.docs
       .map((document) => LotModel.fromJson({
             'id': document.id,

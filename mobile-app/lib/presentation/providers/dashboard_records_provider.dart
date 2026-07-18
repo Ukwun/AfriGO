@@ -7,11 +7,18 @@ final dashboardRecordsProvider =
         (ref, resource) async {
   final user = FirebaseAuth.instance.currentUser;
   if (user == null) return const [];
-  final snapshot = await FirebaseFirestore.instance
+  final query = FirebaseFirestore.instance
       .collection(resource)
       .where('participantIds', arrayContains: user.uid)
-      .limit(50)
-      .get(const GetOptions(source: Source.serverAndCache));
+      .limit(50);
+  QuerySnapshot<Map<String, dynamic>> snapshot;
+  try {
+    snapshot = await query
+        .get(const GetOptions(source: Source.server))
+        .timeout(const Duration(seconds: 5));
+  } catch (_) {
+    snapshot = await query.get(const GetOptions(source: Source.cache));
+  }
   final records = snapshot.docs
       .map((document) => {'id': document.id, ...document.data()})
       .toList(growable: false);

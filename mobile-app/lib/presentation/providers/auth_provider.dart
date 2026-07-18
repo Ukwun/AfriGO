@@ -1,3 +1,7 @@
+// ignore_for_file: avoid_print
+
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../data/services/api_client.dart';
@@ -104,7 +108,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return;
     }
     try {
-      await _establishBackendSession(firebaseUser, forceRefresh: true);
+      await _establishBackendSession(firebaseUser);
     } catch (_) {
       state = const AuthUnauthenticated();
     }
@@ -118,19 +122,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final idToken = await firebaseUser.getIdToken(forceRefresh);
     if (idToken == null) throw Exception('Could not create secure session');
     await apiClient.setToken(idToken);
+    final userData = await _firebaseProfile(firebaseUser, profile: profile);
+    state = AuthAuthenticated(user: AuthUser.fromJson(userData), token: idToken);
+    unawaited(_syncBackendSession(idToken, profile));
+  }
+
+  Future<void> _syncBackendSession(
+    String idToken,
+    Map<String, dynamic>? profile,
+  ) async {
     try {
-      final response = await apiClient.post('/auth/session', body: {
-        'idToken': idToken,
-        if (profile != null) 'profile': profile,
-      });
-      final userData = response['user'] as Map<String, dynamic>?;
-      if (userData == null) throw Exception('Invalid session response');
-      state =
-          AuthAuthenticated(user: AuthUser.fromJson(userData), token: idToken);
+      await apiClient
+          .post('/auth/session', body: {
+            'idToken': idToken,
+            if (profile != null) 'profile': profile,
+          })
+          .timeout(const Duration(seconds: 5));
     } catch (_) {
-      final userData = await _firebaseProfile(firebaseUser, profile: profile);
-      state =
-          AuthAuthenticated(user: AuthUser.fromJson(userData), token: idToken);
+      // Firestore is the available identity source while Functions are offline.
+      // Backend synchronization is retried on the next authenticated launch.
     }
   }
 

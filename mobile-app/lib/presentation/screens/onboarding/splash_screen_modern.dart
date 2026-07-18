@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../config/theme.dart';
-import '../../providers/auth_provider.dart';
 
 class SplashScreenModern extends ConsumerStatefulWidget {
   const SplashScreenModern({super.key});
@@ -21,7 +19,7 @@ class _SplashScreenModernState extends ConsumerState<SplashScreenModern>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 650),
       vsync: this,
     );
 
@@ -36,30 +34,6 @@ class _SplashScreenModernState extends ConsumerState<SplashScreenModern>
 
     _animationController.forward();
 
-    // Check auth state and navigate
-    Future.delayed(const Duration(milliseconds: 2500), () {
-      if (mounted) {
-        final authState = ref.read(authProvider);
-
-        if (authState is AuthAuthenticated) {
-          // User is logged in, go to dashboard
-          final roles =
-              authState.user.roles.map((r) => r.toLowerCase()).toList();
-          if (roles.contains('seller') ||
-              roles.contains('supplier') ||
-              roles.contains('farmer')) {
-            context.go('/dashboard/seller');
-          } else if (roles.contains('exporter') || roles.contains('member')) {
-            context.go('/dashboard/exporter');
-          } else {
-            context.go('/dashboard/buyer');
-          }
-        } else {
-          // User not authenticated, go to login
-          context.go('/login');
-        }
-      }
-    });
   }
 
   @override
