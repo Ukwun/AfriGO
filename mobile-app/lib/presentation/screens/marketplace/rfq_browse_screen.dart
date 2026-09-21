@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import '../../../config/theme.dart';
-import '../../models/rfq_model.dart';
-import '../providers/rfq_provider.dart';
+import '../../../models/rfq_model.dart';
+import '../../providers/rfq_provider.dart';
 import '../../widgets/modern_card.dart';
 import '../../widgets/animated_button.dart';
 
@@ -138,8 +137,7 @@ class _RFQBrowseScreenState extends ConsumerState<RFQBrowseScreen> {
                     final rfq = data[index];
                     return _RFQCard(
                       rfq: rfq,
-                      onTap: () =>
-                          context.pushNamed('rfq-detail', arguments: rfq.id),
+                      onTap: () => context.push('/rfqs/detail/${rfq.id}'),
                     );
                   },
                 );

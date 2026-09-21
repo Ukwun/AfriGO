@@ -7,4 +7,11 @@ export 'animated_icon.dart';
 export 'modern_card.dart';
 export 'motion_system.dart';
 export 'ui_style_reference.dart';
-export 'modern_components.dart';
+export 'modern_components.dart'
+    show
+        ModernButton,
+        ModernTextField,
+        ModernSectionHeader,
+        ModernLoadingIndicator,
+        ModernErrorState,
+        ModernBadge;

@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 
 /// Exception class for authentication errors
 class AuthException implements Exception {
@@ -18,7 +17,6 @@ class AuthException implements Exception {
 class AuthService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
-  final FacebookAuth _facebookAuth = FacebookAuth.instance;
 
   /// Get current user
   User? get currentUser => _firebaseAuth.currentUser;
@@ -162,52 +160,10 @@ class AuthService {
 
   /// LOGIN with Facebook
   Future<User> loginWithFacebook() async {
-    try {
-      print('[AuthService] Starting Facebook sign-in flow...');
-
-      // Trigger Facebook Sign-In
-      final LoginResult result = await _facebookAuth.login(
-        permissions: ['email', 'public_profile'],
-      );
-
-      if (result.status == LoginStatus.cancelled) {
-        throw AuthException('Facebook sign-in cancelled by user');
-      }
-
-      if (result.status == LoginStatus.failed) {
-        throw AuthException(
-          'Facebook sign-in failed: ${result.message}',
-        );
-      }
-
-      final AccessToken? accessToken = result.accessToken;
-      if (accessToken == null) {
-        throw AuthException('Failed to obtain Facebook access token');
-      }
-
-      print('[AuthService] Facebook user authenticated: ${accessToken.userId}');
-
-      // Authenticate with Firebase
-      final OAuthCredential credential =
-          FacebookAuthProvider.credential(accessToken.token);
-
-      final userCredential =
-          await _firebaseAuth.signInWithCredential(credential);
-      final user = userCredential.user;
-
-      if (user == null) {
-        throw AuthException('Facebook sign-in failed - no user returned');
-      }
-
-      print('[AuthService] Facebook authentication successful: ${user.uid}');
-      return user;
-    } catch (e) {
-      print('[AuthService] Facebook sign-in error: $e');
-      if (e is AuthException) {
-        rethrow;
-      }
-      throw AuthException('Facebook sign-in failed: ${e.toString()}');
-    }
+    throw AuthException(
+      'Facebook sign-in is not configured for this build. Use email or Google sign-in.',
+      code: 'facebook-not-configured',
+    );
   }
 
   /// LOGIN with Apple through Firebase's OAuth provider.
@@ -242,7 +198,6 @@ class AuthService {
       await _googleSignIn.signOut();
 
       // Sign out from Facebook
-      await _facebookAuth.logOut();
 
       print('[AuthService] User logged out successfully');
     } catch (e) {

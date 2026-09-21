@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../config/api_config.dart';
 import '../models/lot_model.dart';
 import '../models/order_model.dart';
 import '../models/quote_model.dart';
@@ -12,10 +13,7 @@ final apiServiceProvider = Provider<ApiService>((ref) {
 });
 
 class ApiService {
-  // Android emulator: 10.0.2.2 reaches host localhost
-  // Physical device: Use your backend IP or domain
-  // Production: https://api.afrigo.com
-  static const String _baseUrl = 'http://10.0.2.2:3000/api';
+  static const String _baseUrl = ApiConfig.baseUrl;
   late final Dio _dio;
 
   ApiService() {
@@ -49,6 +47,13 @@ class ApiService {
       ),
     );
   }
+
+  /// Exposes the configured client for feature services that require Dio
+  /// options such as multipart requests or per-request headers.
+  Dio get dio => _dio;
+
+  /// Base API URL used by legacy feature services.
+  String get baseUrl => _baseUrl;
 
   // ==================== LOTS ENDPOINTS ====================
 

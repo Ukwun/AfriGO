@@ -174,7 +174,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -640,7 +640,7 @@ class _CounterOfferScreenState extends ConsumerState<CounterOfferScreen>
                   ),
                 ],
               ),
-              Divider(color: AppColors.borderLight),
+              const Divider(color: AppColors.borderLight),
               const SizedBox(height: 8),
               _buildDetailRow('Lot ID', offer.lotId),
               const SizedBox(height: 6),

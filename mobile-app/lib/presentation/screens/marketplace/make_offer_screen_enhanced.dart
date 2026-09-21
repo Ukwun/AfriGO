@@ -81,7 +81,7 @@ class _MakeOfferScreenEnhancedState
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -494,7 +494,7 @@ class _MakeOfferScreenEnhancedState
               ),
             ],
           ),
-          Icon(Icons.info_outline, color: AppColors.info),
+          const Icon(Icons.info_outline, color: AppColors.info),
         ],
       ),
     );

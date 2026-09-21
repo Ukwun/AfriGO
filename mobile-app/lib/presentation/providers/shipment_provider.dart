@@ -1,19 +1,21 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:afrigo_app/models/shipment_model.dart';
+import '../../config/api_config.dart';
 
 // ======================== HTTP SERVICE ========================
 
 class ShipmentService {
   final Dio httpClient;
   final String baseUrl;
+  static const _secureStorage = FlutterSecureStorage();
+  static const _tokenStorageKey = 'auth_token';
 
   ShipmentService({required this.httpClient, required this.baseUrl});
 
   Future<String?> _getAuthToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('auth_token');
+    return _secureStorage.read(key: _tokenStorageKey);
   }
 
   Future<Map<String, String>> _getHeaders() async {
@@ -181,7 +183,7 @@ final shipmentServiceProvider = Provider<ShipmentService>((ref) {
   final dio = Dio();
   return ShipmentService(
     httpClient: dio,
-    baseUrl: 'http://localhost:3000', // Change to production URL
+    baseUrl: ApiConfig.baseUrl,
   );
 });
 

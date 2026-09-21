@@ -18,8 +18,8 @@ class BuyerAnalyticsScreen extends ConsumerWidget {
           ref.invalidate(dashboardRecordsProvider('orders'));
           ref.invalidate(dashboardRecordsProvider('payments'));
           await Future.wait([
-            ref.read(dashboardRecordsProvider('orders').future),
-            ref.read(dashboardRecordsProvider('payments').future),
+            ref.read(dashboardRecordsProvider('orders').future).catchError((_) => <Map<String, dynamic>>[]),
+            ref.read(dashboardRecordsProvider('payments').future).catchError((_) => <Map<String, dynamic>>[]),
           ]);
         },
         child: ListView(
@@ -33,11 +33,13 @@ class BuyerAnalyticsScreen extends ConsumerWidget {
             orders.when(
               loading: _loading,
               error: (_, __) => _error(
+                context,
                 () => ref.invalidate(dashboardRecordsProvider('orders')),
               ),
               data: (orderRecords) => payments.when(
                 loading: _loading,
                 error: (_, __) => _error(
+                  context,
                   () => ref.invalidate(dashboardRecordsProvider('payments')),
                 ),
                 data: (paymentRecords) =>
@@ -55,21 +57,28 @@ class BuyerAnalyticsScreen extends ConsumerWidget {
         child: Center(child: CircularProgressIndicator()),
       );
 
-  Widget _error(VoidCallback retry) => Card(
+  Widget _error(BuildContext context, VoidCallback retry) => Card(
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: Column(children: [
-            const Icon(Icons.cloud_off_outlined, size: 40),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Icon(Icons.cloud_off_outlined, size: 44),
             const SizedBox(height: 12),
-            const Text(
-              'Analytics could not refresh from Firebase.',
-              textAlign: TextAlign.center,
+            Text(
+              'Your trade insights are temporarily unavailable',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
+            const SizedBox(height: 8),
+            const Text(
+              'We could not reach your live AfriGO account to calculate these figures. This does not change your orders or payments. Check your connection, then refresh.',
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
               onPressed: retry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Refresh insights'),
             ),
           ]),
         ),

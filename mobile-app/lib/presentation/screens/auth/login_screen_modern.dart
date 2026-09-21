@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../config/theme.dart';
+import '../../../data/services/auth_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../animations/micro_animations.dart';
 
@@ -90,7 +91,7 @@ class _LoginScreenModernState extends ConsumerState<LoginScreenModern>
       final authState = ref.read(authProvider);
       if (authState is AuthAuthenticated) {
         if (mounted) {
-          context.go(_getDashboardRoute(authState.user));
+          context.go('/role-selection');
         }
         return;
       }
@@ -118,7 +119,7 @@ class _LoginScreenModernState extends ConsumerState<LoginScreenModern>
       if (!mounted) return;
       final state = ref.read(authProvider);
       if (state is AuthAuthenticated) {
-        context.go(_getDashboardRoute(state.user));
+        context.go('/role-selection');
       } else if (state is AuthError) {
         setState(() => _errorMessage = state.message);
       }
@@ -126,6 +127,68 @@ class _LoginScreenModernState extends ConsumerState<LoginScreenModern>
       if (mounted) setState(() => _errorMessage = error.toString());
     } finally {
       if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  Future<void> _showPasswordReset() async {
+    final emailController =
+        TextEditingController(text: _emailController.text.trim());
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Reset your password'),
+        content: TextField(
+          controller: emailController,
+          keyboardType: TextInputType.emailAddress,
+          autofillHints: const [AutofillHints.email],
+          decoration: const InputDecoration(
+            labelText: 'Email address',
+            hintText: 'you@company.com',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              try {
+                await ref
+                    .read(authProvider.notifier)
+                    .sendPasswordResetEmail(emailController.text);
+                if (dialogContext.mounted) {
+                  Navigator.of(dialogContext).pop(true);
+                }
+              } on AuthException catch (error) {
+                if (dialogContext.mounted) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    SnackBar(content: Text(error.message)),
+                  );
+                }
+              } catch (_) {
+                if (dialogContext.mounted) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    const SnackBar(
+                        content: Text(
+                            'We could not send the reset email. Please try again.')),
+                  );
+                }
+              }
+            },
+            child: const Text('Send reset email'),
+          ),
+        ],
+      ),
+    );
+    emailController.dispose();
+    if (result == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'If an AfriGO account exists for that email, a password-reset link has been sent.'),
+        ),
+      );
     }
   }
 
@@ -324,6 +387,14 @@ class _LoginScreenModernState extends ConsumerState<LoginScreenModern>
                   ),
 
                   const SizedBox(height: 20),
+
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _isProcessing ? null : _showPasswordReset,
+                      child: const Text('Forgot password?'),
+                    ),
+                  ),
 
                   Row(
                     children: [

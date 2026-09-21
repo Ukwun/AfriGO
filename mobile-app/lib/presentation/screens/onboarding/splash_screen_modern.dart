@@ -33,7 +33,6 @@ class _SplashScreenModernState extends ConsumerState<SplashScreenModern>
     );
 
     _animationController.forward();
-
   }
 
   @override
@@ -62,13 +61,11 @@ class _SplashScreenModernState extends ConsumerState<SplashScreenModern>
                     color: Colors.white.withAlpha(26),
                     borderRadius: BorderRadius.circular(60),
                   ),
-                  child: const Center(
-                    child: Text(
-                      '🌍',
-                      style: TextStyle(
-                        fontSize: 60,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Image.asset(
+                      'assets/images/Afrigolg1.png',
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),

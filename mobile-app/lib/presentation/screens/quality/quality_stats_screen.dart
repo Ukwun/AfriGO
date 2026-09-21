@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:math' as math;
-import '../../models/quality_model.dart';
-import '../providers/quality_provider.dart';
+import '../../../models/quality_model.dart';
+import '../../providers/quality_provider.dart';
 
 class QualityStatsScreen extends ConsumerWidget {
   const QualityStatsScreen({super.key});
@@ -42,10 +41,10 @@ class QualityStatsScreen extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: _GradeChartVisualizer(
-                  gradeA: stats.gradeAPercentage,
-                  gradeB: stats.gradeBPercentage,
-                  gradeC: stats.gradeCPercentage,
-                  rejected: stats.rejectedPercentage,
+                  gradeA: stats.avgGradeA,
+                  gradeB: stats.avgGradeB,
+                  gradeC: stats.avgGradeC,
+                  rejected: stats.avgGradeRejected,
                 ),
               ),
             ),
@@ -59,28 +58,28 @@ class QualityStatsScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             _GradeStatCard(
               grade: 'A',
-              percentage: stats.gradeAPercentage,
+              percentage: stats.avgGradeA,
               color: Colors.green,
               description: 'Excellent Quality',
             ),
             const SizedBox(height: 12),
             _GradeStatCard(
               grade: 'B',
-              percentage: stats.gradeBPercentage,
+              percentage: stats.avgGradeB,
               color: Colors.blue,
               description: 'Good Quality',
             ),
             const SizedBox(height: 12),
             _GradeStatCard(
               grade: 'C',
-              percentage: stats.gradeCPercentage,
+              percentage: stats.avgGradeC,
               color: Colors.orange,
               description: 'Fair Quality',
             ),
             const SizedBox(height: 12),
             _GradeStatCard(
               grade: 'Rejected',
-              percentage: stats.rejectedPercentage,
+              percentage: stats.avgGradeRejected,
               color: Colors.red,
               description: 'Below Standards',
             ),
@@ -89,8 +88,7 @@ class QualityStatsScreen extends ConsumerWidget {
             // Key Insights
             const Text(
               'Key Insights',
-              style: TextStyle(
-                  fontSize: 18, fontWeight: AspectRatio.decorationChild),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             _buildInsights(stats),
@@ -102,7 +100,7 @@ class QualityStatsScreen extends ConsumerWidget {
   }
 
   Widget _buildInsights(QualityStatsModel stats) {
-    final totalGood = stats.gradeAPercentage + stats.gradeBPercentage;
+    final totalGood = stats.avgGradeA + stats.avgGradeB;
     final message = totalGood >= 80
         ? 'Excellent! Over 80% of products meet high quality standards.'
         : totalGood >= 60
@@ -134,7 +132,7 @@ class QualityStatsScreen extends ConsumerWidget {
             children: [
               _InsightMetric('Grade A+B', '${(totalGood).toStringAsFixed(1)}%'),
               _InsightMetric('Rejection Rate',
-                  '${stats.rejectedPercentage.toStringAsFixed(1)}%'),
+                  '${stats.avgGradeRejected.toStringAsFixed(1)}%'),
             ],
           ),
         ],

@@ -15,6 +15,7 @@ import '../../config/colors.dart';
 /// SlideInTransition - Smooth horizontal slide enter animation (250ms)
 class SlideInTransition extends StatefulWidget {
   final Widget child;
+  final Object? delay;
   final Offset begin;
   final Duration duration;
   final Curve curve;
@@ -22,6 +23,7 @@ class SlideInTransition extends StatefulWidget {
   const SlideInTransition({
     super.key,
     required this.child,
+    this.delay,
     this.begin = const Offset(1.0, 0.0),
     this.duration = const Duration(milliseconds: 250),
     this.curve = Curves.easeInOutCubic,
@@ -70,6 +72,7 @@ class _SlideInTransitionState extends State<SlideInTransition>
 /// FadeInTransition - Smooth fade enter animation (300ms)
 class FadeInTransition extends StatefulWidget {
   final Widget child;
+  final Object? delay;
   final Duration duration;
   final Curve curve;
   final double beginOpacity;
@@ -77,6 +80,7 @@ class FadeInTransition extends StatefulWidget {
   const FadeInTransition({
     super.key,
     required this.child,
+    this.delay,
     this.duration = const Duration(milliseconds: 300),
     this.curve = Curves.easeInOut,
     this.beginOpacity = 0.0,
@@ -125,6 +129,7 @@ class _FadeInTransitionState extends State<FadeInTransition>
 /// ScaleInTransition - Smooth scale enter animation (250ms)
 class ScaleInTransition extends StatefulWidget {
   final Widget child;
+  final Object? delay;
   final Duration duration;
   final Curve curve;
   final double beginScale;
@@ -132,6 +137,7 @@ class ScaleInTransition extends StatefulWidget {
   const ScaleInTransition({
     super.key,
     required this.child,
+    this.delay,
     this.duration = const Duration(milliseconds: 250),
     this.curve = Curves.easeInOutCubic,
     this.beginScale = 0.8,

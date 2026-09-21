@@ -258,17 +258,23 @@ class _ShipmentLoadFailure extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.cloud_off_outlined, size: 48),
+            const Icon(Icons.cloud_off_outlined, size: 52),
             const SizedBox(height: 12),
+            Text(
+              'Shipment updates are temporarily unavailable',
+              style: Theme.of(context).textTheme.titleLarge,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
             const Text(
-              'Firebase could not refresh shipment activity.',
+              'We could not reach the live shipment feed. Check your connection and refresh. Confirmed delivery records remain safely stored in your AfriGO account.',
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            OutlinedButton.icon(
+            FilledButton.icon(
               onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Refresh shipments'),
             ),
           ]),
         ),

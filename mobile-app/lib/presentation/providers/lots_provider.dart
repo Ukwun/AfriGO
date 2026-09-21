@@ -13,7 +13,14 @@ Future<List<LotModel>> _marketplaceLots({String? category}) async {
         .get(const GetOptions(source: Source.server))
         .timeout(const Duration(seconds: 5));
   } catch (_) {
-    snapshot = await query.get(const GetOptions(source: Source.cache));
+    try {
+      snapshot = await query.get(const GetOptions(source: Source.cache));
+    } catch (_) {
+      // A new account may have no local Firestore cache and a device may be
+      // offline. The marketplace should render its empty/live-unavailable
+      // state instead of failing the entire Explore route.
+      return const <LotModel>[];
+    }
   }
   return snapshot.docs
       .map((document) => LotModel.fromJson({

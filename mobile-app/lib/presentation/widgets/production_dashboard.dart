@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/colors.dart';
+import '../providers/auth_provider.dart';
 import '../providers/dashboard_records_provider.dart';
 import 'dashboard_role.dart';
 import 'motion_system.dart';
@@ -36,6 +37,7 @@ class ProductionDashboard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(currentUserProvider);
     return RoleDashboardShell(
       role: role,
       child: RefreshIndicator(
@@ -43,15 +45,26 @@ class ProductionDashboard extends ConsumerWidget {
           for (final feed in feeds) {
             ref.invalidate(dashboardRecordsProvider(feed.resource));
           }
-          await Future.wait(feeds.map((feed) =>
-              ref.read(dashboardRecordsProvider(feed.resource).future)));
+          // A single unavailable collection must not leave the refresh
+          // indicator spinning forever or prevent the other live sections
+          // from updating.
+          await Future.wait(feeds.map((feed) async {
+            try {
+              await ref.read(dashboardRecordsProvider(feed.resource).future);
+            } catch (_) {
+              // Each section provides its own helpful recovery state below.
+            }
+          }));
         },
         child: CustomScrollView(slivers: [
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
             sliver: SliverList.list(children: [
               FadeInTransition(
-                  child: Text(headline,
+                  child: Text(
+                      user == null || user.firstName.trim().isEmpty
+                          ? headline
+                          : 'Welcome back, ${user.firstName}',
                       style: Theme.of(context)
                           .textTheme
                           .headlineSmall
@@ -59,6 +72,8 @@ class ProductionDashboard extends ConsumerWidget {
               const SizedBox(height: 6),
               Text(description, style: Theme.of(context).textTheme.bodyMedium),
               const SizedBox(height: 20),
+              _LiveAccountNotice(role: role),
+              const SizedBox(height: 12),
               _MarketplaceGateway(role: role),
               const SizedBox(height: 12),
               OutlinedButton.icon(
@@ -73,6 +88,40 @@ class ProductionDashboard extends ConsumerWidget {
               ...feeds.map((feed) => _FeedSection(feed: feed)),
             ]),
           ),
+        ]),
+      ),
+    );
+  }
+}
+
+class _LiveAccountNotice extends StatelessWidget {
+  const _LiveAccountNotice({required this.role});
+  final DashboardRole role;
+
+  @override
+  Widget build(BuildContext context) {
+    final message = switch (role) {
+      DashboardRole.buyer =>
+        'Your requests, offers, contracts and delivery updates appear here as your trading partners act.',
+      DashboardRole.supplier =>
+        'Your lots, offers, contracts and payout updates appear here as they are confirmed.',
+      DashboardRole.exporter =>
+        'Your export requests, dossiers and shipment milestones appear here as they are confirmed.',
+    };
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(children: [
+          Icon(Icons.sync_rounded,
+              color: Theme.of(context).colorScheme.primary),
+          const SizedBox(width: 10),
+          Expanded(
+              child:
+                  Text(message, style: Theme.of(context).textTheme.bodySmall)),
         ]),
       ),
     );
@@ -168,36 +217,15 @@ class _FeedSection extends ConsumerWidget {
         ]),
         const SizedBox(height: 10),
         state.when(
-          loading: () => const Card(
-              child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(child: CircularProgressIndicator()))),
-          error: (error, _) => Card(
-              child: Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: Row(children: [
-                    const Icon(Icons.cloud_off_outlined,
-                        color: AppColors.error),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                        child: Text(
-                            'Could not load live data. Check your connection and try again.')),
-                    IconButton(
-                        onPressed: () => ref.invalidate(
-                            dashboardRecordsProvider(feed.resource)),
-                        icon: const Icon(Icons.refresh_rounded)),
-                  ]))),
+          loading: () => const _LiveLoadingCard(),
+          error: (error, _) => _LiveDataUnavailable(
+            title: feed.title,
+            onRetry: () =>
+                ref.invalidate(dashboardRecordsProvider(feed.resource)),
+            onContinue: () => context.push(feed.route),
+          ),
           data: (records) => records.isEmpty
-              ? Card(
-                  child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Row(children: [
-                        const Icon(Icons.inbox_outlined),
-                        const SizedBox(width: 12),
-                        Expanded(
-                            child: Text(
-                                'No ${feed.title.toLowerCase()} yet. New activity will appear here automatically.')),
-                      ])))
+              ? _LiveEmptyCard(feed: feed)
               : LayoutBuilder(builder: (context, constraints) {
                   final columns = constraints.maxWidth >= 900
                       ? 3
@@ -222,6 +250,94 @@ class _FeedSection extends ConsumerWidget {
       ]),
     );
   }
+}
+
+class _LiveLoadingCard extends StatelessWidget {
+  const _LiveLoadingCard();
+
+  @override
+  Widget build(BuildContext context) => const Card(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+          child: Row(children: [
+            SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2.5)),
+            SizedBox(width: 14),
+            Expanded(child: Text('Checking your latest activity…')),
+          ]),
+        ),
+      );
+}
+
+class _LiveEmptyCard extends StatelessWidget {
+  const _LiveEmptyCard({required this.feed});
+  final DashboardFeed feed;
+
+  @override
+  Widget build(BuildContext context) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Icon(Icons.inbox_outlined),
+            const SizedBox(height: 12),
+            Text('No ${feed.title.toLowerCase()} yet',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 5),
+            const Text(
+                'When there is activity on your AfriGO account, it will appear here automatically.'),
+            const SizedBox(height: 12),
+            TextButton(
+                onPressed: () => context.push(feed.route),
+                child: Text('View ${feed.title.toLowerCase()}')),
+          ]),
+        ),
+      );
+}
+
+class _LiveDataUnavailable extends StatelessWidget {
+  const _LiveDataUnavailable({
+    required this.title,
+    required this.onRetry,
+    required this.onContinue,
+  });
+  final String title;
+  final VoidCallback onRetry;
+  final VoidCallback onContinue;
+
+  @override
+  Widget build(BuildContext context) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Icon(Icons.cloud_off_outlined, color: AppColors.error),
+            const SizedBox(height: 12),
+            Text('$title are temporarily unavailable',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 5),
+            const Text(
+                'We could not reach your live AfriGO records. Your account is still safe; check your connection and try again.'),
+            const SizedBox(height: 14),
+            Wrap(spacing: 8, runSpacing: 8, children: [
+              FilledButton.icon(
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Try again')),
+              TextButton(
+                  onPressed: onContinue, child: const Text('Open this page')),
+            ]),
+          ]),
+        ),
+      );
 }
 
 class _RecordCard extends StatelessWidget {

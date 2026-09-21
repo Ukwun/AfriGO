@@ -194,7 +194,7 @@ final notificationStreamProvider = StreamProvider<dynamic>((ref) {
 final webSocketConnectionStatusProvider = StreamProvider<bool>((ref) async* {
   final webSocketService = ref.watch(webSocketServiceProvider);
   while (true) {
-    yield webSocketService.isConnected();
+    yield webSocketService.isConnected;
     await Future.delayed(const Duration(seconds: 1));
   }
 });

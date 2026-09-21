@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:afrigo_app/models/shipment_model.dart';
-import '../providers/shipment_provider.dart';
+import '../../providers/shipment_provider.dart';
 
 class ShipmentListScreen extends ConsumerStatefulWidget {
   const ShipmentListScreen({super.key});
@@ -18,7 +18,7 @@ class _ShipmentListScreenState extends ConsumerState<ShipmentListScreen> {
   @override
   void initState() {
     super.initState();
-    filters = ShipmentFilters();
+    filters = const ShipmentFilters();
   }
 
   @override

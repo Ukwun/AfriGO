@@ -1,103 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../../config/theme.dart';
 
 class ShipmentDetailScreen extends StatelessWidget {
   const ShipmentDetailScreen({super.key, required this.shipmentId});
   final String shipmentId;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Shipment details')),
-      body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-        stream: FirebaseFirestore.instance
-            .collection('shipments')
-            .doc(shipmentId)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting &&
-              !snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return const Center(
-              child: Text('Shipment activity could not be refreshed.'),
-            );
-          }
-          final shipment = snapshot.data?.data();
-          if (shipment == null) {
-            return const Center(child: Text('Shipment not found.'));
-          }
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              _section(
-                context,
-                'Current status',
-                (shipment['status'] ?? 'pending')
-                    .toString()
-                    .replaceAll('_', ' ')
-                    .toUpperCase(),
-                Icons.local_shipping_outlined,
-              ),
-              _section(
-                context,
-                'Tracking number',
-                shipment['trackingNumber'] ??
-                    shipment['shipmentReference'] ??
-                    'Not assigned',
-                Icons.qr_code_2,
-              ),
-              _section(
-                context,
-                'Origin',
-                shipment['pickupLocationName'] ??
-                    shipment['origin'] ??
-                    'Not assigned',
-                Icons.trip_origin,
-              ),
-              _section(
-                context,
-                'Destination',
-                shipment['deliveryLocationName'] ??
-                    shipment['destination'] ??
-                    'Not assigned',
-                Icons.location_on_outlined,
-              ),
-              _section(
-                context,
-                'Carrier',
-                shipment['carrierName'] ?? 'Not assigned',
-                Icons.business_outlined,
-              ),
-              _section(
-                context,
-                'Live telemetry',
-                shipment['telemetryEnabled'] == true
-                    ? 'Enabled'
-                    : 'No verified telemetry feed',
-                Icons.sensors,
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _section(
-          BuildContext context, String label, dynamic value, IconData icon) =>
-      TweenAnimationBuilder<double>(
-        tween: Tween(begin: .96, end: 1),
-        duration: const Duration(milliseconds: 240),
-        builder: (context, scale, child) =>
-            Transform.scale(scale: scale, child: child),
-        child: Card(
-          child: ListTile(
-            leading: Icon(icon),
-            title: Text(label),
-            subtitle: Text(value.toString()),
-          ),
-        ),
-      );
+  @override Widget build(BuildContext context) => Scaffold(backgroundColor: Colors.white, appBar: AppBar(backgroundColor: Colors.white, surfaceTintColor: Colors.white, title: const Text('AfriGoOS'), leading: IconButton(onPressed: () => context.pop(), icon: const Icon(Icons.arrow_back))), body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(stream: FirebaseFirestore.instance.collection('shipments').doc(shipmentId).snapshots(), builder: (context, snapshot) { if (!snapshot.hasData) return const Center(child: CircularProgressIndicator()); if (snapshot.hasError || snapshot.data!.data() == null) return const Center(child: Padding(padding: EdgeInsets.all(28), child: Text('This shipment is unavailable or you do not have access.', textAlign: TextAlign.center))); return _Body(id: shipmentId, data: snapshot.data!.data()!); }));
 }
+class _Body extends StatelessWidget { const _Body({required this.id,required this.data}); final String id; final Map<String,dynamic> data; String v(List<String> keys,String fallback){for(final k in keys){final x=data[k];if(x!=null&&x.toString().trim().isNotEmpty)return x.toString();}return fallback;} int get step{final s=v(['status'],'pending').toLowerCase();if(s.contains('deliver'))return 4;if(s.contains('border')||s.contains('custom'))return 3;if(s.contains('transit')||s.contains('depart'))return 2;if(s.contains('collect'))return 1;return 0;} @override Widget build(BuildContext context){final product=v(['commodity','productName'],'Cargo pending');final origin=v(['pickupLocationName','origin'],'Collection pending');final destination=v(['deliveryLocationName','destination'],'Delivery pending');return ListView(padding:const EdgeInsets.fromLTRB(20,18,20,32),children:[Text('Shipment ${id.length>14?id.substring(0,14):id}',style:AfrigoTypography.soraHeading2),const SizedBox(height:5),Text(product,style:AfrigoTypography.interBody1.copyWith(color:AfrigoColors.textSecondary)),const SizedBox(height:14),Chip(avatar:const Icon(Icons.local_shipping_outlined),label:Text(v(['status'],'Pending').replaceAll('_',' '))),const SizedBox(height:18),_Box(child:Row(children:[const Icon(Icons.location_on_rounded,color:AfrigoColors.primary),const SizedBox(width:10),Expanded(child:Text(origin)),const Icon(Icons.arrow_forward_rounded,color:AfrigoColors.primary),Expanded(child:Text(destination,textAlign:TextAlign.end))])),const SizedBox(height:18),_Box(title:'Shipment progress',child:Row(children:List.generate(4,(i)=>Expanded(child:_Progress(i:i,done:step>i,current:step==i))))),const SizedBox(height:18),_Box(title:'Latest update',child:ListTile(contentPadding:EdgeInsets.zero,leading:const Icon(Icons.local_shipping_outlined,color:AfrigoColors.primary),title:Text(v(['latestUpdate','carrierUpdate'],'No verified carrier update yet')),subtitle:const Text('Updates appear when the authorised provider reports them.'))),const SizedBox(height:14),Row(children:[Expanded(child:FilledButton.icon(onPressed:()=>context.push('/messages'),icon:const Icon(Icons.chat_outlined),label:const Text('Contact provider'))),const SizedBox(width:12),Expanded(child:OutlinedButton.icon(onPressed:()=>context.push('/documents'),icon:const Icon(Icons.description_outlined),label:const Text('Documents')))]),const SizedBox(height:18),_Box(title:'Shipment details',child:Column(children:[_row('Tracking reference',v(['trackingNumber','shipmentReference'],'Not assigned')),_row('Carrier',v(['carrierName'],'Not assigned')),_row('Estimated arrival',v(['estimatedArrival','expectedDeliveryDate'],'To be confirmed')),_row('Route','$origin → $destination')]))]);} Widget _row(String label,String value)=>Padding(padding:const EdgeInsets.symmetric(vertical:8),child:Row(children:[Expanded(child:Text(label,style:const TextStyle(color:AfrigoColors.textSecondary))),Expanded(child:Text(value,textAlign:TextAlign.end,style:const TextStyle(fontWeight:FontWeight.w700)))]));}
+class _Box extends StatelessWidget{const _Box({required this.child,this.title});final String? title;final Widget child;@override Widget build(BuildContext context)=>Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:const Color(0xFFF3F9F5),borderRadius:BorderRadius.circular(18),border:Border.all(color:AfrigoColors.borderLight)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[if(title!=null)...[Text(title!,style:AfrigoTypography.soraHeading5.copyWith(color:AfrigoColors.primary)),const SizedBox(height:12)],child]));}
+class _Progress extends StatelessWidget{const _Progress({required this.i,required this.done,required this.current});final int i;final bool done,current;@override Widget build(BuildContext context){const labels=['Collected','Departed','Border','Delivered'];return Column(children:[Icon(done?Icons.check_circle:current?Icons.timelapse:Icons.circle_outlined,color:done?AfrigoColors.primary:current?const Color(0xFFAA7B19):AfrigoColors.textTertiary),const SizedBox(height:7),Text(labels[i],textAlign:TextAlign.center,style:const TextStyle(fontSize:11))]);}}

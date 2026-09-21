@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_app/models/order_model.dart';
-import 'package:mobile_app/models/quote_model.dart';
+import 'package:afrigo_app/models/order_model.dart';
+import 'package:afrigo_app/models/quote_model.dart';
 
 void main() {
   group('OrderModel', () {

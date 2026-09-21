@@ -5,6 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../presentation/providers/lots_provider.dart';
 import '../../../domain/models/lot_model.dart';
+import '../../../config/colors.dart';
+import '../../../config/theme.dart';
+import '../../providers/auth_provider.dart';
 
 class MarketplaceScreen extends ConsumerStatefulWidget {
   const MarketplaceScreen({super.key});
@@ -14,117 +17,327 @@ class MarketplaceScreen extends ConsumerStatefulWidget {
 }
 
 class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
-  String _selectedCategory = 'All';
-  final List<String> _categories = [
-    'All',
-    'Cocoa',
-    'Coffee',
-    'Cashews',
-    'Rubber'
-  ];
+  String _selectedCategory = 'All markets';
+  String _query = '';
 
   @override
   Widget build(BuildContext context) {
-    final lotsAsync = _selectedCategory == 'All'
-        ? ref.watch(lotsProvider)
-        : ref.watch(lotByCategoryProvider(_selectedCategory));
+    final lotsAsync = ref.watch(lotsProvider);
+    final user = ref.watch(currentUserProvider);
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text('AfriGo Marketplace'),
-        elevation: 0,
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              ref.invalidate(lotsProvider);
-            },
+      backgroundColor: AfrigoColors.bgLight,
+      body: Column(
+        children: [
+          Expanded(
+            child: lotsAsync.when(
+              loading: () => const _MarketplaceLoading(),
+              error: (_, __) => _MarketplaceUnavailable(
+                onRetry: () => ref.invalidate(lotsProvider),
+              ),
+              data: (lots) => _MarketplaceContents(
+                lots: lots,
+                currentUser: user,
+                selectedCategory: _selectedCategory,
+                query: _query,
+                onCategoryChanged: (value) {
+                  if (value == 'Buyer requests') {
+                    // RFQs are a separate live resource; route to their
+                    // real-time list instead of fabricating request cards.
+                    context.push('/rfqs');
+                    return;
+                  }
+                  setState(() => _selectedCategory = value);
+                },
+                onQueryChanged: (value) => setState(() => _query = value),
+                onRefresh: () async {
+                  ref.invalidate(lotsProvider);
+                  await ref.read(lotsProvider.future);
+                },
+              ),
+            ),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Category filters
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _categories.map((category) {
-                  final isSelected = category == _selectedCategory;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: FilterChip(
-                      label: Text(category),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        setState(() => _selectedCategory = category);
-                      },
-                      backgroundColor: Colors.white,
-                      selectedColor: Colors.green,
-                      labelStyle: TextStyle(
-                        color: isSelected ? Colors.white : Colors.black,
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.normal,
-                      ),
-                      side: BorderSide(
-                        color: isSelected ? Colors.green : Colors.grey[300]!,
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
+      bottomNavigationBar: _MarketplaceNavigation(
+        onHome: () => context.go(_homeRouteFor(user?.roles.firstOrNull)),
+        onTrades: () => context.push('/quotes'),
+        onSupport: () => context.push('/support'),
+        onProfile: () => context.push('/profile'),
+      ),
+    );
+  }
+}
 
-          // Lots list
-          Expanded(
-            child: lotsAsync.when(
-              loading: () => const Center(
-                child: CircularProgressIndicator(),
-              ),
-              error: (error, stackTrace) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+String _homeRouteFor(String? role) => switch (role) {
+      'supplier' => '/supplier/home',
+      'exporter' => '/exporter/home',
+      _ => '/buyer/home',
+    };
+
+class _MarketplaceContents extends StatelessWidget {
+  const _MarketplaceContents({
+    required this.lots,
+    required this.currentUser,
+    required this.selectedCategory,
+    required this.query,
+    required this.onCategoryChanged,
+    required this.onQueryChanged,
+    required this.onRefresh,
+  });
+
+  final List<LotModel> lots;
+  final AuthUser? currentUser;
+  final String selectedCategory;
+  final String query;
+  final ValueChanged<String> onCategoryChanged;
+  final ValueChanged<String> onQueryChanged;
+  final Future<void> Function() onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    const categories = ['All markets', 'Products', 'Buyer requests'];
+    final normalizedQuery = query.trim().toLowerCase();
+    final filtered = lots.where((lot) {
+      // Lots are inventory products. Buyer requests are a separate Firestore
+      // resource and should not be presented as fake product results here.
+      final categoryMatches = selectedCategory != 'Buyer requests';
+      final text =
+          '${lot.productName} ${lot.productType} ${lot.location} ${lot.sellerName}'
+              .toLowerCase();
+      return categoryMatches &&
+          (normalizedQuery.isEmpty || text.contains(normalizedQuery));
+    }).toList(growable: false);
+
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 18, 24, 12),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-                    const SizedBox(height: 16),
-                    const Text('Failed to load products'),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () => ref.refresh(lotsProvider),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
+                    const _AfriGoOSMark(),
+                    const SizedBox(height: 28),
+                    Text('Trade opportunities',
+                        style: AfrigoTypography.soraHeading2
+                            .copyWith(color: AfrigoColors.textPrimary)),
+                    const SizedBox(height: 6),
+                    Text(
+                        'Search products or buyer requests across Africa.',
+                        style: AfrigoTypography.interBody1
+                            .copyWith(color: AfrigoColors.textSecondary)),
+                    const SizedBox(height: 22),
+                    TextField(
+                      onChanged: onQueryChanged,
+                      textInputAction: TextInputAction.search,
+                      decoration: InputDecoration(
+                        hintText: 'Search products or buyer requests...',
+                        prefixIcon: const Icon(Icons.search_rounded),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: const BorderSide(
+                                color: AfrigoColors.borderLight)),
+                        enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: const BorderSide(
+                                color: AfrigoColors.borderLight)),
                       ),
-                      child: const Text('Retry'),
                     ),
-                  ],
-                ),
-              ),
-              data: (lots) => lots.isEmpty
-                  ? const Center(child: Text('No products found'))
-                  : RefreshIndicator(
-                      onRefresh: () async {
-                        ref.invalidate(lotsProvider);
-                        await ref.read(lotsProvider.future);
-                      },
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(12),
-                        itemCount: lots.length,
-                        itemBuilder: (context, index) {
-                          return LotCard(lot: lots[index]);
-                        },
-                      ),
+                    const SizedBox(height: 16),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                          children: categories
+                              .map((category) => Padding(
+                                    padding: const EdgeInsets.only(right: 10),
+                                    child: ChoiceChip(
+                                      selected: category == selectedCategory,
+                                      onSelected: (_) =>
+                                          onCategoryChanged(category),
+                                      avatar: Icon(
+                                          category == 'All markets'
+                                              ? Icons.public_rounded
+                                              : category == 'Products'
+                                                  ? Icons.inventory_2_outlined
+                                                  : Icons.people_alt_outlined,
+                                          size: 18,
+                                          color: category == selectedCategory
+                                              ? Colors.white
+                                              : AfrigoColors.primary),
+                                      label: Text(category),
+                                      selectedColor: AfrigoColors.primary,
+                                      backgroundColor:
+                                          AfrigoColors.primary.withOpacity(.07),
+                                      labelStyle: TextStyle(
+                                          color: category == selectedCategory
+                                              ? Colors.white
+                                              : AfrigoColors.primary,
+                                          fontWeight: FontWeight.w700),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(18),
+                                          side: BorderSide(
+                                              color:
+                                                  category == selectedCategory
+                                                      ? AfrigoColors.primary
+                                                      : Colors.transparent)),
+                                    ),
+                                  ))
+                              .toList()),
                     ),
+                    const SizedBox(height: 24),
+                    Row(children: [
+                      Text('Live listings',
+                          style: AfrigoTypography.soraHeading5
+                              .copyWith(color: AfrigoColors.textPrimary)),
+                      const Spacer(),
+                      Text(
+                          '${filtered.length} result${filtered.length == 1 ? '' : 's'}',
+                          style: AfrigoTypography.interBody2
+                              .copyWith(color: AfrigoColors.textSecondary)),
+                    ]),
+                  ]),
             ),
           ),
+          if (filtered.isEmpty)
+            const SliverFillRemaining(
+                hasScrollBody: false, child: _MarketplaceEmpty())
+          else
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
+              sliver: SliverList.separated(
+                itemCount: filtered.length,
+                itemBuilder: (context, index) => LotCard(lot: filtered[index]),
+                separatorBuilder: (_, __) => const SizedBox(height: 4),
+              ),
+            ),
         ],
       ),
     );
   }
+}
+
+class _AfriGoOSMark extends StatelessWidget {
+  const _AfriGoOSMark();
+  @override
+  Widget build(BuildContext context) => Row(children: [
+        SizedBox(
+            width: 45,
+            height: 45,
+            child: Image.asset('assets/images/Afrigolg1.png',
+                fit: BoxFit.contain)),
+        const SizedBox(width: 10),
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('AfriGoOS',
+              style: AfrigoTypography.soraHeading5
+                  .copyWith(color: AfrigoColors.primary, height: 1)),
+          Text('Africa Trades Together',
+              style: AfrigoTypography.interBody2Semi
+                  .copyWith(color: AfrigoColors.primary)),
+        ]),
+      ]);
+}
+
+class _MarketplaceLoading extends StatelessWidget {
+  const _MarketplaceLoading();
+  @override
+  Widget build(BuildContext context) =>
+      const Center(child: CircularProgressIndicator());
+}
+
+class _MarketplaceUnavailable extends StatelessWidget {
+  const _MarketplaceUnavailable({required this.onRetry});
+  final VoidCallback onRetry;
+  @override
+  Widget build(BuildContext context) => Center(
+          child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Icon(Icons.cloud_off_rounded,
+              size: 52, color: AfrigoColors.textSecondary),
+          const SizedBox(height: 16),
+          Text('Live opportunities are unavailable',
+              style: AfrigoTypography.soraHeading5),
+          const SizedBox(height: 8),
+          Text(
+              'We could not reach the marketplace right now. Your account and previous activity are safe.',
+              textAlign: TextAlign.center,
+              style: AfrigoTypography.interBody2
+                  .copyWith(color: AfrigoColors.textSecondary)),
+          const SizedBox(height: 18),
+          FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Refresh listings')),
+        ]),
+      ));
+}
+
+class _MarketplaceEmpty extends StatelessWidget {
+  const _MarketplaceEmpty();
+  @override
+  Widget build(BuildContext context) => Center(
+          child: Padding(
+        padding: const EdgeInsets.all(30),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Icon(Icons.travel_explore_rounded,
+              size: 56, color: AfrigoColors.primary),
+          const SizedBox(height: 16),
+          Text('No matching live listings',
+              style: AfrigoTypography.soraHeading5),
+          const SizedBox(height: 8),
+          Text(
+              'Try another search or check back when a business publishes an opportunity.',
+              textAlign: TextAlign.center,
+              style: AfrigoTypography.interBody2
+                  .copyWith(color: AfrigoColors.textSecondary)),
+        ]),
+      ));
+}
+
+class _MarketplaceNavigation extends StatelessWidget {
+  const _MarketplaceNavigation(
+      {required this.onHome,
+      required this.onTrades,
+      required this.onSupport,
+      required this.onProfile});
+  final VoidCallback onHome;
+  final VoidCallback onTrades;
+  final VoidCallback onSupport;
+  final VoidCallback onProfile;
+  @override
+  Widget build(BuildContext context) => NavigationBar(
+        selectedIndex: 1,
+        onDestinationSelected: (index) {
+          switch (index) {
+            case 0:
+              onHome();
+            case 2:
+              onTrades();
+            case 3:
+              onSupport();
+            case 4:
+              onProfile();
+          }
+        },
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
+          NavigationDestination(
+              icon: Icon(Icons.search_rounded), label: 'Explore'),
+          NavigationDestination(
+              icon: Icon(Icons.swap_horiz_rounded), label: 'Trades'),
+          NavigationDestination(
+              icon: Icon(Icons.headset_mic_outlined), label: 'Support'),
+          NavigationDestination(
+              icon: Icon(Icons.person_outline_rounded), label: 'Profile'),
+        ],
+      );
 }
 
 class LotCard extends StatefulWidget {
@@ -136,29 +349,40 @@ class LotCard extends StatefulWidget {
   State<LotCard> createState() => _LotCardState();
 }
 
+String _fallbackLotImage(LotModel lot) {
+  final product = '${lot.productName} ${lot.productType}'.toLowerCase();
+  if (product.contains('construction') || product.contains('building')) {
+    return 'assets/images/construction-work-site.jpg';
+  }
+  if (product.contains('export') || product.contains('logistics')) {
+    return 'assets/images/photorealistic-scene-with-warehouse-logistics-operations.jpg';
+  }
+  return 'assets/images/pexels-zahrah-nandoo-2147929825-29833299.jpg';
+}
+
 class _LotCardState extends State<LotCard> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
+  late AnimationController controller;
+  late Animation<double> scaleAnimation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    controller = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.98).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    scaleAnimation = Tween<double>(begin: 1.0, end: 0.98).animate(
+      CurvedAnimation(parent: controller, curve: Curves.easeInOut),
     );
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    controller.dispose();
     super.dispose();
   }
 
-  Future<void> _contactSupplier() async {
+  Future<void> contactSupplier() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || widget.lot.sellerId.isEmpty) return;
     if (user.uid == widget.lot.sellerId) {
@@ -204,157 +428,129 @@ class _LotCardState extends State<LotCard> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return ScaleTransition(
-      scale: _scaleAnimation,
+      scale: scaleAnimation,
       child: GestureDetector(
-        onTapDown: (_) => _controller.forward(),
+        onTapDown: (_) => controller.forward(),
         onTapUp: (_) {
-          _controller.reverse();
+          controller.reverse();
           context.push('/lots/detail/${widget.lot.id}');
         },
-        onTapCancel: () => _controller.reverse(),
+        onTapCancel: () => controller.reverse(),
         child: Card(
-          elevation: 2,
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Image
-              if (widget.lot.imageUrl != null)
-                ClipRRect(
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(12)),
-                  child: Image.network(
-                    widget.lot.imageUrl!,
-                    height: 180,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        height: 180,
-                        color: Colors.grey[200],
-                        child: const Center(
-                            child: Icon(Icons.image_not_supported)),
-                      );
-                    },
+          elevation: 0,
+          margin: const EdgeInsets.symmetric(vertical: 7),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: const BorderSide(color: AfrigoColors.borderLight),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: SizedBox(
+            height: 190,
+            child: LayoutBuilder(builder: (context, constraints) {
+              final imageWidth = constraints.maxWidth < 390 ? 112.0 : 132.0;
+              final image = widget.lot.imageUrl?.trim();
+              return Row(children: [
+                SizedBox(
+                  width: imageWidth,
+                  height: double.infinity,
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.horizontal(
+                        left: Radius.circular(18)),
+                    child: image != null && image.isNotEmpty
+                        ? Image.network(image,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                _fallbackImage(widget.lot, imageWidth))
+                        : _fallbackImage(widget.lot, imageWidth),
                   ),
-                )
-              else
-                Container(
-                  height: 180,
-                  width: double.infinity,
-                  color: Colors.grey[200],
-                  child: const Center(
-                      child: Icon(Icons.image_not_supported, size: 48)),
                 ),
-
-              Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 8, 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.lot.productName,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'From: ${widget.lot.sellerName}',
-                                style: TextStyle(
-                                    fontSize: 12, color: Colors.grey[600]),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Column(
-                          children: [
-                            const Icon(Icons.star,
-                                color: Colors.amber, size: 16),
-                            Text(
-                              '${widget.lot.sellerRating.toStringAsFixed(1)}★',
-                              style: const TextStyle(
-                                  fontSize: 12, fontWeight: FontWeight.bold),
+                        Row(children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: AfrigoColors.primary.withValues(alpha: .08),
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '\$${widget.lot.pricePerUnit.toStringAsFixed(2)}/${widget.lot.unit}',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
+                            child: Text('Product',
+                                style: AfrigoTypography.interBody3Semi
+                                    .copyWith(color: AfrigoColors.primary)),
                           ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '${widget.lot.quantity.toStringAsFixed(0)} ${widget.lot.unit}',
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () {
-                              context.push('/lots/detail/${widget.lot.id}');
-                            },
-                            icon: const Icon(Icons.info_outline, size: 16),
-                            label: const Text('View Details'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.green,
-                              side: const BorderSide(color: Colors.green),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: _contactSupplier,
-                            icon: const Icon(Icons.chat_outlined, size: 16),
-                            label: const Text('Contact'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                            ),
+                          const Spacer(),
+                          const Icon(Icons.chevron_right_rounded,
+                              color: AfrigoColors.textSecondary),
+                        ]),
+                        const SizedBox(height: 8),
+                        Text(widget.lot.productName,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: AfrigoTypography.soraHeading6.copyWith(
+                                color: AfrigoColors.textPrimary)),
+                        const Spacer(),
+                        Row(children: [
+                          const Icon(Icons.location_on_outlined,
+                              size: 19, color: AfrigoColors.textSecondary),
+                          const SizedBox(width: 5),
+                          Expanded(
+                              child: Text(widget.lot.location,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AfrigoTypography.interBody2.copyWith(
+                                      color: AfrigoColors.textSecondary))),
+                        ]),
+                        const SizedBox(height: 5),
+                        Row(children: [
+                          const Icon(Icons.inventory_2_outlined,
+                              size: 19, color: AfrigoColors.textSecondary),
+                          const SizedBox(width: 5),
+                          Expanded(
+                              child: Text(
+                                  '${widget.lot.quantity.toStringAsFixed(0)} ${widget.lot.unit} available',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AfrigoTypography.interBody2.copyWith(
+                                      color: AfrigoColors.textSecondary))),
+                        ]),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton.icon(
+                            onPressed: () =>
+                                context.push('/lots/detail/${widget.lot.id}'),
+                            icon: const Icon(Icons.arrow_forward_ios_rounded,
+                                size: 12),
+                            label: const Text('View details'),
+                            style: TextButton.styleFrom(
+                                foregroundColor: AppColors.secondaryGold,
+                                visualDensity: VisualDensity.compact),
                           ),
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+              ]);
+            }),
           ),
         ),
       ),
     );
   }
+
+  Widget _fallbackImage(LotModel lot, double width) => Image.asset(
+        _fallbackLotImage(lot),
+        width: width,
+        height: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Container(
+          color: AfrigoColors.bgLightAlt,
+          child: const Icon(Icons.inventory_2_outlined,
+              color: AfrigoColors.primary, size: 40),
+        ),
+      );
 }

@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../models/payment_model.dart';
 import '../../services/api_service.dart';
 
@@ -9,12 +9,13 @@ import '../../services/api_service.dart';
 class PaymentService {
   final Dio httpClient;
   final String baseUrl;
+  static const _secureStorage = FlutterSecureStorage();
+  static const _tokenStorageKey = 'auth_token';
 
   PaymentService({required this.httpClient, required this.baseUrl});
 
   Future<String?> _getAuthToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('auth_token');
+    return _secureStorage.read(key: _tokenStorageKey);
   }
 
   Future<Map<String, String>> _getHeaders() async {

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import '../../models/quality_model.dart';
-import '../providers/quality_provider.dart';
+import '../../../models/quality_model.dart';
+import '../../providers/quality_provider.dart';
 
 class QualityInspectionScreen extends ConsumerStatefulWidget {
   final String lotId;

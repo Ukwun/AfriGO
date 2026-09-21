@@ -37,10 +37,10 @@ class RoleDashboardShell extends ConsumerWidget {
     DashboardRole.buyer: [
       _RoleTab(
         label: 'Home',
-        route: '/dashboard/buyer',
+        route: '/buyer/home',
         icon: Icons.home_outlined,
         activeIcon: Icons.home_rounded,
-        prefixes: ['/dashboard/buyer'],
+        prefixes: ['/buyer/home', '/dashboard/buyer'],
       ),
       _RoleTab(
         label: 'RFQs',
@@ -74,10 +74,10 @@ class RoleDashboardShell extends ConsumerWidget {
     DashboardRole.supplier: [
       _RoleTab(
         label: 'Home',
-        route: '/dashboard/seller',
+        route: '/supplier/home',
         icon: Icons.home_outlined,
         activeIcon: Icons.home_rounded,
-        prefixes: ['/dashboard/seller'],
+        prefixes: ['/supplier/home', '/dashboard/seller'],
       ),
       _RoleTab(
         label: 'Lots',
@@ -111,10 +111,10 @@ class RoleDashboardShell extends ConsumerWidget {
     DashboardRole.exporter: [
       _RoleTab(
         label: 'Home',
-        route: '/dashboard/exporter',
+        route: '/exporter/home',
         icon: Icons.home_outlined,
         activeIcon: Icons.home_rounded,
-        prefixes: ['/dashboard/exporter'],
+        prefixes: ['/exporter/home', '/dashboard/exporter'],
       ),
       _RoleTab(
         label: 'Pipeline',

@@ -1,12 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:html/parser.dart' show parse;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../config/api_config.dart';
 import '../../models/contract_model.dart';
 import 'auth_provider.dart';
 
 final contractServiceProvider = Provider((ref) {
-  final authToken = ref.watch(authTokenProvider);
+  final authToken = ref.watch(accessTokenProvider);
   return ContractService(http.Client(), authToken);
 });
 
@@ -68,7 +68,7 @@ final contractSignatureDaysLeftProvider = FutureProvider.family<
 class ContractService {
   final http.Client _httpClient;
   final String? _authToken;
-  final String _baseUrl = 'http://localhost:3000';
+  final String _baseUrl = ApiConfig.baseUrl;
 
   ContractService(this._httpClient, this._authToken);
 

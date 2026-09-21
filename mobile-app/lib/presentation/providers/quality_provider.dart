@@ -1,12 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../config/api_config.dart';
 import '../../models/quality_model.dart';
 import 'auth_provider.dart';
 
 final qualityServiceProvider = Provider((ref) {
-  final authService = ref.watch(authServiceProvider);
-  return QualityService(authToken: authService.token);
+  final authToken = ref.watch(accessTokenProvider);
+  return QualityService(authToken: authToken);
 });
 
 final qualityInspectionsProvider =
@@ -44,7 +45,7 @@ final qualityStatsProvider = FutureProvider<QualityStatsModel>((ref) async {
 
 class QualityService {
   final String? authToken;
-  static const String _baseUrl = 'http://localhost:3000';
+  static const String _baseUrl = ApiConfig.baseUrl;
 
   QualityService({required this.authToken});
 

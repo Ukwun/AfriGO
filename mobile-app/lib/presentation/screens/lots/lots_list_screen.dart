@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/lots_model.dart';
-import '../../providers/lots_provider.dart';
 
 class LotsListScreen extends ConsumerStatefulWidget {
   const LotsListScreen({super.key});

@@ -1,8 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../presentation/providers/auth_provider.dart';
 import '../presentation/screens/onboarding/splash_screen_modern.dart';
 import '../presentation/screens/onboarding/welcome_screen.dart';
+import '../presentation/screens/onboarding/business_profile_screen.dart';
+import '../presentation/screens/onboarding/role_selection_screen.dart';
 import '../presentation/screens/auth/login_screen_modern.dart';
 import '../presentation/screens/auth/register_screen.dart';
 import '../presentation/animations/page_transitions.dart';
@@ -19,6 +22,8 @@ import '../presentation/screens/trading/lots/lot_photo_upload_screen.dart';
 import '../presentation/screens/user/profile_settings_screen.dart';
 import '../presentation/screens/user/notification_center_screen.dart';
 import '../presentation/screens/user/app_settings_screen.dart';
+import '../presentation/screens/user/business_settings_screen.dart';
+import '../presentation/screens/user/team_permissions_screen.dart';
 import '../presentation/screens/dashboard/buyer_analytics_screen.dart';
 import '../presentation/screens/dashboard/buyer_more_screen.dart';
 // New real screens
@@ -31,16 +36,45 @@ import '../presentation/screens/messaging/conversation_screen.dart';
 import '../presentation/screens/trading/shipment_detail_screen.dart';
 import '../presentation/screens/trading/supplier_profile_screen.dart';
 import '../presentation/screens/trading/create_export_request_screen.dart';
+import '../presentation/screens/trading/trade_workspace_screen.dart';
+import '../presentation/screens/trading/request_logistics_screen.dart';
+import '../presentation/screens/trading/live_trade_operations_screen.dart';
+import '../presentation/screens/trading/market_access_screen.dart';
 import '../presentation/widgets/production_dashboard.dart';
 import '../presentation/widgets/dashboard_role.dart';
 import '../presentation/screens/shared/live_resource_screen.dart';
 import '../presentation/screens/shared/live_record_detail_screen.dart';
+import '../presentation/screens/marketplace/opportunity_detail_screen.dart';
+import '../presentation/screens/support/support_hub_screen.dart';
+
+class _AuthRouterRefresh extends ChangeNotifier {
+  _AuthRouterRefresh(Ref ref) {
+    _subscription = ref.listen<AuthState>(
+      authProvider,
+      (_, __) => notifyListeners(),
+      fireImmediately: true,
+    );
+  }
+
+  late final ProviderSubscription<AuthState> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.close();
+    super.dispose();
+  }
+}
 
 final goRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
-  return GoRouter(
+  final authRefresh = _AuthRouterRefresh(ref);
+  ref.onDispose(authRefresh.dispose);
+
+  late final GoRouter router;
+  router = GoRouter(
     initialLocation: '/',
+    refreshListenable: authRefresh,
     redirect: (context, state) {
+      final authState = ref.read(authProvider);
       final location = state.matchedLocation;
       final isPublic = location == '/welcome' ||
           location == '/login' ||
@@ -66,7 +100,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         'exporter' => '/exporter/home',
         _ => '/buyer/home',
       };
-      if (isPublic || location == '/') return home;
+      if (isPublic || location == '/') return '/role-selection';
       if (location == '/dashboard/seller') return '/supplier/home';
 
       final requiredRole = location.startsWith('/supplier/')
@@ -96,6 +130,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/register',
         pageBuilder: (context, state) => slideRightTransition(
             context: context, state: state, child: const RegisterScreen()),
+      ),
+      GoRoute(
+        path: '/role-selection',
+        builder: (context, state) => const RoleSelectionScreen(),
+      ),
+      GoRoute(
+        path: '/business-profile',
+        pageBuilder: (context, state) => slideRightTransition(
+            context: context,
+            state: state,
+            child: const BusinessProfileScreen()),
       ),
       GoRoute(
         path: '/dashboard/buyer',
@@ -273,6 +318,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: '/shipments/:shipmentId',
+        builder: (context, state) => ShipmentDetailScreen(
+          shipmentId: state.pathParameters['shipmentId']!,
+        ),
+      ),
+      GoRoute(
         path: '/lots',
         builder: (context, state) => const LiveResourceScreen(
           resource: 'lots',
@@ -289,12 +340,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/lots/detail/:lotId',
         builder: (context, state) {
           final lotId = state.pathParameters['lotId']!;
-          return LiveRecordDetailScreen(
-            resource: 'lots',
-            recordId: lotId,
-            title: 'Lot details',
-          );
+          return OpportunityDetailScreen(lotId: lotId);
         },
+      ),
+      GoRoute(
+        path: '/lots/:lotId',
+        builder: (context, state) => LiveRecordDetailScreen(
+          resource: 'lots',
+          recordId: state.pathParameters['lotId']!,
+          title: 'Lot details',
+        ),
       ),
       GoRoute(
         path: '/lots/edit/:lotId',
@@ -324,6 +379,61 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           emptyMessage: 'Orders created from accepted offers will appear here.',
         ),
       ),
+      GoRoute(
+        path: '/orders/detail/:orderId',
+        builder: (context, state) => TradeWorkspaceScreen(
+          orderId: state.pathParameters['orderId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/orders/:orderId',
+        builder: (context, state) => TradeWorkspaceScreen(
+          orderId: state.pathParameters['orderId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/orders/:orderId/quotes',
+        builder: (context, state) => const LiveTradeOperationsScreen(
+          mode: 'quotes',
+        ),
+      ),
+      GoRoute(
+        path: '/orders/:orderId/logistics',
+        builder: (context, state) => RequestLogisticsScreen(
+          orderId: state.pathParameters['orderId']!,
+        ),
+      ),
+      GoRoute(
+          path: '/quotes',
+          builder: (context, state) =>
+              const LiveTradeOperationsScreen(mode: 'quotes')),
+      GoRoute(
+        path: '/quotes/:quoteId',
+        builder: (context, state) => LiveRecordDetailScreen(
+          resource: 'quotes',
+          recordId: state.pathParameters['quoteId']!,
+          title: 'Quote details',
+        ),
+      ),
+      GoRoute(
+        path: '/trading/quotes/:quoteId',
+        builder: (context, state) => LiveRecordDetailScreen(
+          resource: 'quotes',
+          recordId: state.pathParameters['quoteId']!,
+          title: 'Quote details',
+        ),
+      ),
+      GoRoute(
+          path: '/documents',
+          builder: (context, state) =>
+              const LiveTradeOperationsScreen(mode: 'documents')),
+      GoRoute(
+          path: '/provider-requests',
+          builder: (context, state) =>
+              const LiveTradeOperationsScreen(mode: 'providers')),
+      GoRoute(
+          path: '/market-access',
+          builder: (context, state) => const MarketAccessScreen()),
       GoRoute(
         path: '/contracts',
         builder: (context, state) => const LiveResourceScreen(
@@ -368,8 +478,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/profile',
-        builder: (context, state) => const ProfileSettingsScreen(),
+        builder: (context, state) => const BusinessSettingsScreen(),
       ),
+      GoRoute(
+          path: '/profile/edit',
+          builder: (context, state) => const ProfileSettingsScreen()),
+      GoRoute(
+          path: '/team',
+          builder: (context, state) => const TeamPermissionsScreen()),
       GoRoute(
         path: '/notifications',
         builder: (context, state) => const NotificationCenterScreen(),
@@ -478,14 +594,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/trading/trade/:tradeId',
         name: 'trade_detail',
-        builder: (context, state) {
-          final tradeId = state.pathParameters['tradeId']!;
-          return LiveRecordDetailScreen(
-            resource: 'orders',
-            recordId: tradeId,
-            title: 'Trade details',
-          );
-        },
+        builder: (context, state) => TradeWorkspaceScreen(
+          orderId: state.pathParameters['tradeId']!,
+        ),
       ),
 
       /// Seller RFQ List - View all available RFQs for quoting
@@ -667,6 +778,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: 'marketplace',
         builder: (context, state) => const MarketplaceScreen(),
       ),
+      GoRoute(
+        path: '/support',
+        name: 'support',
+        builder: (context, state) => const SupportHubScreen(),
+      ),
     ],
   );
+  ref.listen<AuthState>(authProvider, (_, __) => router.refresh());
+  ref.onDispose(router.dispose);
+  return router;
 });

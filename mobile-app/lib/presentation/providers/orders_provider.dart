@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../config/api_config.dart';
 import '../../models/order_model.dart';
 import 'auth_provider.dart';
 
@@ -25,7 +26,7 @@ final myOrdersProvider = FutureProvider.autoDispose((ref) async {
 
 class OrdersService {
   final auth;
-  static const String baseUrl = 'http://10.0.2.2:3000'; // Emulator localhost
+  static const String baseUrl = ApiConfig.baseUrl;
 
   OrdersService(this.auth);
 

@@ -78,7 +78,7 @@ class _AnimatedIconWithLabelState extends State<AnimatedIconWithLabel>
               Text(
                 widget.label,
                 style: widget.labelStyle ??
-                    TextStyle(
+                    const TextStyle(
                       color: AppColors.textDark,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,

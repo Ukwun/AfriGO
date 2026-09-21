@@ -1,8 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../models/order_model.dart';
-import '../../services/api_service.dart';
+import '../../../models/order_model.dart';
+import '../../../services/api_service.dart';
 
 // Orders list provider
 final ordersProvider =
@@ -239,7 +239,7 @@ class BrowseOrdersScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               // Product info
               Text(
-                order.productName,
+                order.lot?.productName ?? 'Trade order',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -276,7 +276,7 @@ class BrowseOrdersScreen extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      'with ${order.sellerName ?? 'Seller'}',
+                      'with ${order.seller?.fullName ?? 'Seller'}',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],

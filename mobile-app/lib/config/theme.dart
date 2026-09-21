@@ -495,4 +495,14 @@ class AppTheme {
   static const Color textSecondary = AppColors.textSecondary;
   static const Color backgroundLight = AppColors.backgroundLight;
   static const Color surfaceCard = AppColors.surfaceCard;
+
+  static TextStyle get headlineSmall => AfrigoTypography.soraHeading3;
+  static TextStyle get headlineMedium => AfrigoTypography.soraHeading2;
+  static TextStyle get titleMedium => AfrigoTypography.soraHeading5;
+  static TextStyle get titleSmall => AfrigoTypography.soraHeading6;
+  static TextStyle get bodyMedium => AfrigoTypography.interBody2;
+  static TextStyle get bodySmall => AfrigoTypography.interBody3;
+  static TextStyle get labelLarge => AfrigoTypography.interBody2Semi;
+  static TextStyle get labelMedium => AfrigoTypography.interBody3Semi;
+  static TextStyle get labelSmall => AfrigoTypography.interBody3;
 }

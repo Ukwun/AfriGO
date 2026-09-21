@@ -219,17 +219,27 @@ class _LoadFailure extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.cloud_off_outlined, size: 48),
+            const Icon(Icons.cloud_off_outlined, size: 52),
             const SizedBox(height: 12),
+            Text(
+              'Your RFQs are not available right now',
+              style: Theme.of(context).textTheme.titleLarge,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
             const Text(
-              'Firebase could not refresh your RFQs. Existing cached records may become available when connectivity returns.',
+              'We could not reach your live AfriGO records. Check your internet connection, then refresh this page. Your requests and offers are not lost.',
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            OutlinedButton.icon(
+            FilledButton.icon(
               onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Refresh RFQs'),
+            ),
+            TextButton(
+              onPressed: () => context.push('/rfqs/create'),
+              child: const Text('Create a new request'),
             ),
           ]),
         ),

@@ -226,7 +226,7 @@ class _ContractCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '${contract.contractType.capitalize()}',
+                    contract.contractType.capitalize(),
                     style: const TextStyle(color: Colors.grey, fontSize: 12),
                   ),
                   Text(

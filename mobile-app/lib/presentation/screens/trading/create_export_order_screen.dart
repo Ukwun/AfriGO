@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -15,20 +17,38 @@ class CreateExportOrderScreen extends ConsumerStatefulWidget {
 class _CreateExportOrderScreenState
     extends ConsumerState<CreateExportOrderScreen>
     with SingleTickerProviderStateMixin {
+  final _formKey = GlobalKey<FormState>();
+
   late final TextEditingController _productController;
   late final TextEditingController _quantityController;
   late final TextEditingController _buyerController;
+  late final TextEditingController _buyerEmailController;
   late final TextEditingController _destinationController;
+  late final TextEditingController _deliveryDateController;
+
   late AnimationController _animationController;
+
+  String _selectedUnit = 'kg';
+  String _selectedIncoterm = 'CIF';
   int _currentStep = 0;
+  bool _isSubmitting = false;
+
+  final List<String> _units = ['kg', 'tonnes', 'litres', 'boxes'];
+  final List<String> _incoterms = ['CIF', 'FOB', 'EXW', 'DDP'];
 
   @override
   void initState() {
     super.initState();
+    final currentUser = FirebaseAuth.instance.currentUser;
+
     _productController = TextEditingController();
     _quantityController = TextEditingController();
     _buyerController = TextEditingController();
+    _buyerEmailController = TextEditingController(
+      text: currentUser?.email ?? '',
+    );
     _destinationController = TextEditingController();
+    _deliveryDateController = TextEditingController();
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 600),
@@ -42,7 +62,9 @@ class _CreateExportOrderScreenState
     _productController.dispose();
     _quantityController.dispose();
     _buyerController.dispose();
+    _buyerEmailController.dispose();
     _destinationController.dispose();
+    _deliveryDateController.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -57,32 +79,29 @@ class _CreateExportOrderScreenState
       ),
       body: FadeTransition(
         opacity: _animationController,
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Progress Indicator
-                ScaleInTransition(
-                  child: _buildProgressIndicator(),
-                ),
-                const SizedBox(height: 32),
-
-                // Form Content
-                if (_currentStep == 0) ..._buildProductStep(),
-                if (_currentStep == 1) ..._buildBuyerStep(),
-                if (_currentStep == 2) ..._buildDeliveryStep(),
-                if (_currentStep == 3) ..._buildReviewStep(),
-
-                const SizedBox(height: 32),
-
-                // Navigation Buttons
-                ScaleInTransition(
-                  child: _buildNavigationButtons(),
-                ),
-                const SizedBox(height: 32),
-              ],
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ScaleInTransition(
+                    child: _buildProgressIndicator(),
+                  ),
+                  const SizedBox(height: 32),
+                  if (_currentStep == 0) ..._buildProductStep(),
+                  if (_currentStep == 1) ..._buildBuyerStep(),
+                  if (_currentStep == 2) ..._buildDeliveryStep(),
+                  if (_currentStep == 3) ..._buildReviewStep(),
+                  const SizedBox(height: 32),
+                  ScaleInTransition(
+                    child: _buildNavigationButtons(),
+                  ),
+                  const SizedBox(height: 32),
+                ],
+              ),
             ),
           ),
         ),
@@ -124,6 +143,9 @@ class _CreateExportOrderScreenState
           controller: _productController,
           label: 'Product Name',
           hintText: 'E.g., Premium Cocoa Beans Grade A',
+          validator: (value) => value == null || value.trim().isEmpty
+              ? 'Enter a product name'
+              : null,
         ),
       ),
       const SizedBox(height: 16),
@@ -132,16 +154,22 @@ class _CreateExportOrderScreenState
           controller: _quantityController,
           label: 'Quantity',
           hintText: '5000',
-          suffix: 'kg',
+          suffix: _selectedUnit,
           keyboardType: TextInputType.number,
+          validator: (value) =>
+              value == null || value.trim().isEmpty ? 'Enter a quantity' : null,
         ),
       ),
       const SizedBox(height: 16),
       ScaleInTransition(
         child: _buildDropdownField(
           label: 'Unit of Measurement',
-          value: 'kg',
-          items: ['kg', 'tonnes', 'litres', 'boxes'],
+          value: _selectedUnit,
+          items: _units,
+          onChanged: (value) {
+            if (value == null) return;
+            setState(() => _selectedUnit = value);
+          },
         ),
       ),
     ];
@@ -158,15 +186,26 @@ class _CreateExportOrderScreenState
           controller: _buyerController,
           label: 'Buyer Company Name',
           hintText: 'E.g., Global Traders Ltd',
+          validator: (value) => value == null || value.trim().isEmpty
+              ? 'Enter buyer company'
+              : null,
         ),
       ),
       const SizedBox(height: 16),
       ScaleInTransition(
         child: _buildInputField(
-          controller: TextEditingController(text: 'buyer@globaltraders.com'),
+          controller: _buyerEmailController,
           label: 'Buyer Email',
           hintText: 'buyer@company.com',
-          readOnly: false,
+          keyboardType: TextInputType.emailAddress,
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Enter buyer email';
+            }
+            return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value)
+                ? null
+                : 'Enter a valid email address';
+          },
         ),
       ),
     ];
@@ -183,23 +222,33 @@ class _CreateExportOrderScreenState
           controller: _destinationController,
           label: 'Destination Country',
           hintText: 'E.g., Germany',
+          validator: (value) => value == null || value.trim().isEmpty
+              ? 'Enter destination country'
+              : null,
         ),
       ),
       const SizedBox(height: 16),
       ScaleInTransition(
         child: _buildDropdownField(
           label: 'Incoterms',
-          value: 'CIF',
-          items: ['CIF', 'FOB', 'EXW', 'DDP'],
+          value: _selectedIncoterm,
+          items: _incoterms,
+          onChanged: (value) {
+            if (value == null) return;
+            setState(() => _selectedIncoterm = value);
+          },
         ),
       ),
       const SizedBox(height: 16),
       ScaleInTransition(
         child: _buildInputField(
-          controller: TextEditingController(text: '2024-09-15'),
+          controller: _deliveryDateController,
           label: 'Delivery Date',
           hintText: 'YYYY-MM-DD',
-          readOnly: false,
+          keyboardType: TextInputType.datetime,
+          validator: (value) => value == null || value.trim().isEmpty
+              ? 'Enter delivery date'
+              : null,
         ),
       ),
     ];
@@ -224,13 +273,14 @@ class _CreateExportOrderScreenState
             children: [
               _buildReviewItem('Product', _productController.text),
               const Divider(height: 16),
-              _buildReviewItem('Quantity', '${_quantityController.text} kg'),
+              _buildReviewItem(
+                  'Quantity', '${_quantityController.text} $_selectedUnit'),
               const Divider(height: 16),
               _buildReviewItem('Buyer', _buyerController.text),
               const Divider(height: 16),
               _buildReviewItem('Destination', _destinationController.text),
               const Divider(height: 16),
-              _buildReviewItem('Expected Arrival', '15 Sep 2024'),
+              _buildReviewItem('Delivery Date', _deliveryDateController.text),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -245,7 +295,7 @@ class _CreateExportOrderScreenState
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Please review the information before creating the export order.',
+                        'This order will be saved to the live records and audited as part of the transaction workflow.',
                         style: TextStyle(fontSize: 12),
                       ),
                     ),
@@ -264,7 +314,13 @@ class _CreateExportOrderScreenState
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: const TextStyle(color: Colors.grey)),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ),
       ],
     );
   }
@@ -282,12 +338,12 @@ class _CreateExportOrderScreenState
     required String hintText,
     String? suffix,
     TextInputType keyboardType = TextInputType.text,
-    bool readOnly = false,
+    String? Function(String?)? validator,
   }) {
-    return TextField(
+    return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      readOnly: readOnly,
+      validator: validator,
       decoration: InputDecoration(
         labelText: label,
         hintText: hintText,
@@ -307,12 +363,17 @@ class _CreateExportOrderScreenState
     required String label,
     required String value,
     required List<String> items,
+    required void Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
       initialValue: value,
-      items:
-          items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-      onChanged: (_) {},
+      items: items
+          .map((item) => DropdownMenuItem<String>(
+                value: item,
+                child: Text(item),
+              ))
+          .toList(),
+      onChanged: onChanged,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -342,9 +403,11 @@ class _CreateExportOrderScreenState
                     border: Border.all(color: Colors.grey[300]!),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text('Back',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  child: const Text(
+                    'Back',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                 ),
               ),
             ),
@@ -354,25 +417,33 @@ class _CreateExportOrderScreenState
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () {
-                if (_currentStep < 3) {
-                  setState(() => _currentStep++);
-                } else {
-                  _submitOrder();
-                }
-              },
+              onTap: _isSubmitting
+                  ? null
+                  : () {
+                      if (_currentStep < 3) {
+                        if (_formKey.currentState?.validate() ?? false) {
+                          setState(() => _currentStep++);
+                        }
+                      } else {
+                        _submitOrder();
+                      }
+                    },
               borderRadius: BorderRadius.circular(8),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: AppColors.accentBlue,
+                  color: _isSubmitting ? Colors.grey : AppColors.accentBlue,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  _currentStep < 3 ? 'Next' : 'Create Order',
+                  _isSubmitting
+                      ? 'Saving...'
+                      : (_currentStep < 3 ? 'Next' : 'Create Order'),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w600),
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
@@ -382,10 +453,81 @@ class _CreateExportOrderScreenState
     );
   }
 
-  void _submitOrder() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('✅ Export order created successfully!')),
-    );
-    context.pop();
+  Future<void> _submitOrder() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      setState(() => _isSubmitting = true);
+
+      try {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) {
+          throw Exception('You must be signed in to create an order.');
+        }
+
+        final orderedQuantity =
+            double.tryParse(_quantityController.text.trim());
+        if (orderedQuantity == null || orderedQuantity <= 0) {
+          throw Exception('Enter a valid quantity greater than zero.');
+        }
+
+        final ordersRef =
+            FirebaseFirestore.instance.collection('export_orders').doc();
+        final createdAt = FieldValue.serverTimestamp();
+
+        final orderData = {
+          'id': ordersRef.id,
+          'ownerId': user.uid,
+          'exporterId': user.uid,
+          'participantIds': [user.uid],
+          'productName': _productController.text.trim(),
+          'quantity': orderedQuantity,
+          'quantityUnit': _selectedUnit,
+          'buyerCompanyName': _buyerController.text.trim(),
+          'buyerEmail': _buyerEmailController.text.trim(),
+          'destinationCountry': _destinationController.text.trim(),
+          'incoterms': _selectedIncoterm,
+          'deliveryDate': _deliveryDateController.text.trim(),
+          'status': 'draft',
+          'paymentStatus': 'not_paid',
+          'createdAt': createdAt,
+          'updatedAt': createdAt,
+        };
+
+        await ordersRef.set(orderData);
+
+        await FirebaseFirestore.instance.collection('audit_events').add({
+          'actorId': user.uid,
+          'action': 'export_orders.created',
+          'entityType': 'export_orders',
+          'entityId': ordersRef.id,
+          'details': {
+            'productName': orderData['productName'],
+            'quantity': orderData['quantity'],
+            'destinationCountry': orderData['destinationCountry'],
+            'buyerEmail': orderData['buyerEmail'],
+          },
+          'createdAt': createdAt,
+        });
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Export order created and saved to live records.'),
+          ),
+        );
+        context.pop();
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error.toString().replaceFirst('Exception: ', '')),
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isSubmitting = false);
+        }
+      }
+    }
   }
 }

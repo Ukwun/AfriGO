@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../models/lot_model.dart';
-import '../../models/quote_model.dart';
-import '../../services/api_service.dart';
+import '../../../models/lot_model.dart';
+import '../../../services/api_service.dart';
 
 // Single lot provider
 final lotProvider =

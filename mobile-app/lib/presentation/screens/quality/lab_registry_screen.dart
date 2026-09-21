@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../models/quality_model.dart';
-import '../providers/quality_provider.dart';
+import '../../../models/quality_model.dart';
+import '../../providers/quality_provider.dart';
 
 class LabRegistryScreen extends ConsumerStatefulWidget {
   const LabRegistryScreen({super.key});

@@ -21,6 +21,7 @@ class AppColors {
 
   /// Ocean Blue - Logistics, tracking, shipping, real-time updates
   static const Color accentBlue = Color(0xFF1E88E5);
+  static const Color info = accentBlue;
   static const Color accentBlueDark = Color(0xFF1565C0); // Darker variant
   static const Color accentBlueLight = Color(0xFFE3F2FD); // Background tint
 
@@ -49,15 +50,18 @@ class AppColors {
 
   /// Cards/Surfaces - Cards, modals, dropdowns, overlays
   static const Color surfaceCard = Color(0xFFFFFFFF);
+  static const Color cardBackground = surfaceCard;
 
   /// Text - Dark (Primary) - Main body text, headings, primary content
   static const Color textDark = Color(0xFF111827);
+  static const Color textPrimary = textDark;
 
   /// Text - Secondary - Secondary text, placeholders, disabled states
   static const Color textSecondary = Color(0xFF667085);
 
   /// Borders & Dividers - Card borders, input borders, divider lines
   static const Color borderDefault = Color(0xFFE4E7EC);
+  static const Color borderLight = borderDefault;
 
   /// Soft divider - For lighter visual separation
   static const Color divider = Color(0xFFD0D5DD);

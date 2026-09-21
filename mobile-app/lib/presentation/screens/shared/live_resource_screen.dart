@@ -34,8 +34,9 @@ class LiveResourceScreen extends ConsumerWidget {
             const SizedBox(height: 140),
             _Message(
               icon: Icons.cloud_off_outlined,
-              title: 'Unable to refresh $title',
-              message: 'Firebase could not refresh this activity.',
+              title: '$title are temporarily unavailable',
+              message:
+                  'We could not reach your live AfriGO records. Check your connection and try again. Your account activity is not lost.',
               action: () =>
                   ref.invalidate(dashboardRecordsProvider(resource)),
             ),

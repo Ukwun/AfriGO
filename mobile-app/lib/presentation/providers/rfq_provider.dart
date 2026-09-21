@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../models/rfq_model.dart';
+import '../../config/api_config.dart';
 
 final rfqServiceProvider = Provider((ref) {
   return RFQService(authToken: null);
@@ -44,7 +45,7 @@ final rfqBidsProvider =
 
 class RFQService {
   final String? authToken;
-  static const String _baseUrl = 'http://localhost:3000';
+  static const String _baseUrl = ApiConfig.baseUrl;
 
   RFQService({required this.authToken});
 

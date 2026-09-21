@@ -26,6 +26,25 @@ Widget profile(String role) => ProviderScope(
     );
 
 void main() {
+  test('auth user canonicalizes role data to one valid identity', () {
+    final user = AuthUser.fromJson({
+      'id': 'u123',
+      'email': 'mixed@afrigo.test',
+      'firstName': 'Mixed',
+      'lastName': 'User',
+      'fullName': 'Mixed User',
+      'roles': ['buyer', 'supplier', 'exporter', 'invalid'],
+      'kycStatus': 'verified',
+      'emailVerified': true,
+      'phoneVerified': true,
+      'trustScore': 92,
+      'completedTrades': 12,
+    });
+
+    expect(user.roles, ['supplier']);
+    expect(user.roles.first, 'supplier');
+  });
+
   testWidgets('supplier profile shows supply operations', (tester) async {
     await tester.pumpWidget(profile('supplier'));
     await tester.pump();

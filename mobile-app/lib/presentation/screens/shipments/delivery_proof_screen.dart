@@ -3,11 +3,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io' as io;
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
-import '../../../config/theme.dart';
-import '../../models/shipment_model.dart';
-import '../providers/shipment_provider.dart';
-import '../../widgets/modern_card.dart';
+import '../../../models/shipment_model.dart';
+import '../../providers/shipment_provider.dart';
 import '../../widgets/animated_button.dart';
 
 class DeliveryProofScreen extends ConsumerStatefulWidget {
@@ -159,7 +158,9 @@ class _DeliveryProofScreenState extends ConsumerState<DeliveryProofScreen> {
               // Submit Button with real-time responsiveness
               AnimatedPrimaryButton(
                 label: 'Submit Proof',
-                onPressed: _isSubmitting ? null : () => _submitProof(context),
+                onPressed: () {
+                  if (!_isSubmitting) _submitProof(context);
+                },
                 isLoading: _isSubmitting,
                 isLargeTouchTarget: true,
               ),
@@ -399,10 +400,11 @@ class _DeliveryProofScreenState extends ConsumerState<DeliveryProofScreen> {
         description: 'Delivery proof captured by driver',
         dataBlobUrl: dataBlobUrl,
         recipientName: _recipientNameController.text,
-        recipientPhone: _recipientPhoneController.text,
         recipientIdNumber: _recipientIdController.text.isNotEmpty
             ? _recipientIdController.text
             : null,
+        isVerified: false,
+        capturedById: FirebaseAuth.instance.currentUser!.uid,
       );
 
       await service.captureDeliveryProof(widget.shipmentId, request);

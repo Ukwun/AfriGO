@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:dio/dio.dart';
+import 'package:afrigo_app/models/lot_model.dart';
+import 'package:afrigo_app/services/api_service.dart';
 
 // Make sure to run these tests with:
 // flutter test

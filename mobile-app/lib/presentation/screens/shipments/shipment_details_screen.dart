@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'dart:convert';
-import '../../../config/theme.dart';
-import '../../models/shipment_model.dart';
-import '../providers/shipment_provider.dart';
+import 'dart:typed_data';
+import '../../../models/shipment_model.dart';
+import '../../providers/shipment_provider.dart';
 import '../../widgets/modern_card.dart';
-import '../../widgets/animated_button.dart';
 import '../../widgets/motion_system.dart';
 
 class ShipmentDetailsScreen extends ConsumerStatefulWidget {
@@ -365,7 +363,8 @@ class _ShipmentDetailsScreenState extends ConsumerState<ShipmentDetailsScreen>
                           ),
                           child: proof.dataBlobUrl!.startsWith('data:image')
                               ? Image.memory(
-                                  _dataUrlToBytes(proof.dataBlobUrl!),
+                                  Uint8List.fromList(
+                                      _dataUrlToBytes(proof.dataBlobUrl!)),
                                   fit: BoxFit.cover,
                                 )
                               : Image.network(

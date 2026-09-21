@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:coop_commerce_web/data/services/contract_service.dart';
+import 'package:afrigo_app/data/services/contract_service.dart';
 import 'dart:typed_data';
 
 /// Contract Signing Integration Tests

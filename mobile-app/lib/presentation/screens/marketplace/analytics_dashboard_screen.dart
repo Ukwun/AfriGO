@@ -69,7 +69,7 @@ class _AnalyticsDashboardScreenState
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -80,7 +80,7 @@ class _AnalyticsDashboardScreenState
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh, color: AppColors.textPrimary),
+            icon: const Icon(Icons.refresh, color: AppColors.textPrimary),
             onPressed: () {
               ref.refresh(analyticsDataProvider(_selectedPeriod));
             },

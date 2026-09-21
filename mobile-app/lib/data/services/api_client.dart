@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../config/api_config.dart';
 
 class ApiClient {
   ApiClient._internal() {
@@ -15,21 +17,39 @@ class ApiClient {
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         final token = await _storedToken();
-        if (token != null) options.headers['Authorization'] = 'Bearer $token';
+        if (token != null) {
+          options.headers['Authorization'] = 'Bearer $token';
+        }
         handler.next(options);
       },
-      onError: (error, handler) => handler.next(error),
+      onError: (error, handler) async {
+        if (error.response?.statusCode == 401 &&
+            error.requestOptions.extra['retry'] != true) {
+          final refreshedToken = await _refreshCurrentSessionToken();
+          if (refreshedToken != null) {
+            final requestOptions = error.requestOptions;
+            requestOptions.extra['retry'] = true;
+            requestOptions.headers['Authorization'] = 'Bearer $refreshedToken';
+            try {
+              final response = await _dio.fetch(requestOptions);
+              return handler.resolve(response);
+            } on DioException catch (retryError) {
+              return handler.next(retryError);
+            }
+          }
+        }
+        handler.next(error);
+      },
     ));
   }
 
   static final ApiClient _instance = ApiClient._internal();
   factory ApiClient() => _instance;
 
-  static const _baseUrl = String.fromEnvironment(
-    'AFRIGO_API_URL',
-    defaultValue:
-        'https://europe-west1-afrigo-62e9b.cloudfunctions.net/api/api',
-  );
+  static final _baseUrl = ApiConfig.apiBaseUrl;
+  static const _tokenStorageKey = 'auth_token';
+  static const _secureStorage = FlutterSecureStorage();
+
   late final Dio _dio;
 
   String get baseUrl => _dio.options.baseUrl;
@@ -40,7 +60,22 @@ class ApiClient {
   }
 
   Future<String?> _storedToken() async =>
-      (await SharedPreferences.getInstance()).getString('auth_token');
+      _secureStorage.read(key: _tokenStorageKey);
+
+  Future<String?> _refreshCurrentSessionToken() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return null;
+
+    try {
+      final idToken = await currentUser.getIdTokenResult(true);
+      final token = idToken.token;
+      if (token == null || token.isEmpty) return null;
+      await setToken(token);
+      return token;
+    } catch (_) {
+      return null;
+    }
+  }
 
   Future<Map<String, dynamic>> get(String endpoint) =>
       _request(() => _dio.get(_endpoint(endpoint)));
@@ -109,14 +144,12 @@ class ApiClient {
       : error.message ?? 'Request failed';
 
   Future<void> setToken(String token) async {
-    final preferences = await SharedPreferences.getInstance();
-    await preferences.setString('auth_token', token);
+    await _secureStorage.write(key: _tokenStorageKey, value: token);
     _dio.options.headers['Authorization'] = 'Bearer $token';
   }
 
   Future<void> logout() async {
-    final preferences = await SharedPreferences.getInstance();
-    await preferences.remove('auth_token');
+    await _secureStorage.delete(key: _tokenStorageKey);
     _dio.options.headers.remove('Authorization');
   }
 }

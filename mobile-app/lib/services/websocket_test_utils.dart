@@ -27,12 +27,7 @@ class WebSocketTestUtils {
   Future<void> connect() async {
     socket = IO.io(
       serverUrl,
-      IO.SocketIoClientOptions()
-        ..autoConnect = true
-        ..reconnection = true
-        ..auth = {
-          'token': authToken,
-        },
+      IO.OptionBuilder().setAuth({'token': authToken}).build(),
     );
 
     socket.on('connect', (_) {
@@ -407,7 +402,7 @@ class WebSocketTestUtils {
     required String tradeId,
     required String shipmentId,
   }) async {
-    print('\n' + '=' * 60);
+    print('\n${'=' * 60}');
     print('WEBSOCKET LATENCY TEST SUITE');
     print('=' * 60);
     print('Testing <500ms guaranteed latency for all real-time events');
@@ -525,7 +520,7 @@ class WebSocketTestResults {
       tests.map((t) => t.latencyMs).reduce((a, b) => a < b ? a : b);
 
   void printReport() {
-    print('\n' + '=' * 60);
+    print('\n${'=' * 60}');
     print('WEBSOCKET TEST RESULTS REPORT');
     print('=' * 60);
     print('Timestamp: $timestamp');

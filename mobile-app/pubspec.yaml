@@ -3,7 +3,7 @@ description: "Pan-African Digital Trade Operating System - Mobile & Web App"
 
 publish_to: 'none'
 
-version: 0.1.0+1
+version: 0.1.1+2
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -21,6 +21,7 @@ dependencies:
   
   # HTTP Client
   dio: ^5.3.0
+  http: ^1.2.2
   
   # Firebase
   firebase_core: ^3.15.2
@@ -30,13 +31,13 @@ dependencies:
   
   # Social Authentication
   google_sign_in: ^6.1.0
-  flutter_facebook_auth: ^6.0.0
   # sign_in_with_apple: ^5.0.0  # Disabled due to Android compatibility issues
   
   # Local Storage
   hive: ^2.2.0
   hive_flutter: ^1.1.0
   shared_preferences: ^2.2.0
+  flutter_secure_storage: ^9.2.2
   
   # Forms & Validation
   formz: ^0.6.0
@@ -105,7 +106,5 @@ flutter:
   #       - asset: assets/fonts/Sora-Bold.ttf
   #         weight: 700
   
-  # Images/assets (commented out - not used yet)
-  # assets:
-  #   - assets/images/
-  #   - assets/icons/
+  assets:
+    - assets/images/
